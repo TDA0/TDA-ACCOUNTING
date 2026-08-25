@@ -4468,11 +4468,11 @@
 
     if (bal.netUSD < 0 && bal.netLBP > 0) {
         netBalanceusd = (bal.netLBP / 90000) + bal.netUSD;
-        netBalancelbp = bal.netLBP;
+        netBalancelbp = bal.netLBP - (bal.netUSD * 90000);
     } 
     else if (bal.netLBP < 0 && bal.netUSD > 0) {
-        netBalancelbp = (bal.netUSD * 89000) + bal.netLBP;
-        netBalanceusd = bal.netUSD;
+        netBalancelbp = (bal.netUSD * 90000) + bal.netLBP;
+        netBalanceusd = bal.netUSD - (bal.netLBP / 90000);
     } 
     else {
         // Keep the original va
