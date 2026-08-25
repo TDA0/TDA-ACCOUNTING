@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TDA Accounting — Daily Spending & Income</title>
+<title>Accounting — Daily Spending & Income</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231E3D32'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -923,9 +923,12 @@
       <label>Email</label>
       <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
     </div>
-    <div class="field" style="margin-bottom:16px;">
+    <div class="field" style="margin-bottom:8px;">
       <label>Password</label>
       <input type="password" id="auth-password" placeholder="At least 6 characters" autocomplete="current-password">
+    </div>
+    <div id="auth-forgot-row" style="text-align:right;margin-bottom:16px;">
+      <button type="button" class="btn ghost-teal small" id="btn-forgot-password" style="border:none;background:transparent;padding:2px 0;">Forgot password?</button>
     </div>
     <button class="btn brass" id="auth-submit" style="width:100%;">🔑 Log In</button>
     <div class="auth-divider">or</div>
@@ -941,7 +944,7 @@
       <div class="head-row">
         <div>
           <p class="eyebrow">💰 Personal Ledger</p>
-          <h1>TDA Accounting</h1>
+          <h1>Accounting</h1>
           <p>Daily spending &amp; income, tracked in USD and LBP</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -1373,6 +1376,47 @@
       <button class="btn subtle" id="contact-cancel" type="button">Cancel</button>
     </div>
     <p style="font-size:11.5px;color:var(--muted);margin:12px 0 0;line-height:1.5;">This opens your device's email app with a pre-filled message — nothing is sent automatically.</p>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-forgot">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-forgot-close" type="button" aria-label="Close">&times;</button>
+    <h2>🔑 Reset your password</h2>
+    <p class="modal-sub">Enter your account email and we'll send you a link to set a new password.</p>
+    <div id="forgot-error" class="auth-error" style="display:none;"></div>
+    <div id="forgot-sent" class="auth-error" style="display:none;background:#dcecdf;color:var(--green-ok);border-color:var(--green-ok);"></div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Email</label>
+      <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="btn-row">
+      <button class="btn brass" id="forgot-send" type="button" style="flex:1;">✉️ Send reset link</button>
+      <button class="btn subtle" id="forgot-cancel" type="button">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE / SET NEW PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-change-password">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-change-password-close" type="button" aria-label="Close">&times;</button>
+    <h2 id="change-password-title">🔒 Change password</h2>
+    <p class="modal-sub" id="change-password-sub">Choose a new password for your account.</p>
+    <div id="change-password-error" class="auth-error" style="display:none;"></div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>New password</label>
+      <input type="password" id="change-password-new" placeholder="At least 6 characters" autocomplete="new-password">
+    </div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Confirm new password</label>
+      <input type="password" id="change-password-confirm" placeholder="Re-enter password" autocomplete="new-password">
+    </div>
+    <div class="btn-row">
+      <button class="btn brass" id="change-password-submit" type="button" style="flex:1;">✅ Update password</button>
+      <button class="btn subtle" id="change-password-cancel" type="button">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -2804,12 +2848,17 @@
         <div class="profile-row"><span class="lbl">Total entries</span><span class="val">${entries.length}</span></div>
         <div class="profile-row"><span class="lbl">Sync</span><span class="val"><span class="sync-badge cloud"><span class="dot"></span>Cloud (Supabase)</span></span></div>
       `;
-      actions.innerHTML = `<button class="btn ghost" id="btn-signout">🚪 Sign out</button>`;
+      actions.innerHTML = `
+        <div class="btn-row">
+          <button class="btn ghost-teal" id="btn-change-password">🔒 Change password</button>
+          <button class="btn ghost" id="btn-signout">🚪 Sign out</button>
+        </div>`;
       $('btn-signout').addEventListener('click', async ()=>{
         await supabaseClient.auth.signOut();
         currentUser = null;
         location.reload();
       });
+      $('btn-change-password').addEventListener('click', ()=> openChangePasswordModal(false));
     } else {
       info.innerHTML = `
         <div class="profile-row"><span class="lbl">Total entries</span><span class="val">${entries.length}</span></div>
@@ -2838,6 +2887,7 @@
     $('auth-submit').textContent = tab === 'login' ? '🔑 Log In' : '✨ Sign Up';
     $('auth-password').setAttribute('autocomplete', tab === 'login' ? 'current-password' : 'new-password');
     $('auth-error').style.display = 'none';
+    $('auth-forgot-row').style.display = tab === 'login' ? 'block' : 'none';
   }
   document.querySelectorAll('.auth-tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=> setAuthTab(btn.dataset.authtab));
@@ -2902,6 +2952,101 @@
     enterApp();
   });
 
+  // ---------- forgot password ----------
+  $('btn-forgot-password').addEventListener('click', ()=>{
+    $('forgot-error').style.display = 'none';
+    $('forgot-sent').style.display = 'none';
+    $('forgot-email').value = $('auth-email').value.trim();
+    openModal('modal-forgot');
+  });
+  $('modal-forgot-close').addEventListener('click', ()=> closeModal('modal-forgot'));
+  $('forgot-cancel').addEventListener('click', ()=> closeModal('modal-forgot'));
+
+  $('forgot-send').addEventListener('click', async ()=>{
+    const email = $('forgot-email').value.trim();
+    $('forgot-error').style.display = 'none';
+    $('forgot-sent').style.display = 'none';
+
+    if(!isSupabaseConfigured){
+      $('forgot-error').textContent = "Cloud sync isn't set up for this copy, so there's no account to reset.";
+      $('forgot-error').style.display = 'block';
+      return;
+    }
+    if(!email){
+      $('forgot-error').textContent = 'Enter your account email.';
+      $('forgot-error').style.display = 'block';
+      return;
+    }
+
+    const btn = $('forgot-send');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try{
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: location.origin + location.pathname
+      });
+      if(error) throw error;
+      $('forgot-sent').textContent = 'Check your email for a link to reset your password.';
+      $('forgot-sent').style.display = 'block';
+    } catch(e){
+      $('forgot-error').textContent = e.message || 'Something went wrong. Try again.';
+      $('forgot-error').style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = original;
+  });
+
+  // ---------- change / set new password ----------
+  let isRecoveryFlow = false;
+  function openChangePasswordModal(isRecovery){
+    isRecoveryFlow = !!isRecovery;
+    $('change-password-error').style.display = 'none';
+    $('change-password-new').value = '';
+    $('change-password-confirm').value = '';
+    $('change-password-title').textContent = isRecovery ? '🔑 Set a new password' : '🔒 Change password';
+    $('change-password-sub').textContent = isRecovery
+      ? "You're resetting your password — choose a new one to finish."
+      : 'Choose a new password for your account.';
+    openModal('modal-change-password');
+  }
+  $('modal-change-password-close').addEventListener('click', ()=> closeModal('modal-change-password'));
+  $('change-password-cancel').addEventListener('click', ()=> closeModal('modal-change-password'));
+
+  $('change-password-submit').addEventListener('click', async ()=>{
+    const pw1 = $('change-password-new').value;
+    const pw2 = $('change-password-confirm').value;
+    $('change-password-error').style.display = 'none';
+
+    if(pw1.length < 6){
+      $('change-password-error').textContent = 'Password must be at least 6 characters.';
+      $('change-password-error').style.display = 'block';
+      return;
+    }
+    if(pw1 !== pw2){
+      $('change-password-error').textContent = "Passwords don't match.";
+      $('change-password-error').style.display = 'block';
+      return;
+    }
+
+    const btn = $('change-password-submit');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Updating…';
+    try{
+      const { error } = await supabaseClient.auth.updateUser({ password: pw1 });
+      if(error) throw error;
+      closeModal('modal-change-password');
+      toast('Password updated');
+      isRecoveryFlow = false;
+    } catch(e){
+      $('change-password-error').textContent = e.message || 'Something went wrong. Try again.';
+      $('change-password-error').style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = original;
+  });
+
   function enterApp(){
     $('auth-screen').style.display = 'none';
     $('main-app').style.display = 'block';
@@ -2910,6 +3055,13 @@
 
   async function bootstrap(){
     if(isSupabaseConfigured && supabaseClient){
+      supabaseClient.auth.onAuthStateChange((event, session)=>{
+        if(event === 'PASSWORD_RECOVERY' && session && session.user){
+          currentUser = session.user;
+          if($('main-app').style.display !== 'block') enterApp();
+          openChangePasswordModal(true);
+        }
+      });
       const { data } = await supabaseClient.auth.getSession();
       if(data && data.session && data.session.user){
         currentUser = data.session.user;
