@@ -4464,23 +4464,29 @@
     renderAvatar();
 
     const bal = computeStats(entries);
-    let netBalanceusd, netBalancelbp;
+    let netBalanceusd, netBalancelbp, tlbp, tusd;
 
     if (bal.netUSD < 0 && bal.netLBP > 0) {
         // USD is negative, use LBP to cover it
         netBalanceusd = bal.netUSD + (bal.netLBP / 90000);
         netBalancelbp = 0;
+
+        tusd = fmtUSD(netBalanceusd) + ' left' + ' (covered by LBP) <' + fmtUSD(bal.netUSD) + '>';
     } else if (bal.netLBP < 0 && bal.netUSD > 0) {
         // LBP is negative, use USD to cover it
         netBalancelbp = bal.netLBP + (bal.netUSD * 90000);
         netBalanceusd = 0;
+        tlbp = fmtLBP(netBalancelbp) + ' left' + ' (covered by USD) <' + fmtLBP(bal.netLBP) + '>';
     } else {
         // Keep original values
         netBalanceusd = bal.netUSD;
         netBalancelbp = bal.netLBP;
+
+        tusd = fmtUSD(netBalanceusd) + ' left';
+        tlbp = fmtLBP(netBalancelbp) + ' left';
     }
-    $('profile-balance-usd').textContent = fmtUSD(netBalanceusd) + ' left';
-    $('profile-balance-lbp').textContent = fmtLBP(bal.netLBP) + ' left';
+    $('profile-balance-usd').textContent = tusd;
+    $('profile-balance-lbp').textContent = tlbp;
     const balCard = $('profile-balance-card');
     balCard.style.background = (netBalanceusd < 0 || netBalancelbp < 0)
       ? 'linear-gradient(135deg, var(--brick) 0%, #7a332a 100%)'
