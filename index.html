@@ -4464,8 +4464,22 @@
     renderAvatar();
 
     const bal = computeStats(entries);
-    $('profile-balance-usd').textContent = fmtUSD(bal.netUSD) + ' left';
-    $('profile-balance-lbp').textContent = fmtLBP(bal.netLBP) + ' left';
+    let netBalanceusd,netBalancelbp;
+
+    if (bal.netUSD < 0 && bal.netLBP > 0) {
+        netBalance = (bal.netLBP / 90000) + bal.netUSD;
+    } 
+    else if (bal.netLBP < 0 && bal.netUSD > 0) {
+        netBalancelbp = (bal.netUSD * 89000) + bal.netLBP;
+    } 
+    else {
+        // Keep the original va
+        // lues
+        netBalanceusd = bal.netUSD;
+        netBalancelbp = bal.netLBP;
+    }
+    $('profile-balance-usd').textContent = fmtUSD(netBalanceusd) + ' left';
+    $('profile-balance-lbp').textContent = fmtLBP(netBalancelbp) + ' left';
     const balCard = $('profile-balance-card');
     balCard.style.background = (bal.netUSD < 0 || bal.netLBP < 0)
       ? 'linear-gradient(135deg, var(--brick) 0%, #7a332a 100%)'
