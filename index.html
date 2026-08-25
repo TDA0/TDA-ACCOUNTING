@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accounting — Daily Spending & Income</title>
+<title>TDA Accounting — Daily Spending & Income</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231E3D32'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -239,6 +239,7 @@
   .btn.ghost{background:transparent;color:var(--brick);border:1px solid var(--brick);padding:6px 12px;font-size:12.5px;box-shadow:none;}
   .btn.ghost:hover{background:var(--brick);color:var(--white);transform:translateY(-1px);}
   .btn.ghost.confirming{background:var(--brick);color:var(--white);border-color:var(--brick);animation:confirmPulse 1s ease-in-out infinite;}
+  .btn.confirming{background:var(--brick) !important;color:var(--white) !important;border-color:var(--brick) !important;animation:confirmPulse 1s ease-in-out infinite;}
   @keyframes confirmPulse{0%,100%{box-shadow:0 0 0 0 rgba(156,68,56,0.5);}50%{box-shadow:0 0 0 6px rgba(156,68,56,0);}}
   .btn.ghost-teal{background:transparent;color:var(--teal);border:1px solid var(--teal);padding:6px 12px;font-size:12.5px;box-shadow:none;}
   .btn.ghost-teal:hover{background:var(--teal);color:var(--white);transform:translateY(-1px);}
@@ -649,11 +650,45 @@
   .sync-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
   .sync-badge.banned{background:#f2d9d6;color:var(--brick);}
 
-  .admin-user-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--rule);flex-wrap:wrap;}
+  .admin-user-row{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:13px 8px;border-bottom:1px solid var(--rule);flex-wrap:wrap;
+    border-radius:8px;transition:background-color .15s ease;
+  }
+  .admin-user-row:hover{background:rgba(47,100,120,0.045);}
   .admin-user-row:last-child{border-bottom:none;}
-  .admin-user-row .au-email{flex:1;min-width:160px;font-weight:600;font-size:13.5px;word-break:break-word;}
-  .admin-user-row .au-meta{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
-  .admin-user-row .au-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .admin-user-row .au-left{display:flex;align-items:flex-start;gap:11px;min-width:220px;flex:1;}
+  .admin-user-row .au-avatar{
+    width:36px;height:36px;border-radius:50%;flex-shrink:0;margin-top:1px;
+    background:linear-gradient(135deg,var(--brass-dim) 0%,var(--brass) 100%);
+    color:var(--white);display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;font-size:14px;
+    box-shadow:0 2px 6px -2px rgba(147,112,47,0.5);
+  }
+  .admin-user-row .au-avatar.is-banned{background:linear-gradient(135deg,#c98f87 0%,var(--brick) 100%);box-shadow:0 2px 6px -2px rgba(156,68,56,0.5);}
+  .admin-user-row .au-email{flex:1;min-width:160px;font-weight:600;font-size:13.5px;word-break:break-word;line-height:1.35;}
+  .admin-user-row .au-meta{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6;}
+  .admin-user-row .au-ban-reason{font-size:11.5px;color:var(--brick);margin-top:3px;font-style:italic;line-height:1.4;}
+  .admin-user-row .au-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
+  .ban-notice{
+    background:linear-gradient(180deg,#f7e6e3,#f2d9d5);
+    border:1px solid #dba79f;
+    color:#7a2f24;
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    font-size:13.5px;
+    line-height:1.55;
+  }
+  .ban-notice .bn-title{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin:0 0 4px;color:var(--brick);}
+  .ban-notice .bn-reason{margin:0;}
+  .ban-notice .bn-until{font-family:'Space Mono',monospace;font-size:11.5px;opacity:0.8;margin-top:6px;}
+  .ban-reason-box{
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;
+    padding:10px 12px;font-size:12.5px;color:var(--ink);margin-bottom:12px;
+  }
+  .ban-reason-box b{color:var(--brick);}
+  .duration-hint{font-size:11.5px;color:var(--muted);margin-top:-8px;margin-bottom:12px;}
 
   /* ===== Menu button / responsive off-canvas nav ===== */
   .app{position:relative;}
@@ -991,6 +1026,7 @@
       <button type="button" class="auth-tab-btn active" data-authtab="login">Log In</button>
       <button type="button" class="auth-tab-btn" data-authtab="signup">Sign Up</button>
     </div>
+    <div id="auth-ban-notice" class="ban-notice" style="display:none;"></div>
     <div id="auth-error" class="auth-error" style="display:none;"></div>
     <div class="field" style="margin-bottom:12px;">
       <label>Email</label>
@@ -1017,7 +1053,7 @@
       <div class="head-row">
         <div>
           <p class="eyebrow">💰 Personal Ledger</p>
-          <h1>Accounting</h1>
+          <h1>TDA Accounting</h1>
           <p>Daily spending &amp; income, tracked in USD and LBP</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -1382,9 +1418,11 @@
         </p>
         <p style="font-size:12px;color:var(--muted);background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;margin:0 0 14px;">
           🔒 <b>About passwords:</b> Supabase never stores or exposes a password anyone can read back — not you,
-          not an admin, not even Supabase itself — accounts are secured with one-way hashing. There's no "reveal"
-          button here because that data doesn't exist anywhere retrievable. If a user is locked out, use
-          <b>Send reset link</b> below to email them a secure reset, or <b>Set new password</b> to assign one directly.
+          not an admin, not even Supabase itself — accounts are secured with one-way hashing, so there's no
+          "reveal" button because that data doesn't exist anywhere retrievable. If you need into an account,
+          use <b>🔓 Log in as user</b> below to open a real session for them without ever touching a password —
+          that's the safer, auditable version of "just show me the password." For lockouts, use
+          <b>Send reset link</b> to email a secure reset, or <b>Set new password</b> to assign one directly.
         </p>
         <div id="admin-summary-grid" class="stat-grid" style="margin-bottom:14px;"></div>
         <div class="card" style="box-shadow:none;border-style:dashed;margin-bottom:14px;">
@@ -1435,11 +1473,18 @@
         <h2 id="admin-user-modal-title">Account</h2>
         <p class="modal-sub" id="admin-user-modal-sub"></p>
         <div id="admin-user-meta" class="stat-grid" style="margin-bottom:14px;"></div>
-        <div class="btn-row" style="margin-bottom:14px;">
+        <div id="admin-user-ban-box" style="display:none;"></div>
+        <div class="btn-row" style="margin-bottom:8px;">
+          <button class="btn small brass" id="admin-btn-login-as">🔓 Log in as user</button>
           <button class="btn small ghost-teal" id="admin-btn-reset-link">🔑 Send reset link</button>
           <button class="btn small ghost-teal" id="admin-btn-set-password">🛠️ Set new password</button>
           <button class="btn small subtle" id="admin-btn-export-entries">⬇️ Export entries (CSV)</button>
           <button class="btn small ghost" id="admin-btn-copy-id">📋 Copy user ID</button>
+        </div>
+        <div class="btn-row" style="margin-bottom:14px;">
+          <button class="btn small ghost" id="admin-btn-ban">⛔ Ban user</button>
+          <button class="btn small subtle" id="admin-btn-unban" style="display:none;">✅ Unban user</button>
+          <button class="btn small ghost" id="admin-btn-wipe">🧹 Clear all their data</button>
         </div>
         <div id="admin-user-summary" class="stat-grid" style="margin-bottom:14px;"></div>
         <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:10px 0 6px;">Add / fix an entry for this user</h3>
@@ -1482,6 +1527,35 @@
           <button class="btn subtle" id="admin-setpw-cancel">Cancel</button>
         </div>
         <p style="font-size:11.5px;color:var(--muted);margin-top:10px;">This overwrites their password — it doesn't reveal the current one (nothing can). Tell the user their new password through a safe channel.</p>
+      </div>
+    </div>
+
+    <!-- Admin: ban a user with a reason + duration -->
+    <div class="modal-overlay" id="modal-admin-ban">
+      <div class="modal-box">
+        <button class="modal-close" id="modal-admin-ban-close" type="button" aria-label="Close">&times;</button>
+        <h2>⛔ Ban user</h2>
+        <p class="modal-sub" id="admin-ban-sub"></p>
+        <div class="field" style="margin-bottom:12px;">
+          <label>Reason (shown to the user)</label>
+          <input type="text" id="admin-ban-reason" placeholder="e.g. Spamming other users" maxlength="200">
+        </div>
+        <div class="field" style="margin-bottom:4px;">
+          <label>Duration</label>
+          <select id="admin-ban-duration">
+            <option value="24">1 day</option>
+            <option value="72">3 days</option>
+            <option value="168" selected>7 days</option>
+            <option value="720">30 days</option>
+            <option value="forever">Forever</option>
+          </select>
+        </div>
+        <p class="duration-hint">They'll see this reason and the ban length on the login screen if they try to sign in.</p>
+        <div id="admin-ban-error" class="auth-error" style="display:none;"></div>
+        <div class="btn-row">
+          <button class="btn ghost" id="admin-ban-submit">⛔ Confirm ban</button>
+          <button class="btn subtle" id="admin-ban-cancel">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -2117,6 +2191,107 @@
     return data;
   }
 
+  // Same as adminCall but usable from the logged-out auth screen (e.g. to
+  // look up a banned account's reason before anyone has a session). The
+  // admin-actions function must allow this one action ('get_ban_info')
+  // without requiring an admin session — see the note in the chat reply.
+  async function publicAdminCall(action, payload){
+    if(!isSupabaseConfigured || !supabaseClient) return null;
+    try{
+      const { data, error } = await supabaseClient.functions.invoke('admin-actions', {
+        body: { action, ...(payload||{}) }
+      });
+      if(error) return null;
+      return data;
+    } catch(e){ return null; }
+  }
+
+  // ---------- admin: log in as a user (impersonation) ----------
+  // Never touches a password. The server generates a one-time Supabase
+  // magic-link for the target account (auth.admin.generateLink) and this
+  // just opens it in a new tab, which signs that tab in as them. Two-click
+  // confirm because it opens a real session for another account.
+  async function loginAsUser(u, btnEl){
+    if(btnEl && btnEl.dataset.confirm !== '1'){
+      btnEl.dataset.confirm = '1';
+      const original = btnEl.textContent;
+      btnEl.textContent = '⚠️ Confirm?';
+      btnEl.classList.add('confirming');
+      setTimeout(()=>{ if(btnEl){ btnEl.dataset.confirm='0'; btnEl.textContent = original; btnEl.classList.remove('confirming'); } }, 2500);
+      return;
+    }
+    try{
+      const res = await adminCall('impersonate_user', { userId: u.id });
+      if(!res || !res.link) throw new Error('No sign-in link returned');
+      window.open(res.link, '_blank', 'noopener');
+      toast('Opened a session for ' + (u.email || u.id) + ' in a new tab');
+    } catch(e){ toast(e.message || 'Could not log in as this user', true); }
+  }
+
+  // ---------- admin: ban with reason + duration ----------
+  let adminBanTarget = null;
+  function openAdminBanModal(u){
+    adminBanTarget = u;
+    $('admin-ban-sub').textContent = `For ${u.email || u.id}`;
+    $('admin-ban-reason').value = '';
+    $('admin-ban-duration').value = '168';
+    $('admin-ban-error').style.display = 'none';
+    openModal('modal-admin-ban');
+  }
+  $('modal-admin-ban-close').addEventListener('click', ()=> closeModal('modal-admin-ban'));
+  $('admin-ban-cancel').addEventListener('click', ()=> closeModal('modal-admin-ban'));
+  $('admin-ban-submit').addEventListener('click', async ()=>{
+    if(!adminBanTarget) return;
+    const reason = $('admin-ban-reason').value.trim();
+    const durationVal = $('admin-ban-duration').value;
+    $('admin-ban-error').style.display = 'none';
+    if(!reason){
+      $('admin-ban-error').textContent = 'Give a reason — the user will see it.';
+      $('admin-ban-error').style.display = 'block';
+      return;
+    }
+    const btn = $('admin-ban-submit');
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Banning…';
+    try{
+      await adminCall('ban_user', {
+        userId: adminBanTarget.id,
+        reason,
+        durationHours: durationVal === 'forever' ? null : Number(durationVal)
+      });
+      toast('User banned');
+      closeModal('modal-admin-ban');
+      renderAdminUsers();
+      if($('modal-admin-user').classList.contains('open') && adminTargetUser && adminTargetUser.id === adminBanTarget.id){
+        openAdminUserModal(adminBanTarget);
+      }
+    } catch(e){
+      $('admin-ban-error').textContent = e.message || 'Ban failed';
+      $('admin-ban-error').style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = original;
+  });
+
+  // ---------- admin: wipe a user's data ----------
+  async function wipeUserData(u, btnEl){
+    if(btnEl.dataset.confirm !== '1'){
+      btnEl.dataset.confirm = '1';
+      const original = btnEl.textContent;
+      btnEl.textContent = '⚠️ Confirm — deletes everything?';
+      btnEl.classList.add('confirming');
+      setTimeout(()=>{ if(btnEl){ btnEl.dataset.confirm='0'; btnEl.textContent = original; btnEl.classList.remove('confirming'); } }, 3000);
+      return;
+    }
+    try{
+      await adminCall('wipe_user_data', { userId: u.id });
+      toast('Cleared all data for ' + (u.email || u.id));
+      adminTargetEntries = [];
+      renderAdminUserEntries();
+      $('admin-user-summary').innerHTML = statBoxesHtml(computeStats([]));
+      renderAdminUsers();
+    } catch(e){ toast(e.message || 'Could not clear this user\'s data', true); }
+  }
+
   async function checkAdminAccess(){
     isAdminUser = false;
     if(isSupabaseConfigured && supabaseClient && currentUser){
@@ -2241,14 +2416,19 @@
     }
     wrap.innerHTML = view.map(u => `
       <div class="admin-user-row" data-id="${escapeHtml(u.id)}">
-        <div>
-          <div class="au-email">${escapeHtml(u.email || '(no email)')}</div>
-          <div class="au-meta">joined ${u.created_at ? new Date(u.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}
-            ${u.last_sign_in_at ? ' · last active ' + new Date(u.last_sign_in_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}
-            · ${u.entryCount ?? 0} entries · ${adminBadgeHtml(u)}</div>
+        <div class="au-left">
+          <div class="au-avatar${u.banned ? ' is-banned' : ''}">${escapeHtml((u.email||'?').charAt(0).toUpperCase())}</div>
+          <div>
+            <div class="au-email">${escapeHtml(u.email || '(no email)')}</div>
+            <div class="au-meta">joined ${u.created_at ? new Date(u.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}
+              ${u.last_sign_in_at ? ' · last active ' + new Date(u.last_sign_in_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}
+              · ${u.entryCount ?? 0} entries · ${adminBadgeHtml(u)}</div>
+            ${u.banned && u.ban_reason ? `<div class="au-ban-reason">"${escapeHtml(u.ban_reason)}"${u.ban_until ? ' · until ' + new Date(u.ban_until).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ' · forever'}</div>` : ''}
+          </div>
         </div>
         <div class="au-actions">
           <button class="btn small ghost-teal admin-view-btn">👁️ View / fix account</button>
+          <button class="btn small subtle admin-login-as-btn">🔓 Log in as user</button>
           <button class="btn small subtle admin-reset-btn">🔑 Reset link</button>
           ${u.banned
             ? `<button class="btn small subtle admin-unban-btn">✅ Unban</button>`
@@ -2271,22 +2451,18 @@
         if(u) await sendAdminResetLink(u);
       });
     });
-    wrap.querySelectorAll('.admin-ban-btn').forEach(btn=>{
+    wrap.querySelectorAll('.admin-login-as-btn').forEach(btn=>{
       btn.addEventListener('click', async (ev)=>{
-        const b = ev.currentTarget;
-        if(b.dataset.confirm !== '1'){
-          b.dataset.confirm = '1';
-          b.textContent = '⚠️ Confirm ban?';
-          b.classList.add('confirming');
-          setTimeout(()=>{ if(b){ b.dataset.confirm='0'; b.textContent='⛔ Ban'; b.classList.remove('confirming'); } }, 2500);
-          return;
-        }
-        const id = b.closest('.admin-user-row').dataset.id;
-        try{
-          await adminCall('ban_user', { userId: id });
-          toast('User banned');
-          renderAdminUsers();
-        } catch(e){ toast(e.message || 'Ban failed', true); }
+        const id = ev.currentTarget.closest('.admin-user-row').dataset.id;
+        const u = adminUsersCache.find(x=>x.id===id);
+        if(u) await loginAsUser(u, ev.currentTarget);
+      });
+    });
+    wrap.querySelectorAll('.admin-ban-btn').forEach(btn=>{
+      btn.addEventListener('click', (ev)=>{
+        const id = ev.currentTarget.closest('.admin-user-row').dataset.id;
+        const u = adminUsersCache.find(x=>x.id===id);
+        if(u) openAdminBanModal(u);
       });
     });
     wrap.querySelectorAll('.admin-unban-btn').forEach(btn=>{
@@ -2350,6 +2526,19 @@
       <div class="stat-box"><div class="lbl">Email confirmed</div><div class="val">${u.email_confirmed_at ? '✅ Yes' : '❌ No'}</div></div>
       <div class="stat-box"><div class="lbl">Last active</div><div class="val" style="font-size:13px;">${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'Never'}</div></div>
     `;
+    const banBox = $('admin-user-ban-box');
+    if(u.banned){
+      banBox.style.display = 'block';
+      banBox.innerHTML = `<div class="ban-reason-box">⛔ <b>Banned</b>${u.ban_reason ? ' — "' + escapeHtml(u.ban_reason) + '"' : ''}${u.ban_until ? ' · until ' + new Date(u.ban_until).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ' · forever'}</div>`;
+    } else {
+      banBox.style.display = 'none';
+      banBox.innerHTML = '';
+    }
+    $('admin-btn-ban').style.display = u.banned ? 'none' : '';
+    $('admin-btn-unban').style.display = u.banned ? '' : 'none';
+    $('admin-btn-login-as').dataset.confirm = '0';
+    $('admin-btn-wipe').dataset.confirm = '0';
+    $('admin-btn-wipe').textContent = '🧹 Clear all their data';
     $('admin-user-summary').innerHTML = '<div class="stat-box"><div class="lbl">Loading</div><div class="val">…</div></div>';
     $('admin-user-entries').innerHTML = '';
     resetAdminEntryForm();
@@ -2365,6 +2554,26 @@
     }
   }
   $('modal-admin-user-close').addEventListener('click', ()=> closeModal('modal-admin-user'));
+  $('admin-btn-login-as').addEventListener('click', (ev)=>{
+    if(adminTargetUser) loginAsUser(adminTargetUser, ev.currentTarget);
+  });
+  $('admin-btn-ban').addEventListener('click', ()=>{
+    if(adminTargetUser) openAdminBanModal(adminTargetUser);
+  });
+  $('admin-btn-unban').addEventListener('click', async ()=>{
+    if(!adminTargetUser) return;
+    try{
+      await adminCall('unban_user', { userId: adminTargetUser.id });
+      toast('User unbanned');
+      const u = adminTargetUser;
+      u.banned = false; u.ban_reason = null; u.ban_until = null;
+      openAdminUserModal(u);
+      renderAdminUsers();
+    } catch(e){ toast(e.message || 'Unban failed', true); }
+  });
+  $('admin-btn-wipe').addEventListener('click', (ev)=>{
+    if(adminTargetUser) wipeUserData(adminTargetUser, ev.currentTarget);
+  });
   $('admin-btn-copy-id').addEventListener('click', async ()=>{
     if(!adminTargetUser) return;
     try{ await navigator.clipboard.writeText(adminTargetUser.id); toast('User ID copied'); }
@@ -4281,15 +4490,36 @@
   });
 
   function showAuthError(msg){
+    $('auth-ban-notice').style.display = 'none';
     const el = $('auth-error');
     el.textContent = msg;
     el.style.display = 'block';
+  }
+
+  async function showBanNoticeIfApplicable(email, rawMessage){
+    // Supabase itself refuses sign-in for a banned account, so the error
+    // text is already the tell — we just dress it up with the reason and
+    // expiry that the admin set (stored in the account's own metadata).
+    if(!/banned/i.test(rawMessage || '')) return false;
+    const info = await publicAdminCall('get_ban_info', { email });
+    const el = $('auth-ban-notice');
+    $('auth-error').style.display = 'none';
+    const reason = info && info.reason ? info.reason : null;
+    const until = info && info.until ? new Date(info.until).toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}) : null;
+    el.innerHTML = `
+      <p class="bn-title">⛔ This account is banned</p>
+      <p class="bn-reason">${reason ? 'Reason: ' + escapeHtml(reason) : "No reason was recorded for this ban."}</p>
+      <p class="bn-until">${until ? 'Banned until ' + until : 'This ban does not expire.'}</p>
+    `;
+    el.style.display = 'block';
+    return true;
   }
 
   $('auth-submit').addEventListener('click', async ()=>{
     const email = $('auth-email').value.trim();
     const password = $('auth-password').value;
     $('auth-error').style.display = 'none';
+    $('auth-ban-notice').style.display = 'none';
 
     if(!isSupabaseConfigured){
       $('auth-config-note').style.display = 'block';
@@ -4327,7 +4557,8 @@
         }
       }
     } catch(e){
-      showAuthError(e.message || 'Something went wrong. Try again.');
+      const handled = authTab === 'login' && await showBanNoticeIfApplicable(email, e.message);
+      if(!handled) showAuthError(e.message || 'Something went wrong. Try again.');
     }
     btn.disabled = false;
     btn.textContent = authTab === 'login' ? 'Log In' : 'Sign Up';
