@@ -4480,7 +4480,7 @@
         netBalancelbp = bal.netLBP;
     }
     $('profile-balance-usd').textContent = fmtUSD(netBalanceusd) + ' left';
-    $('profile-balance-lbp').textContent = fmtLBP(netBalancelbp) + ' left';
+    $('profile-balance-lbp').textContent = fmtLBP(bal.netLBP) + ' left';
     const balCard = $('profile-balance-card');
     balCard.style.background = (netBalanceusd < 0 || netBalancelbp < 0)
       ? 'linear-gradient(135deg, var(--brick) 0%, #7a332a 100%)'
