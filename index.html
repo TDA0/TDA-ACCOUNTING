@@ -4472,11 +4472,13 @@
         netBalancelbp = 0;
 
         tusd = fmtUSD(netBalanceusd) + ' left' + ' (covered by LBP) <' + fmtUSD(bal.netUSD) + '>';
+        tlbp = fmtLBP(netBalancelbp) + ' left';
     } else if (bal.netLBP < 0 && bal.netUSD > 0) {
         // LBP is negative, use USD to cover it
         netBalancelbp = bal.netLBP + (bal.netUSD * 90000);
         netBalanceusd = 0;
         tlbp = fmtLBP(netBalancelbp) + ' left' + ' (covered by USD) <' + fmtLBP(bal.netLBP) + '>';
+        tusd = fmtUSD(netBalanceusd) + ' left';
     } else {
         // Keep original values
         netBalanceusd = bal.netUSD;
