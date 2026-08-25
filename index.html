@@ -4464,19 +4464,20 @@
     renderAvatar();
 
     const bal = computeStats(entries);
-    let netBalanceusd,netBalancelbp;
+    let netBalanceusd, netBalancelbp;
 
     if (bal.netUSD < 0 && bal.netLBP > 0) {
-        netBalanceusd = (bal.netLBP / 90000) + bal.netUSD;
-        netBalancelbp = bal.netLBP - (bal.netUSD * 90000);
+        // USD is negative, use LBP to cover it
+        netBalanceusd = 0;
+        netBalancelbp = bal.netLBP + (bal.netUSD * 90000);
     } 
     else if (bal.netLBP < 0 && bal.netUSD > 0) {
-        netBalancelbp = (bal.netUSD * 90000) + bal.netLBP;
-        netBalanceusd = bal.netUSD - (bal.netLBP / 90000);
+        // LBP is negative, use USD to cover it
+        netBalancelbp = 0;
+        netBalanceusd = bal.netUSD + (bal.netLBP / 89000);
     } 
     else {
-        // Keep the original va
-        // lues
+        // Keep original values
         netBalanceusd = bal.netUSD;
         netBalancelbp = bal.netLBP;
     }
