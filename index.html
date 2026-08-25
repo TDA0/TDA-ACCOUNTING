@@ -4470,13 +4470,11 @@
         // USD is negative, use LBP to cover it
         netBalanceusd = bal.netUSD + (bal.netLBP / 90000);
         netBalancelbp = 0;
-    } 
-    else if (bal.netLBP < 0 && bal.netUSD > 0) {
+    } else if (bal.netLBP < 0 && bal.netUSD > 0) {
         // LBP is negative, use USD to cover it
         netBalancelbp = bal.netLBP + (bal.netUSD * 90000);
         netBalanceusd = 0;
-    } 
-    else {
+    } else {
         // Keep original values
         netBalanceusd = bal.netUSD;
         netBalancelbp = bal.netLBP;
