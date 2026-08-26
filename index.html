@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accounting — Daily Spending & Income</title>
+<title>TDA Accounting — Daily Spending & Income</title>
 <script>
   // Applied as early as possible (before first paint) so the app never
   // flashes the wrong theme or a Quick Add button the user chose to hide.
@@ -887,7 +887,30 @@
     margin:0 auto;
     box-shadow:0 2px 4px rgba(31,42,36,0.05), 0 18px 40px -20px rgba(31,42,36,0.28);
     box-sizing:border-box;
+    position:relative;
+    overflow:hidden;
   }
+  /* Tiled "TDA" watermark behind the report content. An SVG tile (rotated,
+     low-opacity text) repeated as a background image, rather than a single
+     centered mark, so it still shows on every printed/PDF page even though
+     this is one continuous div with no real page breaks in the DOM.
+     print-color-adjust forces browsers/print dialogs to keep it instead of
+     stripping background art to save ink. */
+  .report-doc::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='230'%3E%3Ctext x='-10' y='120' font-family='Fraunces, serif' font-weight='700' font-size='34' fill='%231E3D32' fill-opacity='0.055' transform='rotate(-32 115 115)'%3ETDA%3C/text%3E%3C/svg%3E");
+    background-repeat:repeat;
+    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact;
+  }
+  html.theme-dark .report-doc::before{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='230'%3E%3Ctext x='-10' y='120' font-family='Fraunces, serif' font-weight='700' font-size='34' fill='%23000000' fill-opacity='0.1' transform='rotate(-32 115 115)'%3ETDA%3C/text%3E%3C/svg%3E");
+  }
+  .report-doc > *{position:relative;z-index:1;}
   #reportOutput{
     padding:6px 0 4px;
     overflow-x:auto;
@@ -926,6 +949,20 @@
   .report-head h1{font-family:'Fraunces',serif;font-size:23px;margin:0 0 4px;color:var(--forest);}
   .report-head .sub{font-family:'Space Mono',monospace;font-size:12.5px;color:var(--muted);}
   .report-head .meta-right{text-align:right;line-height:1.6;}
+  .report-user-block{display:flex;align-items:center;gap:10px;margin:-8px 0 20px;}
+  .report-user-block .ru-avatar{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper);display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;font-size:14px;
+  }
+  .report-user-block .ru-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .report-user-block .ru-text{line-height:1.35;}
+  .report-user-block .ru-name{font-family:'Work Sans',sans-serif;font-weight:600;font-size:13px;color:var(--ink);}
+  .report-user-block .ru-title{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.5px;color:var(--muted);}
+  @media (max-width:480px){
+    .report-user-block{margin-top:0;}
+  }
   .report-section{margin-bottom:26px;}
   .report-section h3{font-family:'Fraunces',serif;font-size:16px;color:var(--forest);border-bottom:1px solid var(--rule);padding-bottom:6px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
   .report-section h3 .idx{font-family:'Space Mono',monospace;font-size:11px;color:var(--brass);border:1px solid var(--brass);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1654,7 +1691,7 @@
           <div class="brand-mark" aria-hidden="true">💰</div>
           <div>
             <p class="eyebrow">Personal Ledger</p>
-            <h1>Accounting</h1>
+            <h1>TDA Accounting</h1>
             <p>Daily spending &amp; income, tracked in USD and LBP</p>
           </div>
         </div>
@@ -1691,7 +1728,6 @@
       </div>
       <div class="nav-group nav-group-account">
         <span class="nav-group-label">Account</span>
-        <button class="tab-btn" data-tab="admin" id="nav-admin-tab" style="display:none;"><span class="tab-ic">🛠️</span><span class="tab-lbl">Admin</span></button>
         <button class="tab-btn" data-tab="profile" id="nav-profile-tab"><span class="nav-profile-slot" id="nav-profile-slot"><span class="tab-ic">👤</span><span class="tab-lbl">Profile</span></span></button>
       </div>
     </nav>
@@ -2842,6 +2878,22 @@
             <button class="btn small brass" id="btn-username-save" type="button">💾 Save username</button>
           </div>
         </div>
+        <div class="field-row">
+          <div class="field" style="max-width:260px;">
+            <label>Job title</label>
+            <input type="text" id="profile-jobtitle" placeholder="e.g. Freelance Designer" maxlength="60">
+          </div>
+          <div class="field" style="max-width:170px;">
+            <label>Effective from</label>
+            <input type="date" id="profile-jobtitle-date">
+          </div>
+          <div class="field" style="flex:0;">
+            <label>&nbsp;</label>
+            <button class="btn small brass" id="btn-jobtitle-save" type="button">💾 Save job title</button>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Shown on your printed reports. Reports use whichever job title was effective for the period being reported — so a report for an old month shows the old job title, even if you've changed it since. Reports you've already printed or downloaded keep the job title they were made with.</p>
+        <div id="profile-jobtitle-history" style="margin-top:10px;"></div>
         <div id="profile-info" style="margin-top:10px;"></div>
       </div>
       <div class="card">
@@ -2943,7 +2995,7 @@
       <div class="footer-divider"></div>
 
       <div class="footer-inner">
-        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.2</span></div>
+        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.6</span></div>
         <div class="footer-links">
           <button type="button" id="btn-footer-about">ℹ️ About Us</button>
           <button type="button" id="btn-footer-rules">📜 Rules &amp; Terms</button>
@@ -2952,11 +3004,11 @@
         </div>
         <button type="button" class="bell-fab" id="btn-notify-optin" aria-label="Get email notifications from us" aria-pressed="false" title="Get occasional email updates from us">🔕</button>
         <div class="footer-social">
-          <a href="https://instagram.com" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-          <a href="https://x.com" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
-          <a href="https://facebook.com" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
-          <a href="https://wa.me" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
-          <a href="mailto:you@example.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+          <a href="https://www.instagram.com/tda.tech" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+          <a href="https://x.com/TDA_6" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+          <a href="https://www.facebook.com/share/1HkmZnhAks/" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+          <a href="https://wa.me/81158126" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
+          <a href="mailto:tdaspprt@gmail.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
         </div>
       </div>
     </div>
@@ -3009,11 +3061,11 @@
     <div class="about-cta">
       <p>Have feedback, a feature idea, or just want to say hi? We'd genuinely love to hear from you.</p>
       <div class="footer-social about-social">
-        <a href="https://instagram.com" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-        <a href="https://x.com" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
-        <a href="https://facebook.com" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
-        <a href="https://wa.me" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
-        <a href="mailto:you@example.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+        <a href="https://www.instagram.com/tda.tech" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="https://x.com/TDA_6" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+        <a href="https://www.facebook.com/share/1HkmZnhAks/" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+        <a href="https://wa.me/81158126" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
+        <a href="mailto:tdaspprt@gmail.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
       </div>
     </div>
   </div>
@@ -3199,8 +3251,8 @@
   // bug" and "Contact support" messages get sent. Both buttons open the
   // visitor's own email app with the message pre-filled; nothing is
   // sent from a server, so no other setup is needed.
-  const BUG_REPORT_EMAIL = 'you@example.com';
-  const SUPPORT_EMAIL = 'you@example.com';
+  const BUG_REPORT_EMAIL = 'tdaspprt@gmail.com';
+  const SUPPORT_EMAIL = 'tdaspprt@gmail.com';
   // =====================================================
 
   const DEFAULT_EXPENSE_CATS = ['Food','Transport','Rent','Utilities','Health','Shopping','Entertainment','Education','Other'];
@@ -3246,7 +3298,56 @@
   const ACCOUNTS_KEY = 'accounts';
   const BUDGETS_KEY = 'budgets';
   const RECURRING_KEY = 'recurring';
-  let myProfile = { username:'', avatar:'', notifyOptIn:false };
+  let myProfile = { username:'', avatar:'', notifyOptIn:false, jobTitle:'', jobHistory:[] };
+  // Returns the job title that was effective on a given date (YYYY-MM-DD),
+  // by looking through jobHistory for the most recent entry on or before
+  // that date. Falls back to the earliest known title if the date is
+  // before any recorded change, or to the plain jobTitle field if there's
+  // no history at all (e.g. an older save from before this feature).
+  function jobTitleAsOf(dateStr){
+    const hist = Array.isArray(myProfile.jobHistory) ? myProfile.jobHistory : [];
+    if(!hist.length) return myProfile.jobTitle || '';
+    const sorted = [...hist].sort((a,b)=> a.date.localeCompare(b.date));
+    let match = null;
+    for(const h of sorted){ if(h.date <= dateStr) match = h; else break; }
+    return (match || sorted[0]).title;
+  }
+  function monthEndStr(y, m1){
+    // last calendar day of month m1 (1-12) in year y, as 'YYYY-MM-DD'
+    const d = new Date(y, m1, 0);
+    return `${y}-${String(m1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function renderJobTitleHistory(){
+    const wrap = $('profile-jobtitle-history');
+    if(!wrap) return;
+    const hist = Array.isArray(myProfile.jobHistory) ? [...myProfile.jobHistory] : [];
+    if(!hist.length){ wrap.innerHTML = ''; return; }
+    hist.sort((a,b)=> b.date.localeCompare(a.date));
+    wrap.innerHTML = `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:4px;">Job title history</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        ${hist.map((h,i)=> `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;padding:6px 10px;background:var(--paper-2);border-radius:8px;">
+            <span><b>${escapeHtml(h.title)}</b> <span style="color:var(--muted);">— from ${h.date}</span></span>
+            <button type="button" class="btn small ghost jobhist-remove" data-idx="${i}" style="padding:3px 8px;font-size:11px;">🗑️</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    wrap.querySelectorAll('.jobhist-remove').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const idx = parseInt(btn.dataset.idx, 10);
+        const sorted = [...myProfile.jobHistory].sort((a,b)=> b.date.localeCompare(a.date));
+        const target = sorted[idx];
+        myProfile.jobHistory = myProfile.jobHistory.filter(h=> !(h.date===target.date && h.title===target.title));
+        const latest = [...myProfile.jobHistory].sort((a,b)=> a.date.localeCompare(b.date)).pop();
+        myProfile.jobTitle = latest ? latest.title : '';
+        $('profile-jobtitle').value = myProfile.jobTitle;
+        await saveProfile('Job title entry removed');
+        renderJobTitleHistory();
+      });
+    });
+  }
   // Recurring transaction rules. Each rule looks like:
   // { id, name, type:'expense'|'income', amount, currency, category,
   //   accountId, frequency:'daily'|'weekly'|'monthly'|'yearly',
@@ -4657,6 +4758,17 @@
         myProfile.username = parsed.username || '';
         myProfile.avatar = parsed.avatar || '';
         myProfile.notifyOptIn = !!parsed.notifyOptIn;
+        myProfile.jobTitle = parsed.jobTitle || '';
+        if(Array.isArray(parsed.jobHistory) && parsed.jobHistory.length){
+          myProfile.jobHistory = parsed.jobHistory;
+        } else if(myProfile.jobTitle){
+          // Migrating a profile saved before job title history existed —
+          // treat the single saved title as effective from the very start
+          // so old reports still resolve to something sensible.
+          myProfile.jobHistory = [{ date:'2000-01-01', title: myProfile.jobTitle }];
+        } else {
+          myProfile.jobHistory = [];
+        }
       }
     }catch(e){ /* keep defaults */ }
   }
@@ -4836,6 +4948,19 @@
     myProfile.username = name;
     renderAvatar();
     await saveProfile('Username saved');
+  });
+  $('btn-jobtitle-save').addEventListener('click', async ()=>{
+    const title = $('profile-jobtitle').value.trim();
+    const effDate = $('profile-jobtitle-date').value || todayISO();
+    if(!title){ alertInline('Enter a job title first.'); return; }
+    myProfile.jobTitle = title;
+    if(!Array.isArray(myProfile.jobHistory)) myProfile.jobHistory = [];
+    // Replace any existing entry for the same date (re-saving the same
+    // day just corrects it) rather than piling up duplicates.
+    myProfile.jobHistory = myProfile.jobHistory.filter(h=> h.date !== effDate);
+    myProfile.jobHistory.push({ date: effDate, title });
+    const ok = await saveProfile('Job title saved');
+    if(ok) renderJobTitleHistory();
   });
   if($('btn-export-my-csv')){
     $('btn-export-my-csv').addEventListener('click', ()=>{
@@ -5125,26 +5250,19 @@
 
   // ---------- admin: log in as a user (impersonation) ----------
   // Never touches a password. The server generates a one-time Supabase
-  // magic-link for the target account (auth.admin.generateLink) and this
-  // opens it in a new tab, which signs that tab in as them — the admin's
-  // own tab stays signed in as the admin. Two-click confirm because it
-  // opens a real session for another account.
+  // magic-link for the target account (auth.admin.generateLink), and we
+  // navigate THIS tab to it — the admin's own session here gets replaced
+  // by the target user's session (that's the point: it signs you in as
+  // them). Two-click confirm because it swaps out the admin's own tab.
   //
-  // Two bugs fixed here:
-  // 1) The tab used to open with `window.open(...)` AFTER an `await`.
-  //    Browsers only treat window.open as a trusted, non-popup-blocked
-  //    call when it happens synchronously inside the click handler —
-  //    once you `await` a network call first, that trust is gone and the
-  //    tab silently gets blocked, so "log in as user" looked like it did
-  //    nothing. Fix: open a blank tab synchronously, right on click, and
-  //    only navigate it to the real link once the server responds.
-  // 2) The call never told the server where to send the browser back to,
-  //    so `redirect_to` fell back to whatever the Edge Function assumes
-  //    (or Supabase's default Site URL) — the tab could land anywhere
-  //    except this app. Fix: pass this page's own URL as `redirectTo` and
-  //    have the server forward it into `generateLink({ redirectTo })`.
-  //    (Update your `impersonate_user` case in admin-actions to pass
-  //    `options: { redirectTo: payload.redirectTo }` into generateLink.)
+  // The call tells the server where to send the browser back to once the
+  // link is verified, so `redirect_to` doesn't fall back to whatever the
+  // Edge Function assumes (or Supabase's default Site URL) and end up
+  // somewhere outside this app. We pass this page's own URL as
+  // `redirectTo` and the server forwards it into
+  // `generateLink({ redirectTo })`.
+  // (Your `impersonate_user` case in admin-actions needs to pass
+  // `options: { redirectTo: payload.redirectTo }` into generateLink.)
   async function loginAsUser(u, btnEl){
     if(btnEl && btnEl.dataset.confirm !== '1'){
       btnEl.dataset.confirm = '1';
@@ -5154,31 +5272,21 @@
       setTimeout(()=>{ if(btnEl){ btnEl.dataset.confirm='0'; btnEl.textContent = original; btnEl.classList.remove('confirming'); } }, 2500);
       return;
     }
-    // Must happen synchronously, before any `await`, or it gets treated
-    // as a popup and blocked in most browsers.
-    const win = window.open('', '_blank');
-    if(win){
-      win.opener = null; // same tab-nabbing protection as noopener, but we keep our own reference so we can redirect it below
-      try{ win.document.write('<!doctype html><title>Signing in…</title><body style="font-family:system-ui,sans-serif;padding:48px 24px;color:#555;text-align:center;">Signing you in as this user…</body>'); } catch(e){}
-    }
+    const original = btnEl ? btnEl.textContent : null;
+    if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Signing in…'; }
     try{
       const res = await adminCall('impersonate_user', {
         userId: u.id,
         redirectTo: location.origin + location.pathname
       });
       if(!res || !res.link) throw new Error('No sign-in link returned');
-      if(win && !win.closed){
-        win.location.href = res.link;
-      } else {
-        // Popup blocked before we could pre-open it, or the person closed
-        // the tab while this was loading — try a direct open as a
-        // fallback (may still get blocked, since we're past the original
-        // click by now, but it's the best remaining option).
-        window.open(res.link, '_blank', 'noopener');
-      }
-      toast('Opened a session for ' + (u.email || u.id) + ' in a new tab');
+      // Navigate the current tab straight to the magic link — no new
+      // tab/window. The link itself redirects back to `redirectTo` (this
+      // app) once Supabase has verified it and set the session cookie, so
+      // this tab ends up back here, now signed in as the target user.
+      location.href = res.link;
     } catch(e){
-      if(win && !win.closed) win.close();
+      if(btnEl){ btnEl.disabled = false; btnEl.textContent = original; }
       toast(e.message || 'Could not log in as this user', true);
     }
   }
@@ -5341,13 +5449,14 @@
         isAdminUser = false;
       }
     }
-    $('nav-admin-tab').style.display = isAdminUser ? '' : 'none';
     if(!isAdminUser && $('panel-admin').classList.contains('active')){
       document.querySelector('.tab-btn[data-tab="add"]').click();
     }
     // Admin status resolves async (server round-trip), after the profile
     // tab may have already rendered without it — refresh so the 🛠️ Admin
-    // label on the profile appears/disappears the moment we know for sure.
+    // label (and the "Open Admin panel" button next to it) on the profile
+    // appears/disappears the moment we know for sure. The admin tab now
+    // lives only on the profile page, not in the main nav bar.
     if($('panel-profile')) renderProfile();
   }
 
@@ -5933,28 +6042,32 @@
   });
 
   // ---------- tabs ----------
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-      btn.classList.add('active');
-      $('panel-'+btn.dataset.tab).classList.add('active');
-      if(btn.dataset.tab === 'list') renderList();
-      if(btn.dataset.tab === 'stats'){ renderStats(); renderCalendar(); }
-      if(btn.dataset.tab === 'tracker') renderTracker();
-      if(btn.dataset.tab === 'overview') renderOverview();
-      if(btn.dataset.tab === 'categories') renderCategoryLists();
-      if(btn.dataset.tab === 'accounts') renderAccountList();
-      if(btn.dataset.tab === 'budgets') renderBudgets();
-      if(btn.dataset.tab === 'add'){ populateCategories(); populateAccountsSelect($('f-account') ? $('f-account').value : null); }
-      if(btn.dataset.tab === 'profile') renderProfile();
-      if(btn.dataset.tab === 'admin'){
-        $('admin-not-ready').style.display = isSupabaseConfigured ? 'none' : '';
-        if(isSupabaseConfigured) renderAdminUsers();
-      }
-      closeNavMenu();
-      window.scrollTo({top:0, behavior:'smooth'});
-    });
+  // Delegated on document (rather than bound per-button at load time) so
+  // that tab-switching buttons added later — like the "Open Admin panel"
+  // button that only appears inside the profile tab for admins — work
+  // without needing their own separate click wiring.
+  document.addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('.tab-btn');
+    if(!btn || !btn.dataset.tab) return;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll(`.tab-btn[data-tab="${btn.dataset.tab}"]`).forEach(b=>b.classList.add('active'));
+    $('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'list') renderList();
+    if(btn.dataset.tab === 'stats'){ renderStats(); renderCalendar(); }
+    if(btn.dataset.tab === 'tracker') renderTracker();
+    if(btn.dataset.tab === 'overview') renderOverview();
+    if(btn.dataset.tab === 'categories') renderCategoryLists();
+    if(btn.dataset.tab === 'accounts') renderAccountList();
+    if(btn.dataset.tab === 'budgets') renderBudgets();
+    if(btn.dataset.tab === 'add'){ populateCategories(); populateAccountsSelect($('f-account') ? $('f-account').value : null); }
+    if(btn.dataset.tab === 'profile') renderProfile();
+    if(btn.dataset.tab === 'admin'){
+      $('admin-not-ready').style.display = isSupabaseConfigured ? 'none' : '';
+      if(isSupabaseConfigured) renderAdminUsers();
+    }
+    closeNavMenu();
+    window.scrollTo({top:0, behavior:'smooth'});
   });
 
   // ---------- responsive menu ----------
@@ -8549,7 +8662,13 @@
     try{
       let res;
       try{
-        res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
+        // Nager.Date's original host (date.nager.at) doesn't send CORS
+        // headers, so a direct browser fetch() to it fails with a generic
+        // network error — which is what was showing up here as "check your
+        // connection and try again" even on a perfectly good connection.
+        // Their newer host, nagerholidays.com, serves the same data and is
+        // explicitly CORS-enabled for browser use, so we call that instead.
+        res = await fetch(`https://nagerholidays.com/api/v4/Holidays/${country}/${year}`);
       }catch(networkErr){
         // fetch() itself rejected (never got an HTTP response at all) —
         // that's a real connectivity/CORS problem, not something the API
@@ -8572,7 +8691,25 @@
         return;
       }
       if(!res.ok) throw new Error(`Holiday API returned an error (status ${res.status}). Try again in a moment.`);
-      const holidays = await res.json();
+      // Read as text first: if the API (or something sitting in front of
+      // it, like a rate limiter or a browser extension) returns an empty
+      // or non-JSON body while still reporting a 200 OK, res.json() throws
+      // the raw "Unexpected end of JSON input" — not useful to a user.
+      // Parsing the text ourselves lets us give a real explanation instead.
+      const raw = await res.text();
+      if(!raw || !raw.trim()){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = 'The holiday API returned an empty response — try again in a moment.';
+        return;
+      }
+      let holidays;
+      try{
+        holidays = JSON.parse(raw);
+      }catch(parseErr){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = "The holiday API returned something that wasn't valid data — try again in a moment.";
+        return;
+      }
       if(!Array.isArray(holidays) || holidays.length === 0){
         statusEl.style.color = 'var(--brick)';
         statusEl.textContent = 'No holiday data found for that country/year.';
@@ -8589,7 +8726,7 @@
         const existing = activityRecords[dateStr];
         const existingActs = (existing && existing.activities) || [];
         if(existingActs.includes('holiday')) return;
-        const noteBit = h.localName || h.name || '';
+        const noteBit = h.localName || h.name || h.localizedName || '';
         activityRecords[dateStr] = {
           activities: Array.from(new Set([...existingActs, 'holiday'])),
           note: (existing && existing.note) ? existing.note : noteBit
@@ -9006,7 +9143,32 @@
     `;
   }
 
-  function reportHead(title, sub, count, genDate){
+  // Snapshot of the profile as it stood the moment this report was generated.
+  // reportHead() bakes these values directly into the returned HTML string,
+  // so a report that's already been generated/printed/downloaded is frozen —
+  // editing the username, photo, or job title in the Profile tab afterward
+  // only affects reports generated from that point on. The job title itself
+  // is picked from jobHistory using the asOfDate passed in (roughly, the end
+  // of the period being reported), so a report for an old month still shows
+  // whichever job title was effective back then, not today's.
+  function reportUserBlockHtml(asOfDate){
+    const name = escapeHtml(myProfile.username) || (currentUser && escapeHtml(currentUser.email)) || 'Unnamed user';
+    const title = escapeHtml(jobTitleAsOf(asOfDate || todayISO()));
+    const initial = (myProfile.username || (currentUser && currentUser.email) || '?').trim().charAt(0).toUpperCase();
+    const avatarHtml = myProfile.avatar
+      ? `<img src="${myProfile.avatar}" alt="">`
+      : (initial || '?');
+    return `
+      <div class="report-user-block">
+        <div class="ru-avatar">${avatarHtml}</div>
+        <div class="ru-text">
+          <div class="ru-name">${name}</div>
+          ${title ? `<div class="ru-title">${title}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  function reportHead(title, sub, count, genDate, asOfDate){
     return `
       <div class="report-letterhead">
         <div class="lh-name">TDA Accounting</div>
@@ -9020,6 +9182,7 @@
         </div>
         <div class="sub meta-right">Generated ${genDate}<br>${count} ${count === 1 ? 'entry' : 'entries'}</div>
       </div>
+      ${reportUserBlockHtml(asOfDate)}
     `;
   }
   function reportFoot(genDate){
@@ -9045,7 +9208,7 @@
       lastReportName = `tracker-${y}-${String(m).padStart(2,'0')}`;
       return `
         <div class="report-doc">
-          ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate)}
+          ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate, monthEndStr(y, m))}
           ${activityReportHtml(y, m-1, genDate)}
           ${reportFoot(genDate)}
         </div>
@@ -9056,7 +9219,7 @@
       lastReportName = `tracker-${y}-annual`;
       return `
         <div class="report-doc">
-          ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate)}
+          ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate, `${y}-12-31`)}
           ${activityYearReportHtml(y)}
           ${reportFoot(genDate)}
         </div>
@@ -9096,7 +9259,7 @@
       lastReportName = `accounting-${y}-${String(m).padStart(2,'0')}`;
       html = `
         <div class="report-doc">
-          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate)}
+          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate, monthEndStr(y, m))}
           <div class="report-section"><h3><span class="idx">1</span>Summary</h3>${statBoxesHtml(s)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Highlights</h3>${highlightsHtml(list, s) || '<p style="font-size:13px;color:var(--muted);">No entries recorded this month.</p>'}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category</h3>
@@ -9128,7 +9291,7 @@
       lastReportName = `accounting-${y}-selected-months`;
       html = `
         <div class="report-doc">
-          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate)}
+          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate, monthEndStr(y, checked[checked.length-1]+1))}
           <div class="report-section"><h3><span class="idx">1</span>Combined summary</h3>${statBoxesHtml(overall)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>Detail per month</h3>
@@ -9146,7 +9309,7 @@
       lastReportName = `accounting-${y}-annual`;
       html = `
         <div class="report-doc">
-          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate)}
+          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate, `${y}-12-31`)}
           <div class="report-section"><h3><span class="idx">1</span>Year summary</h3>${statBoxesHtml(yearStats)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Year total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category (full year)</h3>
@@ -9408,6 +9571,9 @@
     const info = $('profile-info');
     const actions = $('profile-account-actions');
     $('profile-username').value = myProfile.username || '';
+    $('profile-jobtitle').value = myProfile.jobTitle || '';
+    $('profile-jobtitle-date').value = todayISO();
+    renderJobTitleHistory();
     renderAvatar();
 
     const bal = computeStats(entries);
@@ -9422,7 +9588,7 @@
         ? new Date(currentUser.created_at).toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})
         : '—';
       info.innerHTML = `
-        ${isAdminUser ? `<div class="profile-row"><span class="lbl">Role</span><span class="val"><span class="sync-badge admin">🛠️ Admin</span></span></div>` : ''}
+        ${isAdminUser ? `<div class="profile-row"><span class="lbl">Role</span><span class="val"><span class="sync-badge admin">🛠️ Admin</span> <button class="btn small subtle tab-btn" data-tab="admin" id="profile-open-admin-btn" type="button" style="margin-left:8px;">🛠️ Open Admin panel</button></span></div>` : ''}
         <div class="profile-row"><span class="lbl">Email</span><span class="val">${escapeHtml(currentUser.email || '')}</span></div>
         <div class="profile-row"><span class="lbl">Member since</span><span class="val">${joined}</span></div>
         <div class="profile-row"><span class="lbl">Total entries</span><span class="val">${entries.length}</span></div>
