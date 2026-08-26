@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accounting — Daily Spending & Income</title>
+<title>TDA Accounting — Daily Spending & Income</title>
 <script>
   // Applied as early as possible (before first paint) so the app never
   // flashes the wrong theme or a Quick Add button the user chose to hide.
@@ -113,103 +113,143 @@
     isolation:isolate;
   }
   header.top{
-    background:var(--forest);
+    background:linear-gradient(160deg, var(--forest) 0%, var(--forest-2) 100%);
     color:var(--paper);
-    padding:clamp(16px,4vw,32px) clamp(16px,5vw,56px) clamp(14px,3vw,24px);
+    padding:clamp(14px,3.4vw,26px) clamp(16px,5vw,56px) clamp(14px,2.6vw,20px);
     position:relative;
     overflow:hidden;
-    border-bottom:6px solid var(--brass);
-    box-shadow:0 4px 16px rgba(0,0,0,0.15);
+    box-shadow:0 4px 20px rgba(0,0,0,0.18);
   }
   header.top::before{
     content:"";
     position:absolute; inset:0;
-    background-image:repeating-linear-gradient(180deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 26px);
+    background-image:repeating-linear-gradient(180deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 26px);
     pointer-events:none;
   }
   header.top::after{
     content:"";
     position:absolute; right:-60px; top:-70px;
-    width:220px; height:220px; border-radius:50%;
-    background:radial-gradient(circle, rgba(201,169,106,0.25) 0%, transparent 70%);
+    width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.18) 0%, transparent 70%);
     pointer-events:none;
   }
+  /* Slim gradient accent instead of a flat 6px bar — reads as a deliberate
+     brand line rather than a heavy border. */
+  .site-header-sticky::after{
+    content:"";
+    display:block;
+    height:3px;
+    background:linear-gradient(90deg, var(--brass-dim) 0%, var(--brass) 45%, var(--brass-dim) 100%);
+  }
 
-  header.top .head-row{display:flex;justify-content:space-between;align-items:flex-end;position:relative;gap:12px;flex-wrap:wrap;}
+  header.top .head-row{display:flex;justify-content:space-between;align-items:center;position:relative;gap:16px;flex-wrap:wrap;}
   @media (max-width:480px){
-    header.top .head-row{flex-direction:column;align-items:flex-start;gap:8px;}
+    header.top .head-row{flex-direction:column;align-items:flex-start;gap:10px;}
+  }
+  header.top .brand-row{display:flex;align-items:center;gap:12px;}
+  header.top .brand-mark{
+    width:clamp(36px,7vw,46px);height:clamp(36px,7vw,46px);border-radius:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:clamp(17px,3.6vw,22px);
+    background:linear-gradient(150deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 100%);
+    border:1px solid rgba(255,255,255,0.16);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 10px -4px rgba(0,0,0,0.4);
   }
   header.top .eyebrow{
     font-family:'Space Mono',monospace;
-    font-size:clamp(9px,1.6vw,11px);
-    letter-spacing:2.2px;
+    font-size:clamp(9px,1.6vw,10.5px);
+    letter-spacing:2px;
     text-transform:uppercase;
     color:var(--brass-dim);
-    margin:0 0 6px;
+    margin:0 0 3px;
+    display:flex;align-items:center;gap:6px;
   }
   header.top h1{
     font-family:'Fraunces', serif;
     font-weight:700;
-    font-size:clamp(23px,6.5vw,40px);
-    margin:0 0 4px;
-    letter-spacing:0.2px;
-    line-height:1.1;
+    font-size:clamp(21px,5.6vw,32px);
+    margin:0 0 3px;
+    letter-spacing:0.1px;
+    line-height:1.08;
   }
-  header.top p{margin:0;font-size:clamp(11.5px,2vw,14px);opacity:0.8;font-family:'Space Mono',monospace;}
-  header.top .save-state{font-family:'Space Mono',monospace;font-size:clamp(10px,1.6vw,11.5px);opacity:0.85;display:flex;align-items:center;gap:6px;}
-  header.top .dot{width:7px;height:7px;border-radius:50%;background:var(--brass-dim);}
+  header.top p{margin:0;font-size:clamp(11px,1.8vw,13px);opacity:0.72;font-family:'Space Mono',monospace;}
+
+  /* Right-side toolbar: save status + bell + menu grouped as one cohesive
+     surface with subtle dividers, instead of loose floating controls. */
+  header.top .head-toolbar{
+    display:flex;align-items:center;gap:2px;flex-wrap:wrap;
+    background:rgba(0,0,0,0.16);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:14px;
+    padding:5px;
+  }
+  header.top .save-state{
+    font-family:'Space Mono',monospace;font-size:clamp(10px,1.5vw,11px);opacity:0.9;
+    display:flex;align-items:center;gap:6px;padding:7px 12px;white-space:nowrap;
+  }
+  header.top .dot{width:6px;height:6px;border-radius:50%;background:var(--brass-dim);}
   header.top .dot.busy{background:#e0c66b;animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
 
   nav.tabs{
     display:flex;
     align-items:center;
-    gap:5px;
-    background:var(--forest-2);
-    border-bottom:1px solid rgba(0,0,0,0.15);
+    gap:4px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.06) 100%), var(--forest-2);
+    border-bottom:1px solid rgba(0,0,0,0.2);
     overflow-x:auto;
-    padding:clamp(7px,1.6vw,10px) clamp(10px,3vw,28px);
+    padding:clamp(7px,1.4vw,9px) clamp(10px,3vw,28px);
     scrollbar-width:thin;
-    box-shadow:inset 0 6px 10px -8px rgba(0,0,0,0.35);
+    position:relative;
   }
   nav.tabs::-webkit-scrollbar{height:0;}
+  .nav-group{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;}
+  .nav-group-main{flex:1 1 auto;min-width:0;}
+  .nav-group-account{flex:0 0 auto;margin-left:8px;padding-left:12px;border-left:1px solid rgba(255,255,255,0.14);}
+  .nav-group-label{display:none;}
   nav.tabs button{
-    flex:1;
-    min-width:88px;
-    padding:clamp(8px,1.6vw,11px) clamp(10px,2vw,20px);
+    display:inline-flex;align-items:center;gap:7px;
+    flex:0 0 auto;
+    padding:clamp(8px,1.4vw,10px) clamp(12px,1.8vw,16px);
     background:transparent;
     border:none;
-    color:rgba(243,238,217,0.68);
+    color:rgba(243,238,217,0.66);
     font-family:'Work Sans',sans-serif;
     font-weight:600;
-    font-size:clamp(11.5px,1.6vw,13px);
-    letter-spacing:0.35px;
+    font-size:clamp(12px,1.5vw,13px);
+    letter-spacing:0.2px;
     cursor:pointer;
-    border-radius:8px;
+    border-radius:9px;
     transition:color .15s ease, background-color .15s ease, box-shadow .15s ease, transform .1s ease;
     white-space:nowrap;
   }
-  nav.tabs button:hover{background:rgba(255,255,255,0.09); color:var(--paper); transform:translateY(-1px);}
-  nav.tabs button:active{transform:translateY(1px) scale(0.97);}
+  nav.tabs button .tab-ic{font-size:14px;line-height:1;}
+  nav.tabs button:hover{background:rgba(255,255,255,0.08); color:var(--paper);}
+  nav.tabs button:active{transform:scale(0.97);}
+  nav.tabs button:focus-visible{outline:2px solid var(--brass-dim); outline-offset:-2px;}
   nav.tabs button.active{
     color:var(--forest);
     background:linear-gradient(135deg, var(--brass-dim) 0%, var(--brass) 100%);
-    box-shadow:0 4px 14px -4px rgba(0,0,0,0.45);
-    animation:tabPop .25s ease;
+    box-shadow:0 3px 10px -3px rgba(0,0,0,0.5);
+    animation:tabPop .2s ease;
     font-weight:700;
   }
-  nav.tabs button.active:hover{background:var(--brass-dim); transform:translateY(-1px);}
-  @keyframes tabPop{0%{transform:scale(0.92);}60%{transform:scale(1.03);}100%{transform:scale(1);}}
+  nav.tabs button.active:hover{background:var(--brass-dim);}
+  @keyframes tabPop{0%{transform:scale(0.94);}100%{transform:scale(1);}}
+  /* Soft fade at the scrollable edges hints there's more to scroll to,
+     instead of tabs just cutting off abruptly. */
+  @media (min-width:901px){
+    nav.tabs{-webkit-mask-image:linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);}
+  }
 
   /* Profile tab shows an avatar thumbnail once one is set */
   .nav-profile-slot{display:inline-flex;align-items:center;justify-content:center;gap:7px;}
   .nav-profile-slot img{
-    width:20px;height:20px;border-radius:50%;object-fit:cover;
+    width:18px;height:18px;border-radius:50%;object-fit:cover;
     border:1px solid rgba(255,255,255,0.4);flex-shrink:0;
   }
   @media (max-width:900px){
     .nav-profile-slot{justify-content:flex-start;}
-    .nav-profile-slot img{width:26px;height:26px;}
+    .nav-profile-slot img{width:24px;height:24px;}
   }
 
   main{padding:clamp(14px,3.5vw,36px) clamp(14px,4vw,56px) 0;}
@@ -285,6 +325,8 @@
     letter-spacing:0.3px;
     box-shadow:0 2px 8px -3px rgba(30,61,50,0.45);
     transition:background-color .18s ease, transform .12s ease, box-shadow .2s ease, filter .15s ease;
+    max-width:100%;
+    overflow-wrap:break-word;
   }
   .btn:hover{filter:brightness(1.08); box-shadow:0 6px 18px -6px rgba(30,61,50,0.55); transform:translateY(-2px);}
   .btn:active{transform:translateY(0) scale(0.97); box-shadow:0 2px 6px -3px rgba(30,61,50,0.4);}
@@ -395,7 +437,13 @@
   .stat-box.income{border-left-color:var(--green-ok);}
   .stat-box.salary{border-left-color:var(--teal);}
   .stat-box .lbl{font-size:clamp(11px,1.2vw,12.5px);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:var(--muted);margin-bottom:6px;}
-  .stat-box .val{font-family:'Space Mono',monospace;font-size:clamp(17px,2vw,20px);font-weight:700;line-height:1.5;}
+  .stat-box .val{font-family:'Space Mono',monospace;font-size:clamp(17px,2vw,20px);font-weight:700;line-height:1.5;overflow-wrap:anywhere;word-break:break-word;}
+  .stat-box.live{border-left-color:var(--teal);}
+  .stat-box .sub{font-size:11px;color:var(--muted);margin-top:4px;font-family:'Space Mono',monospace;}
+  .live-refresh-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 0 0 6px;line-height:1;vertical-align:middle;display:inline-block;}
+  .live-refresh-btn:hover{color:var(--forest);}
+  .live-refresh-btn.spinning{animation:ov-live-spin .8s linear infinite;}
+  @keyframes ov-live-spin{to{transform:rotate(360deg);}}
 
   table.report-table{width:100%;border-collapse:collapse;font-size:13px;}
   table.report-table th{
@@ -458,16 +506,16 @@
   .rem-bell-btn{
     position:relative;
     background:transparent;
-    border:1px solid rgba(243,238,217,0.35);
+    border:none;
     color:var(--paper);
     width:36px;height:36px;
-    border-radius:50%;
+    border-radius:10px;
     font-size:16px;
     cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;
     transition:background .15s ease, transform .15s ease;
   }
-  .rem-bell-btn:hover{background:rgba(243,238,217,0.12);transform:translateY(-1px);}
+  .rem-bell-btn:hover{background:rgba(243,238,217,0.14);transform:translateY(-1px);}
   .rem-bell-btn:active{transform:translateY(0);}
   .rem-badge{
     position:absolute; top:-4px; right:-4px;
@@ -725,6 +773,25 @@
     .actchip .ic{font-size:9px;}
   }
 
+  /* ===== Currency Converter ===== */
+  .conv-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
+  .conv-swap-btn{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:var(--paper);
+    color:var(--forest);font-size:16px;cursor:pointer;flex-shrink:0;margin-bottom:1px;
+    transition:transform .15s ease, background-color .15s ease;
+  }
+  .conv-swap-btn:hover{background:var(--paper-2);}
+  .conv-swap-btn:active{transform:rotate(180deg);}
+  .conv-result{
+    font-family:'Space Mono',monospace;font-weight:700;font-size:24px;color:var(--forest);
+    margin:14px 0 6px;word-break:break-word;
+  }
+  .conv-rate-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    font-size:12px;color:var(--muted);margin-bottom:8px;
+  }
+  .conv-manual-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px;background:var(--paper-2);border-radius:9px;padding:10px;}
+
   .acttype-manager{display:flex;flex-direction:column;gap:8px;}
   .acttype-row{
     display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--rule);border-radius:9px;background:var(--paper);
@@ -738,6 +805,10 @@
   .acttype-actions{display:flex;gap:6px;flex-shrink:0;}
   .acttype-actions button{background:none;border:none;cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;transition:background-color .15s ease;}
   .acttype-actions button:hover{background:var(--paper-2);}
+  .acttype-row-editing{flex-direction:column;align-items:stretch;background:var(--paper-2);border-color:var(--brass-dim);}
+  .acttype-edit-form{width:100%;}
+  .acttype-edit-form .acttype-actions{font-family:'Work Sans',sans-serif;font-size:12.5px;font-weight:600;flex-wrap:wrap;}
+  .acttype-edit-form .acttype-actions button{padding:7px 12px;border:1px solid var(--rule);background:var(--paper);}
 
   .actstat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:4px;}
   .actstat-box{
@@ -905,15 +976,17 @@
   }
 
   /* ===== Profile ===== */
-  .profile-row{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid var(--rule);font-size:14px;gap:12px;}
+  .profile-row{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid var(--rule);font-size:14px;gap:12px;flex-wrap:wrap;}
   .profile-row:last-child{border-bottom:none;}
   .profile-row .lbl{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:var(--forest-2);flex-shrink:0;}
-  .profile-row .val{font-family:'Space Mono',monospace;text-align:right;word-break:break-word;}
-  .sync-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;}
+  .profile-row .val{font-family:'Space Mono',monospace;text-align:right;word-break:break-word;overflow-wrap:anywhere;min-width:0;flex:1 1 auto;}
+  .sync-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;max-width:100%;}
   .sync-badge.cloud{background:#dcecdf;color:var(--green-ok);}
   .sync-badge.local{background:var(--paper-2);color:var(--forest-2);}
-  .sync-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .sync-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
   .sync-badge.banned{background:#f2d9d6;color:var(--brick);}
+  .sync-badge.admin{background:rgba(169,128,63,0.18);color:var(--brass);}
+  html.theme-dark .sync-badge.admin{background:rgba(201,169,106,0.22);}
 
   .admin-user-row{
     display:flex;align-items:center;justify-content:space-between;gap:14px;
@@ -922,7 +995,7 @@
   }
   .admin-user-row:hover{background:rgba(47,100,120,0.045);}
   .admin-user-row:last-child{border-bottom:none;}
-  .admin-user-row .au-left{display:flex;align-items:flex-start;gap:11px;min-width:220px;flex:1;}
+  .admin-user-row .au-left{display:flex;align-items:flex-start;gap:11px;flex:1 1 220px;min-width:0;}
   .admin-user-row .au-avatar{
     width:36px;height:36px;border-radius:50%;flex-shrink:0;margin-top:1px;
     background:linear-gradient(135deg,var(--brass-dim) 0%,var(--brass) 100%);
@@ -931,10 +1004,21 @@
     box-shadow:0 2px 6px -2px rgba(147,112,47,0.5);
   }
   .admin-user-row .au-avatar.is-banned{background:linear-gradient(135deg,#c98f87 0%,var(--brick) 100%);box-shadow:0 2px 6px -2px rgba(156,68,56,0.5);}
-  .admin-user-row .au-email{flex:1;min-width:160px;font-weight:600;font-size:13.5px;word-break:break-word;line-height:1.35;}
-  .admin-user-row .au-meta{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6;}
-  .admin-user-row .au-ban-reason{font-size:11.5px;color:var(--brick);margin-top:3px;font-style:italic;line-height:1.4;}
-  .admin-user-row .au-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
+  /* min-width:0 on this flex child + overflow-wrap so a long email/id never
+     pushes past the row edge or squeezes the action buttons off-screen */
+  .admin-user-row .au-left > div{min-width:0;flex:1;}
+  .admin-user-row .au-email{flex:1;min-width:0;font-weight:600;font-size:13.5px;word-break:break-word;overflow-wrap:anywhere;line-height:1.35;}
+  .admin-user-row .au-meta{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6;overflow-wrap:anywhere;}
+  .admin-user-row .au-ban-reason{font-size:11.5px;color:var(--brick);margin-top:3px;font-style:italic;line-height:1.4;overflow-wrap:anywhere;}
+  .admin-user-row .au-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;flex:1 1 auto;min-width:0;}
+  .admin-user-row .au-actions .btn{white-space:normal;text-align:center;line-height:1.3;}
+  @media (max-width:480px){
+    /* Stack each user row so the action buttons get the full row width
+       instead of fighting the email/avatar for space and getting clipped. */
+    .admin-user-row{flex-direction:column;align-items:stretch;gap:10px;}
+    .admin-user-row .au-actions{justify-content:flex-start;width:100%;}
+    .admin-user-row .au-actions .btn{flex:1 1 auto;}
+  }
   .ban-notice{
     background:linear-gradient(180deg,#f7e6e3,#f2d9d5);
     border:1px solid #dba79f;
@@ -1039,6 +1123,10 @@
       z-index:260;
       box-shadow:0 6px 20px -4px rgba(0,0,0,0.5);
     }
+    /* The menu button floats fixed over the header — keep header text
+       from running underneath it. */
+    header.top{padding-right:max(72px, env(safe-area-inset-right));}
+    header.top .head-toolbar{padding-right:52px;}
     nav.tabs{
       display:flex;
       flex-direction:column;
@@ -1075,16 +1163,29 @@
       transition:background-color .2s ease, transform .2s ease;
     }
     .nav-drawer-head button:hover{background:var(--brick); transform:rotate(90deg);}
+    .nav-group{display:flex;flex-direction:column;gap:0;width:100%;}
+    .nav-group-account{
+      margin-left:0;padding-left:0;border-left:none;
+      margin-top:10px;padding-top:10px;
+      border-top:1px solid rgba(255,255,255,0.12);
+    }
+    .nav-group-label{
+      display:block;padding:2px 18px 8px;
+      font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;
+      color:rgba(243,238,217,0.45);
+    }
     nav.tabs button{
       text-align:left;
-      padding:15px 18px;
+      padding:14px 18px;
       border-bottom:1px solid rgba(255,255,255,0.08);
       border-left:3px solid transparent;
       border-radius:0;
       flex:none;
+      width:100%;
       min-width:0;
       font-size:14px;
     }
+    nav.tabs button .tab-ic{font-size:15px;width:20px;text-align:center;}
     nav.tabs button.active{
       border-left-color:var(--brass-dim);
       background:rgba(255,255,255,0.06);
@@ -1099,12 +1200,107 @@
 
   /* ===== Footer ===== */
   .site-footer{
-    background:var(--forest);
+    position:relative;
+    background:linear-gradient(165deg, var(--forest) 0%, var(--forest-2) 100%);
     color:rgba(243,238,217,0.75);
-    padding:clamp(16px,3.5vw,26px) clamp(14px,4vw,56px) clamp(18px,4vw,30px);
-    border-top:6px solid var(--brass);
+    padding:0 0 clamp(14px,3vw,20px);
+    border-top:1px solid rgba(201,169,106,0.35);
     margin-top:24px;
+    overflow:hidden;
   }
+  .site-footer::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, transparent, var(--brass-dim), var(--brass), var(--brass-dim), transparent);
+  }
+  .site-footer .footer-shell{
+    max-width:1180px; margin:0 auto;
+    padding:0 clamp(14px,4vw,56px);
+  }
+
+  /* -- brand / sync status row -- */
+  .footer-top{
+    display:flex; flex-wrap:wrap; gap:12px 20px;
+    align-items:center; justify-content:space-between;
+    padding:clamp(18px,3.5vw,26px) 0 clamp(14px,3vw,18px);
+  }
+  .footer-brand{display:flex; align-items:center; gap:12px;}
+  .footer-brand-mark{
+    width:38px;height:38px;border-radius:11px;flex-shrink:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(201,169,106,0.14); border:1px solid rgba(201,169,106,0.35);
+    font-size:18px;
+  }
+  .footer-brand-text{display:flex;flex-direction:column;gap:1px;}
+  .footer-brand-name{
+    font-family:'Fraunces',serif; font-weight:600; font-size:16px; color:var(--paper);
+    letter-spacing:0.2px;
+  }
+  .footer-brand-tag{
+    font-family:'Work Sans',sans-serif; font-size:11.5px; color:rgba(243,238,217,0.6);
+  }
+  .footer-sync-badge{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:6px 12px 6px 10px; border-radius:999px;
+    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.16);
+    font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:0.4px; text-transform:uppercase;
+    color:rgba(243,238,217,0.85);
+  }
+  .footer-sync-badge .dot{
+    width:7px;height:7px;border-radius:50%; flex-shrink:0;
+    background:var(--muted-dot,#8a9e8f);
+  }
+  .footer-sync-badge.live .dot{
+    background:#5fd68a; box-shadow:0 0 0 0 rgba(95,214,138,0.6);
+    animation:footerPulse 2s infinite;
+  }
+  .footer-sync-badge.local .dot{ background:var(--brass-dim); }
+  @keyframes footerPulse{
+    0%{box-shadow:0 0 0 0 rgba(95,214,138,0.55);}
+    70%{box-shadow:0 0 0 6px rgba(95,214,138,0);}
+    100%{box-shadow:0 0 0 0 rgba(95,214,138,0);}
+  }
+
+  /* -- live stats strip -- */
+  .footer-stats-strip{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:1px;
+    background:rgba(255,255,255,0.09);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:clamp(16px,3vw,22px);
+  }
+  .footer-stat{
+    display:flex; align-items:center; gap:10px;
+    padding:13px clamp(10px,2vw,16px);
+    background:rgba(255,255,255,0.035);
+    transition:background-color .18s ease;
+    min-width:0;
+  }
+  .footer-stat:hover{background:rgba(255,255,255,0.075);}
+  .footer-stat .stat-ic{font-size:16px; flex-shrink:0; opacity:0.9;}
+  .footer-stat .stat-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
+  .footer-stat .stat-val{
+    font-family:'Space Mono',monospace; font-weight:700; font-size:clamp(12px,2vw,13.5px);
+    color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .footer-stat .stat-lbl{
+    font-family:'Work Sans',sans-serif; font-size:10px; letter-spacing:0.3px; text-transform:uppercase;
+    color:rgba(243,238,217,0.55); white-space:nowrap;
+  }
+  @media (max-width:820px){
+    .footer-stats-strip{grid-template-columns:repeat(3, 1fr);}
+    .footer-stat:nth-child(4), .footer-stat:nth-child(5){border-top:1px solid rgba(255,255,255,0.09);}
+  }
+  @media (max-width:480px){
+    .footer-stats-strip{grid-template-columns:repeat(2, 1fr);}
+    .footer-stat:nth-child(3){border-top:1px solid rgba(255,255,255,0.09);}
+  }
+
+  .footer-divider{height:1px; background:rgba(255,255,255,0.09); margin-bottom:clamp(14px,3vw,18px);}
+
   .site-footer .footer-inner{
     display:flex;flex-wrap:wrap;gap:14px 22px;
     align-items:center;justify-content:space-between;
@@ -1117,7 +1313,11 @@
     border-bottom:1px solid transparent;transition:border-color .15s,color .15s;
   }
   .site-footer .footer-links button:hover{color:var(--paper);border-bottom-color:var(--brass-dim);}
-  .site-footer .copyright{font-family:'Space Mono',monospace;font-size:clamp(10px,1.6vw,11px);opacity:0.75;}
+  .site-footer .copyright{font-family:'Space Mono',monospace;font-size:clamp(10px,1.6vw,11px);opacity:0.75;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .footer-version{
+    padding:2px 7px; border-radius:5px; font-size:9.5px; letter-spacing:0.3px;
+    background:rgba(201,169,106,0.16); border:1px solid rgba(201,169,106,0.3); color:var(--brass-dim);
+  }
   .footer-social{display:flex;gap:8px;flex-wrap:wrap;}
   .social-btn{
     width:clamp(32px,6vw,36px);height:clamp(32px,6vw,36px);border-radius:50%;
@@ -1137,6 +1337,7 @@
   .about-social.footer-social{justify-content:center;margin-top:14px;}
   @media (max-width:480px){
     .site-footer .footer-inner{flex-direction:column;align-items:flex-start;gap:12px;}
+    .footer-top{flex-direction:column;align-items:flex-start;}
   }
 
   /* Notification opt-in bell (footer) */
@@ -1311,7 +1512,9 @@
     /* just above the off-canvas nav breakpoint: tabs can get tight
        with longer labels, let them wrap onto two rows instead of
        squeezing or overflowing */
-    nav.tabs{flex-wrap:wrap;overflow-x:visible;}
+    nav.tabs{flex-wrap:wrap;overflow-x:visible;-webkit-mask-image:none;mask-image:none;}
+    .nav-group-main{flex-wrap:wrap;}
+    .nav-group-account{margin-left:0;}
   }
 
   /* ===== Mobile touch-target pass =====
@@ -1449,12 +1652,15 @@
   <div class="site-header-sticky">
     <header class="top">
       <div class="head-row">
-        <div>
-          <p class="eyebrow">💰 Personal Ledger</p>
-          <h1>Accounting</h1>
-          <p>Daily spending &amp; income, tracked in USD and LBP</p>
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">💰</div>
+          <div>
+            <p class="eyebrow">Personal Ledger</p>
+            <h1>TDA Accounting</h1>
+            <p>Daily spending &amp; income, tracked in USD and LBP</p>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="head-toolbar">
           <div class="save-state"><span class="dot" id="save-dot"></span><span id="save-indicator">All entries saved</span></div>
           <button type="button" class="rem-bell-btn" id="btn-reminders-bell" aria-label="Reminders" title="Reminders">🔔<span class="rem-badge" id="rem-badge" style="display:none;">0</span></button>
           <button class="menu-btn" id="btn-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-tabs">
@@ -1472,20 +1678,24 @@
     <nav class="tabs" id="nav-tabs">
       <div class="nav-drawer-head">
         <span>Menu</span>
-        <button type="button" id="btn-menu-close" aria-label="Close menu">&times;</button>
       </div>
-      <button class="tab-btn active" data-tab="add">📝 New Entry</button>
-      <button class="tab-btn" data-tab="list">📋 Entries</button>
-      <button class="tab-btn" data-tab="recurring">🔁 Recurring</button>
-      <button class="tab-btn" data-tab="categories">🏷️ Categories</button>
-      <button class="tab-btn" data-tab="accounts">🏦 Accounts</button>
-      <button class="tab-btn" data-tab="budgets">🎯 Budgets</button>
-      <button class="tab-btn" data-tab="tracker">📅 Calendar</button>
-      <button class="tab-btn" data-tab="overview">📊 Overview</button>
-      <button class="tab-btn" data-tab="stats">📈 Statistics</button>
-      <button class="tab-btn" data-tab="report">🖨️ Print Report</button>
-      <button class="tab-btn" data-tab="admin" id="nav-admin-tab" style="display:none;">🛠️ Admin</button>
-      <button class="tab-btn" data-tab="profile" id="nav-profile-tab"><span class="nav-profile-slot" id="nav-profile-slot">👤 Profile</span></button>
+      <div class="nav-group nav-group-main">
+        <button class="tab-btn active" data-tab="add"><span class="tab-ic">📝</span><span class="tab-lbl">New Entry</span></button>
+        <button class="tab-btn" data-tab="list"><span class="tab-ic">📋</span><span class="tab-lbl">Entries</span></button>
+        <button class="tab-btn" data-tab="recurring"><span class="tab-ic">🔁</span><span class="tab-lbl">Recurring</span></button>
+        <button class="tab-btn" data-tab="categories"><span class="tab-ic">🏷️</span><span class="tab-lbl">Categories</span></button>
+        <button class="tab-btn" data-tab="accounts"><span class="tab-ic">🏦</span><span class="tab-lbl">Accounts</span></button>
+        <button class="tab-btn" data-tab="budgets"><span class="tab-ic">🎯</span><span class="tab-lbl">Budgets</span></button>
+        <button class="tab-btn" data-tab="tracker"><span class="tab-ic">📅</span><span class="tab-lbl">Calendar</span></button>
+        <button class="tab-btn" data-tab="overview"><span class="tab-ic">📊</span><span class="tab-lbl">Overview</span></button>
+        <button class="tab-btn" data-tab="stats"><span class="tab-ic">📈</span><span class="tab-lbl">Statistics</span></button>
+        <button class="tab-btn" data-tab="report"><span class="tab-ic">🖨️</span><span class="tab-lbl">Print Report</span></button>
+      </div>
+      <div class="nav-group nav-group-account">
+        <span class="nav-group-label">Account</span>
+        <button class="tab-btn" data-tab="admin" id="nav-admin-tab" style="display:none;"><span class="tab-ic">🛠️</span><span class="tab-lbl">Admin</span></button>
+        <button class="tab-btn" data-tab="profile" id="nav-profile-tab"><span class="nav-profile-slot" id="nav-profile-slot"><span class="tab-ic">👤</span><span class="tab-lbl">Profile</span></span></button>
+      </div>
     </nav>
   </div>
 
@@ -1941,6 +2151,36 @@
           <button class="btn small brass" id="acttype-add" type="button">➕ Add activity type</button>
         </div>
       </div>
+
+      <div class="card">
+        <h2>🎉 Public Holidays</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Fetch a country's public holidays and mark them on your calendar as 🎉 Holiday automatically — existing activities on those days are kept.</p>
+        <div class="field-row">
+          <div class="field" style="max-width:130px;">
+            <label>Country</label>
+            <select id="holiday-country">
+              <option value="LB">Lebanon</option>
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="FR">France</option>
+              <option value="CA">Canada</option>
+              <option value="AU">Australia</option>
+              <option value="AE">UAE</option>
+              <option value="SA">Saudi Arabia</option>
+              <option value="EG">Egypt</option>
+              <option value="JO">Jordan</option>
+              <option value="DE">Germany</option>
+              <option value="IN">India</option>
+            </select>
+          </div>
+          <div class="field" style="max-width:100px;">
+            <label>Year</label>
+            <input type="number" id="holiday-year" placeholder="2026">
+          </div>
+          <button type="button" class="btn small brass" id="holiday-load-btn" style="margin-bottom:1px;">🌐 Load holidays</button>
+        </div>
+        <div id="holiday-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
+      </div>
     </div>
 
     <!-- DAY ACTIVITY MODAL -->
@@ -1996,6 +2236,118 @@
         <div class="stat-box"><div class="lbl">💰 Current total balance</div><div class="val" id="ov-kpi-balance">$0.00</div></div>
         <div class="stat-box income"><div class="lbl">📈 This month's income</div><div class="val" id="ov-kpi-income">$0.00</div></div>
         <div class="stat-box expense"><div class="lbl">📉 This month's expenses</div><div class="val" id="ov-kpi-expense">$0.00</div></div>
+        <div class="stat-box live" id="ov-kpi-liverate-box">
+          <div class="lbl">🌐 Live rate · USD→LBP<button type="button" class="live-refresh-btn" id="ov-liverate-refresh" title="Refresh live rate">⟳</button></div>
+          <div class="val" id="ov-kpi-liverate">—</div>
+          <div class="sub" id="ov-kpi-liverate-sub">Fetching live rate…</div>
+        </div>
+        <div class="stat-box live" id="ov-kpi-gold-box">
+          <div class="lbl">🪙 Live gold · XAU/USD (oz)<button type="button" class="live-refresh-btn" id="ov-gold-refresh" title="Refresh gold price">⟳</button></div>
+          <div class="val" id="ov-kpi-gold">—</div>
+          <div class="sub" id="ov-kpi-gold-sub">Fetching live price…</div>
+        </div>
+        <div class="stat-box live" id="ov-kpi-fuel95-box">
+          <div class="lbl">⛽ 95 Octane · Lebanon<button type="button" class="live-refresh-btn" id="ov-fuel95-edit" title="Edit fuel prices">✏️</button></div>
+          <div class="val" id="ov-kpi-fuel95">—</div>
+          <div class="sub" id="ov-kpi-fuel95-sub">Set your price ↓</div>
+        </div>
+        <div class="stat-box live" id="ov-kpi-fuel98-box">
+          <div class="lbl">⛽ 98 Octane · Lebanon<button type="button" class="live-refresh-btn" id="ov-fuel98-edit" title="Edit fuel prices">✏️</button></div>
+          <div class="val" id="ov-kpi-fuel98">—</div>
+          <div class="sub" id="ov-kpi-fuel98-sub">Set your price ↓</div>
+        </div>
+        <div class="stat-box live" id="ov-kpi-fueldiesel-box">
+          <div class="lbl">⛽ Diesel · Lebanon<button type="button" class="live-refresh-btn" id="ov-fueldiesel-edit" title="Edit fuel prices">✏️</button></div>
+          <div class="val" id="ov-kpi-fueldiesel">—</div>
+          <div class="sub" id="ov-kpi-fueldiesel-sub">Set your price ↓</div>
+        </div>
+      </div>
+      <div class="card" id="ov-converter-card">
+        <h2>💱 Currency Converter</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Converts automatically using the current exchange rate. Fetch a live rate or type your own.</p>
+        <div class="conv-row">
+          <div class="field">
+            <label>Amount</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="conv-amount" placeholder="100">
+          </div>
+          <div class="field" style="max-width:110px;">
+            <label>From</label>
+            <select id="conv-from">
+              <option value="USD">USD</option>
+              <option value="LBP">LBP</option>
+            </select>
+          </div>
+          <button type="button" class="conv-swap-btn" id="conv-swap" title="Swap currencies">⇄</button>
+          <div class="field" style="max-width:110px;">
+            <label>To</label>
+            <select id="conv-to">
+              <option value="LBP">LBP</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+        <div class="conv-result" id="conv-result">≈ 0 LBP</div>
+        <div class="conv-rate-row">
+          <span id="conv-rate-label">Using rate: 1 USD = 90,000 LBP</span>
+          <button type="button" class="btn small ghost" id="conv-live-btn">🌐 Get live rate</button>
+        </div>
+        <div class="conv-manual-row" id="conv-manual-row" style="display:none;">
+          <div class="field">
+            <label>Set exchange rate manually (LBP per $1)</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="conv-manual-rate" placeholder="e.g. 89,500">
+          </div>
+          <button type="button" class="btn small brass" id="conv-manual-apply">✅ Use this rate</button>
+          <button type="button" class="btn small ghost" id="conv-manual-cancel">✖️ Cancel</button>
+        </div>
+        <div class="btn-row" style="margin-top:2px;">
+          <button type="button" class="btn small ghost" id="conv-manual-toggle">✏️ Enter rate manually</button>
+        </div>
+        <div id="conv-live-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
+      </div>
+      <div class="card" id="ov-gold-card">
+        <h2>🪙 Gold Prices (Lebanon)<button type="button" class="live-refresh-btn" id="ov-gold-card-refresh" title="Refresh gold price">⟳</button></h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Live spot price (XAU/USD), converted to the karats and per-gram pricing used in Lebanon, at the current exchange rate.</p>
+        <div class="stat-grid" id="ov-gold-grid">
+          <div class="stat-box"><div class="lbl">Ounce (oz)</div><div class="val" id="gold-oz-usd">—</div><div class="sub" id="gold-oz-lbp">—</div></div>
+          <div class="stat-box"><div class="lbl">24K · per gram</div><div class="val" id="gold-24k-usd">—</div><div class="sub" id="gold-24k-lbp">—</div></div>
+          <div class="stat-box"><div class="lbl">21K · per gram</div><div class="val" id="gold-21k-usd">—</div><div class="sub" id="gold-21k-lbp">—</div></div>
+          <div class="stat-box"><div class="lbl">18K · per gram</div><div class="val" id="gold-18k-usd">—</div><div class="sub" id="gold-18k-lbp">—</div></div>
+        </div>
+        <div id="gold-card-status" style="font-size:11.5px;color:var(--muted);min-height:14px;">Fetching live price…</div>
+      </div>
+      <div class="card" id="ov-fuel-card">
+        <h2>⛽ Fuel Prices (Lebanon)</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Lebanon's Ministry of Energy &amp; Water sets these weekly and there's no free live feed for them — check <a href="https://www.thefuelprice.com/Flb/en" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">thefuelprice.com</a> or <a href="https://en.dgo.gov.lb/prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">the Ministry's price list</a>, then save this week's figures here.</p>
+        <div class="conv-row">
+          <div class="field">
+            <label>95 Octane (LBP / liter)</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="fuel-95-lbp" placeholder="e.g. 117,350">
+          </div>
+          <div class="field">
+            <label>98 Octane (LBP / liter)</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="fuel-98-lbp" placeholder="e.g. 120,850">
+          </div>
+        </div>
+        <div class="conv-row">
+          <div class="field">
+            <label>Diesel (LBP / liter)</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="fuel-diesel-lbp" placeholder="e.g. 92,350">
+          </div>
+          <div class="field">
+            <label>Cooking gas (LBP / 10kg bottle)</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="fuel-gas-lbp" placeholder="optional">
+          </div>
+        </div>
+        <div class="conv-row">
+          <div class="field" style="max-width:170px;">
+            <label>As of</label>
+            <input type="date" id="fuel-asof">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:2px;">
+          <button type="button" class="btn small brass" id="fuel-save-btn">✅ Save prices</button>
+        </div>
+        <div id="fuel-save-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
       </div>
       <div class="card" id="ov-reminders-card">
         <h2>🔔 Reminders</h2>
@@ -2343,6 +2695,9 @@
           <button class="btn small ghost" id="admin-btn-ban">⛔ Ban user</button>
           <button class="btn small subtle" id="admin-btn-unban" style="display:none;">✅ Unban user</button>
           <button class="btn small ghost" id="admin-btn-wipe">🧹 Clear all their data</button>
+          <button class="btn small ghost-teal" id="admin-btn-resend-confirm">📧 Resend confirmation email</button>
+          <button class="btn small subtle" id="admin-btn-toggle-admin">🛠️ Make admin</button>
+          <button class="btn small ghost" id="admin-btn-delete-user">🗑️ Delete account</button>
         </div>
         <div id="admin-user-summary" class="stat-grid" style="margin-bottom:14px;"></div>
         <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:10px 0 6px;">Add / fix an entry for this user</h3>
@@ -2552,21 +2907,59 @@
   </main>
 
   <footer class="site-footer no-print">
-    <div class="footer-inner">
-      <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved.</div>
-      <div class="footer-links">
-        <button type="button" id="btn-footer-about">ℹ️ About Us</button>
-        <button type="button" id="btn-footer-rules">📜 Rules &amp; Terms</button>
-        <button type="button" id="btn-footer-bug">🐞 Report a bug</button>
-        <button type="button" id="btn-footer-support">💬 Contact support</button>
+    <div class="footer-shell">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-brand-mark">📊</span>
+          <div class="footer-brand-text">
+            <span class="footer-brand-name">TDA Accounting</span>
+            <span class="footer-brand-tag">Personal finance, tracked in USD &amp; LBP</span>
+          </div>
+        </div>
+        <span class="footer-sync-badge local" id="footer-sync-badge"><span class="dot"></span><span id="footer-sync-label">This device only</span></span>
       </div>
-      <button type="button" class="bell-fab" id="btn-notify-optin" aria-label="Get email notifications from us" aria-pressed="false" title="Get occasional email updates from us">🔕</button>
-      <div class="footer-social">
-        <a href="https://instagram.com" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-        <a href="https://x.com" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
-        <a href="https://facebook.com" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
-        <a href="https://wa.me" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
-        <a href="mailto:you@example.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+
+      <div class="footer-stats-strip" id="footer-stats-strip">
+        <div class="footer-stat">
+          <span class="stat-ic">📋</span>
+          <div class="stat-txt"><span class="stat-val" id="footer-stat-entries">0</span><span class="stat-lbl">Entries</span></div>
+        </div>
+        <div class="footer-stat">
+          <span class="stat-ic">💵</span>
+          <div class="stat-txt"><span class="stat-val" id="footer-stat-net-usd">$0.00</span><span class="stat-lbl">Net (USD)</span></div>
+        </div>
+        <div class="footer-stat">
+          <span class="stat-ic">🇱🇧</span>
+          <div class="stat-txt"><span class="stat-val" id="footer-stat-net-lbp">0 LBP</span><span class="stat-lbl">Net (LBP)</span></div>
+        </div>
+        <div class="footer-stat">
+          <span class="stat-ic">🏦</span>
+          <div class="stat-txt"><span class="stat-val" id="footer-stat-accounts">0</span><span class="stat-lbl">Accounts</span></div>
+        </div>
+        <div class="footer-stat">
+          <span class="stat-ic">💱</span>
+          <div class="stat-txt"><span class="stat-val" id="footer-stat-rate">—</span><span class="stat-lbl">Exchange rate</span></div>
+        </div>
+      </div>
+
+      <div class="footer-divider"></div>
+
+      <div class="footer-inner">
+        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.2</span></div>
+        <div class="footer-links">
+          <button type="button" id="btn-footer-about">ℹ️ About Us</button>
+          <button type="button" id="btn-footer-rules">📜 Rules &amp; Terms</button>
+          <button type="button" id="btn-footer-bug">🐞 Report a bug</button>
+          <button type="button" id="btn-footer-support">💬 Contact support</button>
+        </div>
+        <button type="button" class="bell-fab" id="btn-notify-optin" aria-label="Get email notifications from us" aria-pressed="false" title="Get occasional email updates from us">🔕</button>
+        <div class="footer-social">
+          <a href="https://www.instagram.com/tda.tech" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+          <a href="https://x.com/TDA_6" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+          <a href="https://www.facebook.com/share/1HkmZnhAks/" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+          <a href="https://wa.me/81158126" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
+          <a href="mailto:tdaspprt@gmail.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+        </div>
       </div>
     </div>
   </footer>
@@ -2618,11 +3011,11 @@
     <div class="about-cta">
       <p>Have feedback, a feature idea, or just want to say hi? We'd genuinely love to hear from you.</p>
       <div class="footer-social about-social">
-        <a href="https://instagram.com" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-        <a href="https://x.com" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
-        <a href="https://facebook.com" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
-        <a href="https://wa.me" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
-        <a href="mailto:you@example.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+        <a href="https://www.instagram.com/tda.tech" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="https://x.com/TDA_6" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+        <a href="https://www.facebook.com/share/1HkmZnhAks/" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+        <a href="https://wa.me/81158126" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
+        <a href="mailto:tdaspprt@gmail.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
       </div>
     </div>
   </div>
@@ -2808,8 +3201,8 @@
   // bug" and "Contact support" messages get sent. Both buttons open the
   // visitor's own email app with the message pre-filled; nothing is
   // sent from a server, so no other setup is needed.
-  const BUG_REPORT_EMAIL = 'you@example.com';
-  const SUPPORT_EMAIL = 'you@example.com';
+  const BUG_REPORT_EMAIL = 'tdaspprt@gmail.com';
+  const SUPPORT_EMAIL = 'tdaspprt@gmail.com';
   // =====================================================
 
   const DEFAULT_EXPENSE_CATS = ['Food','Transport','Rent','Utilities','Health','Shopping','Entertainment','Education','Other'];
@@ -2971,6 +3364,331 @@
   function entryRate(e){
     const r = e && Number(e.rate);
     return (r && r > 0) ? r : LBP_PER_USD;
+  }
+
+  // ---------- currency converter (Overview card) ----------
+  // Uses currentExchangeRate by default (the same rate the entry form
+  // pre-fills), unless the person types a manual override rate — that
+  // override only affects this converter's own math, it never touches
+  // currentExchangeRate unless they explicitly click "Use this rate".
+  let convManualRate = null;
+  function convActiveRate(){
+    return (convManualRate && convManualRate > 0) ? convManualRate : currentExchangeRate;
+  }
+  function renderConverter(){
+    if(!$('conv-amount')) return;
+    const amount = rawAmountNumber($('conv-amount').value);
+    const from = $('conv-from').value;
+    const to = $('conv-to').value;
+    const rate = convActiveRate();
+    let result = null;
+    if(!isNaN(amount)){
+      if(from === to) result = amount;
+      else if(from === 'USD' && to === 'LBP') result = amount * rate;
+      else if(from === 'LBP' && to === 'USD') result = amount / rate;
+    }
+    $('conv-result').textContent = result === null
+      ? '≈ —'
+      : '≈ ' + (to === 'USD' ? fmtUSD(result) : fmtLBP(result));
+    $('conv-rate-label').textContent = (convManualRate ? 'Using manual rate: ' : 'Using rate: ') +
+      '1 USD = ' + Math.round(rate).toLocaleString('en-US') + ' LBP';
+  }
+  function initConverter(){
+    if(!$('conv-amount')) return;
+    attachAmountFormatter('conv-amount');
+    attachAmountFormatter('conv-manual-rate');
+    $('conv-amount').addEventListener('input', renderConverter);
+    $('conv-from').addEventListener('change', ()=>{
+      // Keep From/To always pointing at opposite currencies.
+      $('conv-to').value = $('conv-from').value === 'USD' ? 'LBP' : 'USD';
+      renderConverter();
+    });
+    $('conv-to').addEventListener('change', ()=>{
+      $('conv-from').value = $('conv-to').value === 'USD' ? 'LBP' : 'USD';
+      renderConverter();
+    });
+    $('conv-swap').addEventListener('click', ()=>{
+      const f = $('conv-from').value, t = $('conv-to').value;
+      $('conv-from').value = t; $('conv-to').value = f;
+      renderConverter();
+    });
+    $('conv-manual-toggle').addEventListener('click', ()=>{
+      $('conv-manual-row').style.display = '';
+      $('conv-manual-rate').value = formatAmountValue(String(Math.round(convActiveRate())));
+      $('conv-manual-rate').focus();
+    });
+    $('conv-manual-cancel').addEventListener('click', ()=>{
+      convManualRate = null;
+      $('conv-manual-row').style.display = 'none';
+      $('conv-manual-rate').value = '';
+      renderConverter();
+    });
+    $('conv-manual-apply').addEventListener('click', ()=>{
+      const n = rawAmountNumber($('conv-manual-rate').value);
+      if(!n || n <= 0){ toast('Enter a valid rate', true); return; }
+      convManualRate = n;
+      $('conv-manual-row').style.display = 'none';
+      renderConverter();
+      toast('Using your manual rate for this converter');
+    });
+    $('conv-live-btn').addEventListener('click', fetchLiveRate);
+  }
+  // Pulls a live USD→LBP rate from a free, no-key exchange-rate API.
+  // This is a *market* reference rate — Lebanon's official rate can
+  // differ — so it's shown as a suggestion the person can accept.
+  async function fetchLiveRate(){
+    const statusEl = $('conv-live-status');
+    const btn = $('conv-live-btn');
+    btn.disabled = true;
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Fetching live rate…';
+    try{
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if(!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      const rate = data && data.rates && Number(data.rates.LBP);
+      if(!rate || rate <= 0) throw new Error('Rate unavailable');
+      convManualRate = rate;
+      renderConverter();
+      const stamp = data.time_last_update_utc ? ' (' + data.time_last_update_utc + ')' : '';
+      statusEl.style.color = 'var(--green-ok)';
+      statusEl.innerHTML = `✅ Live rate: 1 USD = ${Math.round(rate).toLocaleString('en-US')} LBP${stamp} — <a href="#" id="conv-live-save" style="color:var(--forest);font-weight:700;">save as default rate</a>`;
+      const saveLink = $('conv-live-save');
+      if(saveLink) saveLink.addEventListener('click', async (ev)=>{
+        ev.preventDefault();
+        currentExchangeRate = rate;
+        await saveExchangeRateSetting();
+        renderConverter();
+        renderFooterStats();
+        toast('Default exchange rate updated');
+      });
+    }catch(e){
+      statusEl.style.color = 'var(--brick)';
+      statusEl.textContent = '⚠️ Could not fetch a live rate — check your connection, or enter one manually.';
+    }finally{
+      btn.disabled = false;
+    }
+  }
+  // ---------- live rate KPI (Overview stat grid) ----------
+  // Separate from the converter's own "Get live rate" button: this one
+  // fetches automatically on load (and periodically) so the KPI grid
+  // always shows a fresh market rate at a glance, with no click needed.
+  // Purely informational — it never touches currentExchangeRate or any
+  // stored setting; that only happens if the person uses the converter's
+  // "save as default rate" link.
+  let ovLiveRateTimer = null;
+  async function fetchOverviewLiveRate(){
+    const valEl = $('ov-kpi-liverate');
+    const subEl = $('ov-kpi-liverate-sub');
+    const btn = $('ov-liverate-refresh');
+    if(!valEl || !subEl) return;
+    if(btn) btn.classList.add('spinning');
+    try{
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if(!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      const rate = data && data.rates && Number(data.rates.LBP);
+      if(!rate || rate <= 0) throw new Error('Rate unavailable');
+      valEl.textContent = '1 USD = ' + Math.round(rate).toLocaleString('en-US') + ' LBP';
+      const now = new Date();
+      subEl.textContent = 'Updated ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+      subEl.style.color = 'var(--muted)';
+    }catch(e){
+      subEl.textContent = '⚠️ Couldn\'t fetch — check your connection';
+      subEl.style.color = 'var(--brick)';
+    }finally{
+      if(btn) btn.classList.remove('spinning');
+    }
+  }
+  function initLiveRateKpi(){
+    const btn = $('ov-liverate-refresh');
+    if(!btn) return;
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); fetchOverviewLiveRate(); });
+    fetchOverviewLiveRate();
+    if(ovLiveRateTimer) clearInterval(ovLiveRateTimer);
+    // Keep it fresh in the background without the person needing to revisit.
+    ovLiveRateTimer = setInterval(fetchOverviewLiveRate, 10 * 60 * 1000);
+  }
+
+  // ---------- live gold price KPI (Overview stat grid) ----------
+  // Uses xaus.com's free, no-key, CORS-open XAU/USD spot endpoint.
+  // Purely informational, like the live exchange-rate KPI above.
+  let ovGoldTimer = null;
+  // Gold purity fractions for the karats commonly traded in Lebanon.
+  // 24K is (nominally) pure gold; 21K and 18K are simple fractions of it.
+  const GOLD_KARATS = { k24: 1, k21: 21/24, k18: 18/24 };
+  function renderGoldCard(price){
+    const ozUsdEl = $('gold-oz-usd'), ozLbpEl = $('gold-oz-lbp');
+    const statusEl = $('gold-card-status');
+    if(!ozUsdEl) return;
+    if(!price || price <= 0){
+      statusEl.textContent = '⚠️ Couldn\'t fetch — check your connection';
+      statusEl.style.color = 'var(--brick)';
+      return;
+    }
+    const ozLbp = price * currentExchangeRate;
+    ozUsdEl.textContent = fmtUSD(price);
+    ozLbpEl.textContent = Math.round(ozLbp).toLocaleString('en-US') + ' LBP';
+    const perGramUSD = price / 31.1034768;
+    [['k24','24k'], ['k21','21k'], ['k18','18k']].forEach(([key, id])=>{
+      const gUSD = perGramUSD * GOLD_KARATS[key];
+      const gLBP = gUSD * currentExchangeRate;
+      const usdEl = $('gold-'+id+'-usd'), lbpEl = $('gold-'+id+'-lbp');
+      if(usdEl) usdEl.textContent = fmtUSD(gUSD);
+      if(lbpEl) lbpEl.textContent = Math.round(gLBP).toLocaleString('en-US') + ' LBP';
+    });
+    const now = new Date();
+    statusEl.textContent = 'Updated ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) + ' · rate 1$ = ' + Math.round(currentExchangeRate).toLocaleString('en-US') + ' LBP';
+    statusEl.style.color = 'var(--muted)';
+  }
+  async function fetchOverviewGoldPrice(){
+    const valEl = $('ov-kpi-gold');
+    const subEl = $('ov-kpi-gold-sub');
+    const btn = $('ov-gold-refresh');
+    const btn2 = $('ov-gold-card-refresh');
+    if(!valEl || !subEl) return;
+    if(btn) btn.classList.add('spinning');
+    if(btn2) btn2.classList.add('spinning');
+    try{
+      const res = await fetch('https://xaus.com/api/v1/spot?currency=USD&unit=oz');
+      if(!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      const price = data && Number(data.spot_usd_oz);
+      if(!price || price <= 0) throw new Error('Price unavailable');
+      valEl.textContent = fmtUSD(price) + ' / oz';
+      const now = new Date();
+      // Gold is bought and sold by the gram in Lebanon (not by the ounce),
+      // and priced in LBP as often as USD — so the KPI's sub-line converts
+      // to both using the same currentExchangeRate the rest of the app
+      // uses, purely for reference (never stored or used elsewhere).
+      const perGramUSD = price / 31.1034768;
+      const perGramLBP = perGramUSD * currentExchangeRate;
+      subEl.textContent = 'Updated ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) +
+        (data.stale ? ' (last known)' : '') +
+        ' · 1g ≈ ' + fmtUSD(perGramUSD) + ' · ' + Math.round(perGramLBP).toLocaleString('en-US') + ' LBP';
+      subEl.style.color = 'var(--muted)';
+      renderGoldCard(price);
+    }catch(e){
+      subEl.textContent = '⚠️ Couldn\'t fetch — check your connection';
+      subEl.style.color = 'var(--brick)';
+      renderGoldCard(null);
+    }finally{
+      if(btn) btn.classList.remove('spinning');
+      if(btn2) btn2.classList.remove('spinning');
+    }
+  }
+  function initGoldKpi(){
+    const btn = $('ov-gold-refresh');
+    const btn2 = $('ov-gold-card-refresh');
+    if(!btn) return;
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); fetchOverviewGoldPrice(); });
+    if(btn2) btn2.addEventListener('click', (e)=>{ e.stopPropagation(); fetchOverviewGoldPrice(); });
+    fetchOverviewGoldPrice();
+    if(ovGoldTimer) clearInterval(ovGoldTimer);
+    ovGoldTimer = setInterval(fetchOverviewGoldPrice, 10 * 60 * 1000);
+  }
+
+  // ---------- fuel prices (Lebanon) — Overview KPI + card ----------
+  // Unlike the exchange rate and gold KPIs above, there is no free,
+  // no-key, CORS-open live feed for Lebanese fuel prices (the Ministry of
+  // Energy & Water publishes a weekly list, not an API) — so this is a
+  // manually-entered reference value the person keeps up to date
+  // themselves, persisted the same way as every other setting via `store`.
+  let fuelPrices = { octane95: null, octane98: null, diesel: null, gas: null, asOf: null };
+  const FUEL_KEY = 'fuelPricesSetting';
+  async function loadFuelPricesSetting(){
+    try{
+      const res = await store.get(FUEL_KEY);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        fuelPrices = {
+          octane95: Number(parsed.octane95) > 0 ? Number(parsed.octane95) : null,
+          octane98: Number(parsed.octane98) > 0 ? Number(parsed.octane98) : null,
+          diesel: Number(parsed.diesel) > 0 ? Number(parsed.diesel) : null,
+          gas: Number(parsed.gas) > 0 ? Number(parsed.gas) : null,
+          asOf: parsed.asOf || null
+        };
+      }
+    }catch(e){ /* keep defaults already set */ }
+  }
+  async function saveFuelPricesSetting(){
+    try{ await store.set(FUEL_KEY, JSON.stringify(fuelPrices)); }catch(e){ /* best-effort only */ }
+  }
+  function renderFuelKpis(){
+    const v95 = $('ov-kpi-fuel95'), s95 = $('ov-kpi-fuel95-sub');
+    const v98 = $('ov-kpi-fuel98'), s98 = $('ov-kpi-fuel98-sub');
+    const vD = $('ov-kpi-fueldiesel'), sD = $('ov-kpi-fueldiesel-sub');
+    if(!v95 || !vD) return;
+    const asOfLabel = fuelPrices.asOf
+      ? 'as of ' + new Date(fuelPrices.asOf + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+      : '';
+    if(fuelPrices.octane95){
+      v95.textContent = Math.round(fuelPrices.octane95).toLocaleString('en-US') + ' LBP/L';
+      s95.textContent = '≈ ' + fmtUSD(fuelPrices.octane95 / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '');
+    } else {
+      v95.textContent = '—';
+      s95.textContent = 'Set your price ↓';
+    }
+    if(v98 && s98){
+      if(fuelPrices.octane98){
+        v98.textContent = Math.round(fuelPrices.octane98).toLocaleString('en-US') + ' LBP/L';
+        s98.textContent = '≈ ' + fmtUSD(fuelPrices.octane98 / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '');
+      } else {
+        v98.textContent = '—';
+        s98.textContent = 'Set your price ↓';
+      }
+    }
+    if(fuelPrices.diesel){
+      vD.textContent = Math.round(fuelPrices.diesel).toLocaleString('en-US') + ' LBP/L';
+      sD.textContent = '≈ ' + fmtUSD(fuelPrices.diesel / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '');
+    } else {
+      vD.textContent = '—';
+      sD.textContent = 'Set your price ↓';
+    }
+  }
+  function initFuelPricesCard(){
+    if(!$('fuel-95-lbp')) return;
+    attachAmountFormatter('fuel-95-lbp');
+    attachAmountFormatter('fuel-98-lbp');
+    attachAmountFormatter('fuel-diesel-lbp');
+    attachAmountFormatter('fuel-gas-lbp');
+    if(fuelPrices.octane95) $('fuel-95-lbp').value = formatAmountValue(String(fuelPrices.octane95));
+    if(fuelPrices.octane98) $('fuel-98-lbp').value = formatAmountValue(String(fuelPrices.octane98));
+    if(fuelPrices.diesel) $('fuel-diesel-lbp').value = formatAmountValue(String(fuelPrices.diesel));
+    if(fuelPrices.gas) $('fuel-gas-lbp').value = formatAmountValue(String(fuelPrices.gas));
+    $('fuel-asof').value = fuelPrices.asOf || todayISO();
+
+    const jumpToCard = ()=>{
+      $('ov-fuel-card').scrollIntoView({behavior:'smooth', block:'center'});
+      $('fuel-95-lbp').focus();
+    };
+    const btn95 = $('ov-fuel95-edit'); if(btn95) btn95.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
+    const btn98 = $('ov-fuel98-edit'); if(btn98) btn98.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
+    const btnD = $('ov-fueldiesel-edit'); if(btnD) btnD.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
+
+    $('fuel-save-btn').addEventListener('click', async ()=>{
+      const n95 = rawAmountNumber($('fuel-95-lbp').value);
+      const n98 = rawAmountNumber($('fuel-98-lbp').value);
+      const nD = rawAmountNumber($('fuel-diesel-lbp').value);
+      const nG = rawAmountNumber($('fuel-gas-lbp').value);
+      if((!n95 || n95 <= 0) && (!n98 || n98 <= 0) && (!nD || nD <= 0)){
+        toast('Enter at least a 95/98 Octane or Diesel price', true);
+        return;
+      }
+      fuelPrices = {
+        octane95: (n95 && n95 > 0) ? n95 : null,
+        octane98: (n98 && n98 > 0) ? n98 : null,
+        diesel: (nD && nD > 0) ? nD : null,
+        gas: (nG && nG > 0) ? nG : null,
+        asOf: $('fuel-asof').value || todayISO()
+      };
+      await saveFuelPricesSetting();
+      renderFuelKpis();
+      const statusEl = $('fuel-save-status');
+      statusEl.style.color = 'var(--green-ok)';
+      statusEl.textContent = '✅ Saved';
+      toast('Fuel prices saved');
+    });
   }
   // USD-equivalent of an entry's original amount, using THAT entry's own
   // frozen rate. This is the one function every mixed-currency total,
@@ -3972,8 +4690,8 @@
     if(!slot) return;
     const label = escapeHtml(myProfile.username) || 'Profile';
     slot.innerHTML = myProfile.avatar
-      ? `<img src="${myProfile.avatar}" alt="">${label}`
-      : `👤 ${label}`;
+      ? `<img src="${myProfile.avatar}" alt=""><span class="tab-lbl">${label}</span>`
+      : `<span class="tab-ic">👤</span><span class="tab-lbl">${label}</span>`;
   }
   $('avatar-input').addEventListener('change', (ev)=>{
     const file = ev.target.files && ev.target.files[0];
@@ -4410,8 +5128,25 @@
   // ---------- admin: log in as a user (impersonation) ----------
   // Never touches a password. The server generates a one-time Supabase
   // magic-link for the target account (auth.admin.generateLink) and this
-  // just opens it in a new tab, which signs that tab in as them. Two-click
-  // confirm because it opens a real session for another account.
+  // opens it in a new tab, which signs that tab in as them — the admin's
+  // own tab stays signed in as the admin. Two-click confirm because it
+  // opens a real session for another account.
+  //
+  // Two bugs fixed here:
+  // 1) The tab used to open with `window.open(...)` AFTER an `await`.
+  //    Browsers only treat window.open as a trusted, non-popup-blocked
+  //    call when it happens synchronously inside the click handler —
+  //    once you `await` a network call first, that trust is gone and the
+  //    tab silently gets blocked, so "log in as user" looked like it did
+  //    nothing. Fix: open a blank tab synchronously, right on click, and
+  //    only navigate it to the real link once the server responds.
+  // 2) The call never told the server where to send the browser back to,
+  //    so `redirect_to` fell back to whatever the Edge Function assumes
+  //    (or Supabase's default Site URL) — the tab could land anywhere
+  //    except this app. Fix: pass this page's own URL as `redirectTo` and
+  //    have the server forward it into `generateLink({ redirectTo })`.
+  //    (Update your `impersonate_user` case in admin-actions to pass
+  //    `options: { redirectTo: payload.redirectTo }` into generateLink.)
   async function loginAsUser(u, btnEl){
     if(btnEl && btnEl.dataset.confirm !== '1'){
       btnEl.dataset.confirm = '1';
@@ -4421,12 +5156,33 @@
       setTimeout(()=>{ if(btnEl){ btnEl.dataset.confirm='0'; btnEl.textContent = original; btnEl.classList.remove('confirming'); } }, 2500);
       return;
     }
+    // Must happen synchronously, before any `await`, or it gets treated
+    // as a popup and blocked in most browsers.
+    const win = window.open('', '_blank');
+    if(win){
+      win.opener = null; // same tab-nabbing protection as noopener, but we keep our own reference so we can redirect it below
+      try{ win.document.write('<!doctype html><title>Signing in…</title><body style="font-family:system-ui,sans-serif;padding:48px 24px;color:#555;text-align:center;">Signing you in as this user…</body>'); } catch(e){}
+    }
     try{
-      const res = await adminCall('impersonate_user', { userId: u.id });
+      const res = await adminCall('impersonate_user', {
+        userId: u.id,
+        redirectTo: location.origin + location.pathname
+      });
       if(!res || !res.link) throw new Error('No sign-in link returned');
-      window.open(res.link, '_blank', 'noopener');
+      if(win && !win.closed){
+        win.location.href = res.link;
+      } else {
+        // Popup blocked before we could pre-open it, or the person closed
+        // the tab while this was loading — try a direct open as a
+        // fallback (may still get blocked, since we're past the original
+        // click by now, but it's the best remaining option).
+        window.open(res.link, '_blank', 'noopener');
+      }
       toast('Opened a session for ' + (u.email || u.id) + ' in a new tab');
-    } catch(e){ toast(e.message || 'Could not log in as this user', true); }
+    } catch(e){
+      if(win && !win.closed) win.close();
+      toast(e.message || 'Could not log in as this user', true);
+    }
   }
 
   // ---------- admin: force sign-out ----------
@@ -4517,6 +5273,66 @@
     } catch(e){ toast(e.message || 'Could not clear this user\'s data', true); }
   }
 
+  // ---------- admin: resend the account-confirmation email ----------
+  // Requires a `resend_confirmation` action in your admin-actions Edge
+  // Function (server-side, using supabase.auth.admin.generateLink with
+  // type 'signup' or resend() — see ADMIN-SETUP.md). Useful when someone's
+  // confirmation email never arrived or expired.
+  async function resendConfirmationEmail(u, btnEl){
+    const original = btnEl ? btnEl.textContent : null;
+    if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Sending…'; }
+    try{
+      await adminCall('resend_confirmation', { userId: u.id });
+      toast('Confirmation email re-sent to ' + (u.email || u.id));
+    } catch(e){
+      toast(e.message || "Could not resend — is resend_confirmation wired up server-side yet?", true);
+    }
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = original; }
+  }
+
+  // ---------- admin: promote / demote another admin ----------
+  // Requires a `set_admin` action server-side that checks the caller is
+  // already an approved admin before flipping the target's admin flag —
+  // never trust a client-sent boolean for who's an admin. One click,
+  // since it doesn't destroy anything (unlike ban/wipe/delete).
+  async function toggleUserAdmin(u, btnEl){
+    const makingAdmin = !u.isAdmin;
+    const original = btnEl ? btnEl.textContent : null;
+    if(btnEl){ btnEl.disabled = true; btnEl.textContent = makingAdmin ? 'Promoting…' : 'Removing…'; }
+    try{
+      await adminCall('set_admin', { userId: u.id, isAdmin: makingAdmin });
+      u.isAdmin = makingAdmin;
+      toast(makingAdmin ? 'Made ' + (u.email || u.id) + ' an admin' : 'Removed admin from ' + (u.email || u.id));
+      if(adminTargetUser && adminTargetUser.id === u.id) openAdminUserModal(u);
+    } catch(e){
+      toast(e.message || "Could not change admin status — is set_admin wired up server-side yet?", true);
+    }
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = original; }
+  }
+
+  // ---------- admin: permanently delete an account ----------
+  // Different from "Clear all their data": wipe empties the ledger but
+  // keeps the login; this removes the auth account itself (supabase
+  // auth.admin.deleteUser server-side, plus their data). Two-click
+  // confirm like login-as/wipe, since it can't be undone.
+  async function deleteUserAccount(u, btnEl){
+    if(btnEl.dataset.confirm !== '1'){
+      btnEl.dataset.confirm = '1';
+      const original = btnEl.textContent;
+      btnEl.textContent = '⚠️ Confirm — delete forever?';
+      btnEl.classList.add('confirming');
+      setTimeout(()=>{ if(btnEl){ btnEl.dataset.confirm='0'; btnEl.textContent = original; btnEl.classList.remove('confirming'); } }, 3000);
+      return;
+    }
+    try{
+      await adminCall('delete_user', { userId: u.id });
+      toast('Deleted account for ' + (u.email || u.id));
+      closeModal('modal-admin-user');
+      adminUsersCache = adminUsersCache.filter(x => x.id !== u.id);
+      renderAdminUsers();
+    } catch(e){ toast(e.message || "Could not delete this account — is delete_user wired up server-side yet?", true); }
+  }
+
   async function checkAdminAccess(){
     isAdminUser = false;
     if(isSupabaseConfigured && supabaseClient && currentUser){
@@ -4531,14 +5347,19 @@
     if(!isAdminUser && $('panel-admin').classList.contains('active')){
       document.querySelector('.tab-btn[data-tab="add"]').click();
     }
+    // Admin status resolves async (server round-trip), after the profile
+    // tab may have already rendered without it — refresh so the 🛠️ Admin
+    // label on the profile appears/disappears the moment we know for sure.
+    if($('panel-profile')) renderProfile();
   }
 
   function adminBadgeHtml(u){
-    if(u.banned) return '<span class="sync-badge banned"><span class="dot"></span>Banned</span>';
+    const adminTag = u.isAdmin ? '<span class="sync-badge admin">🛠️ Admin</span> ' : '';
+    if(u.banned) return adminTag + '<span class="sync-badge banned"><span class="dot"></span>Banned</span>';
     if(u.email_confirmed_at === false || (u.email_confirmed_at === null && 'email_confirmed_at' in u)) {
-      return '<span class="sync-badge" style="background:rgba(169,128,63,0.15);color:var(--brass);"><span class="dot"></span>Unconfirmed</span>';
+      return adminTag + '<span class="sync-badge" style="background:rgba(169,128,63,0.15);color:var(--brass);"><span class="dot"></span>Unconfirmed</span>';
     }
-    return '<span class="sync-badge cloud"><span class="dot"></span>Active</span>';
+    return adminTag + '<span class="sync-badge cloud"><span class="dot"></span>Active</span>';
   }
 
   function adminSummaryHtml(list){
@@ -4773,6 +5594,11 @@
     $('admin-btn-login-as').dataset.confirm = '0';
     $('admin-btn-wipe').dataset.confirm = '0';
     $('admin-btn-wipe').textContent = '🧹 Clear all their data';
+    $('admin-btn-delete-user').dataset.confirm = '0';
+    $('admin-btn-delete-user').textContent = '🗑️ Delete account';
+    $('admin-btn-toggle-admin').textContent = u.isAdmin ? '🛠️ Remove admin' : '🛠️ Make admin';
+    $('admin-btn-toggle-admin').classList.toggle('ghost', !!u.isAdmin);
+    $('admin-btn-toggle-admin').classList.toggle('subtle', !u.isAdmin);
     $('admin-user-summary').innerHTML = '<div class="stat-box"><div class="lbl">Loading</div><div class="val">…</div></div>';
     $('admin-user-entries').innerHTML = '';
     resetAdminEntryForm();
@@ -4823,6 +5649,15 @@
   });
   $('admin-btn-reset-link').addEventListener('click', async ()=>{
     if(adminTargetUser) await sendAdminResetLink(adminTargetUser);
+  });
+  $('admin-btn-resend-confirm').addEventListener('click', (ev)=>{
+    if(adminTargetUser) resendConfirmationEmail(adminTargetUser, ev.currentTarget);
+  });
+  $('admin-btn-toggle-admin').addEventListener('click', (ev)=>{
+    if(adminTargetUser) toggleUserAdmin(adminTargetUser, ev.currentTarget);
+  });
+  $('admin-btn-delete-user').addEventListener('click', (ev)=>{
+    if(adminTargetUser) deleteUserAccount(adminTargetUser, ev.currentTarget);
   });
 
   // ---------- admin: set a user's password directly ----------
@@ -5141,7 +5976,6 @@
     const nav = $('nav-tabs');
     if(nav.classList.contains('open')) closeNavMenu(); else openNavMenu();
   });
-  $('btn-menu-close').addEventListener('click', closeNavMenu);
   $('nav-backdrop').addEventListener('click', closeNavMenu);
   document.addEventListener('keydown', (ev)=>{
     if(ev.key === 'Escape' && $('nav-tabs').classList.contains('open')) closeNavMenu();
@@ -7247,6 +8081,8 @@
     $('ov-net-lbp').textContent = fmtLBP(s.netLBP) + ' net this month';
     renderDashboardBudgets();
     renderOverviewActivities(y, m);
+    renderConverter();
+    renderFuelKpis();
 
     // ---- top KPI row: balance, this month's income, this month's expenses ----
     const allTime = computeStats(entries);
@@ -7447,6 +8283,26 @@
         </div>
       `).join('');
     }
+    renderFooterStats();
+  }
+
+  // ---------- footer live stats strip ----------
+  function renderFooterStats(){
+    if(!$('footer-stats-strip')) return;
+    const s = computeStats(entries);
+    $('footer-stat-entries').textContent = entries.length.toLocaleString('en-US');
+    $('footer-stat-net-usd').textContent = fmtUSD(s.netUSD);
+    $('footer-stat-net-lbp').textContent = fmtLBP(s.netLBP);
+    $('footer-stat-accounts').textContent = accounts.length.toLocaleString('en-US');
+    $('footer-stat-rate').textContent = '1$ = ' + Math.round(currentExchangeRate).toLocaleString('en-US');
+    const badge = $('footer-sync-badge');
+    const label = $('footer-sync-label');
+    if(badge && label){
+      const cloudActive = isSupabaseConfigured && !!currentUser;
+      badge.classList.toggle('live', cloudActive);
+      badge.classList.toggle('local', !cloudActive);
+      label.textContent = cloudActive ? 'Synced to cloud' : 'This device only';
+    }
   }
 
   // ---------- activity calendar tracker ----------
@@ -7567,21 +8423,89 @@
     `;
   }
 
+  // Which activity type row (if any) is currently expanded into its
+  // inline edit form. Only one row can be in edit mode at a time — opening
+  // another row's pencil, or saving/deleting/pressing ✖️, closes it.
+  let editingActTypeId = null;
+
   function renderActivityTypeManager(){
-    $('acttype-list').innerHTML = activityTypes.map(t => `
+    $('acttype-list').innerHTML = activityTypes.map(t => {
+      if(t.id === editingActTypeId){
+        return `
+          <div class="acttype-row acttype-row-editing" data-id="${t.id}">
+            <div class="acttype-edit-form">
+              <div class="field-row">
+                <div class="field" style="max-width:64px;">
+                  <label>Icon</label>
+                  <input type="text" class="acttype-edit-icon" value="${escapeHtml(t.icon)}" maxlength="4">
+                </div>
+                <div class="field">
+                  <label>Name</label>
+                  <input type="text" class="acttype-edit-name" value="${escapeHtml(t.name)}">
+                </div>
+                <div class="field" style="max-width:64px;">
+                  <label>Color</label>
+                  <input type="color" class="acttype-edit-color" value="${t.color}" style="padding:3px;height:41px;">
+                </div>
+              </div>
+              <div class="acttype-actions" style="margin-top:8px;">
+                <button type="button" class="acttype-save" title="Save">✅ Save</button>
+                <button type="button" class="acttype-delete" title="Delete">🗑️ Delete</button>
+                <button type="button" class="acttype-close" title="Leave edit mode">✖️</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      return `
       <div class="acttype-row${t.enabled === false ? ' disabled' : ''}" data-id="${t.id}">
         <div class="acttype-swatch" style="background:${t.color}">${t.icon}</div>
         <div class="acttype-name">${escapeHtml(t.name)}</div>
         <div class="acttype-actions">
           <button type="button" class="acttype-toggle" title="${t.enabled === false ? 'Enable' : 'Disable'}">${t.enabled === false ? '🚫' : '✅'}</button>
           <button type="button" class="acttype-edit" title="Edit">✏️</button>
-          <button type="button" class="acttype-delete" title="Delete">🗑️</button>
         </div>
       </div>
-    `).join('') || '<p style="font-size:13px;color:var(--muted);">No activity types yet.</p>';
+    `;
+    }).join('') || '<p style="font-size:13px;color:var(--muted);">No activity types yet.</p>';
 
     $('acttype-list').querySelectorAll('.acttype-row').forEach(row=>{
       const id = row.dataset.id;
+
+      if(row.classList.contains('acttype-row-editing')){
+        row.querySelector('.acttype-close').addEventListener('click', ()=>{
+          editingActTypeId = null;
+          renderActivityTypeManager();
+        });
+        row.querySelector('.acttype-save').addEventListener('click', async ()=>{
+          const t = activityTypeById(id);
+          if(!t) return;
+          const newName = row.querySelector('.acttype-edit-name').value.trim();
+          const newIcon = row.querySelector('.acttype-edit-icon').value.trim();
+          const newColor = row.querySelector('.acttype-edit-color').value;
+          if(!newName){ toast('Enter an activity name', true); return; }
+          t.name = newName;
+          t.icon = newIcon || t.icon;
+          t.color = newColor || t.color;
+          const ok = await saveActivityTypes('Activity type updated');
+          if(ok){
+            editingActTypeId = null;
+            renderActivityTypeManager();
+            renderActivityCalendar();
+            renderOverviewActivities(actCalState.year, actCalState.month);
+          }
+        });
+        row.querySelector('.acttype-delete').addEventListener('click', async ()=>{
+          if(!confirm(`Delete "${activityTypeById(id).name}"? Past days keep their record, but you won't be able to pick this activity anymore.`)) return;
+          activityTypes = activityTypes.filter(t=>t.id !== id);
+          editingActTypeId = null;
+          await saveActivityTypes('Activity type deleted');
+          renderActivityTypeManager();
+          renderActivityCalendar();
+        });
+        return;
+      }
+
       row.querySelector('.acttype-toggle').addEventListener('click', async ()=>{
         const t = activityTypeById(id);
         if(!t) return;
@@ -7590,23 +8514,7 @@
         renderActivityTypeManager();
       });
       row.querySelector('.acttype-edit').addEventListener('click', ()=>{
-        const t = activityTypeById(id);
-        if(!t) return;
-        const newName = prompt('Activity name', t.name);
-        if(newName === null) return;
-        const newIcon = prompt('Icon (emoji)', t.icon);
-        if(newIcon === null) return;
-        t.name = newName.trim() || t.name;
-        t.icon = newIcon.trim() || t.icon;
-        saveActivityTypes('Activity type updated').then(()=>{
-          renderActivityTypeManager();
-          renderActivityCalendar();
-        });
-      });
-      row.querySelector('.acttype-delete').addEventListener('click', async ()=>{
-        if(!confirm(`Delete "${activityTypeById(id).name}"? Past days keep their record, but you won't be able to pick this activity anymore.`)) return;
-        activityTypes = activityTypes.filter(t=>t.id !== id);
-        await saveActivityTypes('Activity type deleted');
+        editingActTypeId = id;
         renderActivityTypeManager();
       });
     });
@@ -7624,6 +8532,64 @@
     $('acttype-icon').value = '';
     renderActivityTypeManager();
     renderActivityCalendar();
+  });
+
+  // ---------- public holidays auto-load ----------
+  // Fetches a country's public holidays for a year from a free, no-key
+  // API and stamps the built-in 'holiday' activity onto each matching
+  // date. Uses the same merge behavior as the bulk-apply tool — any
+  // activities already logged on that day (work, gym, etc.) are kept.
+  if($('holiday-year')) $('holiday-year').value = new Date().getFullYear();
+  $('holiday-load-btn') && $('holiday-load-btn').addEventListener('click', async ()=>{
+    const country = $('holiday-country').value;
+    const year = parseInt($('holiday-year').value, 10) || new Date().getFullYear();
+    const statusEl = $('holiday-status');
+    const btn = $('holiday-load-btn');
+    btn.disabled = true;
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Fetching holidays…';
+    try{
+      const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
+      if(!res.ok) throw new Error('Network error');
+      const holidays = await res.json();
+      if(!Array.isArray(holidays) || holidays.length === 0){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = 'No holiday data found for that country/year.';
+        return;
+      }
+      if(!activityTypeById('holiday')){
+        activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
+        await saveActivityTypes();
+      }
+      let added = 0;
+      holidays.forEach(h=>{
+        const dateStr = h.date;
+        if(!dateStr) return;
+        const existing = activityRecords[dateStr];
+        const existingActs = (existing && existing.activities) || [];
+        if(existingActs.includes('holiday')) return;
+        const noteBit = h.localName || h.name || '';
+        activityRecords[dateStr] = {
+          activities: Array.from(new Set([...existingActs, 'holiday'])),
+          note: (existing && existing.note) ? existing.note : noteBit
+        };
+        added++;
+      });
+      const ok = await saveActivityRecords(`Loaded ${added} holiday${added===1?'':'s'} for ${year}`);
+      if(ok){
+        statusEl.style.color = 'var(--green-ok)';
+        statusEl.textContent = `✅ Marked ${added} holiday${added===1?'':'s'} on your calendar for ${year}.`;
+        renderActivityTypeManager();
+        renderActivityCalendar();
+        renderActivityStats();
+        renderOverviewActivities(actCalState.year, actCalState.month);
+      }
+    }catch(e){
+      statusEl.style.color = 'var(--brick)';
+      statusEl.textContent = '⚠️ Could not fetch holidays — check your connection and try again.';
+    }finally{
+      btn.disabled = false;
+    }
   });
 
   function openDayActivityModal(dateStr){
@@ -8297,8 +9263,14 @@
     $('rec-start').value = todayISO();
     renderReceiptField();
     busySaving();
-    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadActivityTypes(), loadActivityRecords()]);
+    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting()]);
     $('f-rate').value = formatAmountValue(String(currentExchangeRate));
+    initConverter();
+    renderConverter();
+    initLiveRateKpi();
+    initGoldKpi();
+    initFuelPricesCard();
+    renderFuelKpis();
     await migrateLegacyEntriesToAccounts();
     await processRecurringTransactions();
     $('save-indicator').textContent = 'All changes saved';
@@ -8320,6 +9292,7 @@
     renderReminders();
     initAppSettings();
     startSelfBanWatch();
+    renderFooterStats();
   }
 
   // ---------- app settings (device-local: theme + quick add visibility) ----------
@@ -8428,6 +9401,7 @@
         ? new Date(currentUser.created_at).toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})
         : '—';
       info.innerHTML = `
+        ${isAdminUser ? `<div class="profile-row"><span class="lbl">Role</span><span class="val"><span class="sync-badge admin">🛠️ Admin</span></span></div>` : ''}
         <div class="profile-row"><span class="lbl">Email</span><span class="val">${escapeHtml(currentUser.email || '')}</span></div>
         <div class="profile-row"><span class="lbl">Member since</span><span class="val">${joined}</span></div>
         <div class="profile-row"><span class="lbl">Total entries</span><span class="val">${entries.length}</span></div>
@@ -8667,6 +9641,25 @@
           currentUser = session.user;
           if($('main-app').style.display !== 'block') enterApp();
           openChangePasswordModal(true);
+        }
+        // Fires when this tab's session becomes invalid — either because
+        // someone here clicked "Sign out", or because an admin force-
+        // signed-out / banned this account and Supabase's client detected
+        // the revoked session on its next token refresh. Previously
+        // nothing listened for this, so a kicked user's tab just sat on
+        // the app with a dead session until they manually reloaded. Now
+        // it drops them straight back to the login screen.
+        if(event === 'SIGNED_OUT'){
+          if(isLockedOut) return; // the ban lock screen manages its own UI
+          currentUser = null;
+          document.querySelectorAll('.modal-overlay.open').forEach(m=> m.classList.remove('open'));
+          if(selfBanWatchTimer){ clearInterval(selfBanWatchTimer); selfBanWatchTimer = null; }
+          if(onlineChannel){ try{ onlineChannel.unsubscribe(); }catch(e){} onlineChannel = null; }
+          $('main-app').style.display = 'none';
+          $('banned-lock-screen').style.display = 'none';
+          $('auth-screen').style.display = 'flex';
+          setAuthTab('login');
+          toast('You were signed out');
         }
       });
       const { data } = await supabaseClient.auth.getSession();
