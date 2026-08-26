@@ -2214,6 +2214,17 @@
           <button type="button" class="btn small brass" id="holiday-load-btn" style="margin-bottom:1px;">🌐 Load holidays</button>
         </div>
         <div id="holiday-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:10px 0 8px;">
+          <div style="flex:1;height:1px;background:var(--rule);"></div>
+          <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">OR</span>
+          <div style="flex:1;height:1px;background:var(--rule);"></div>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">Country not covered by the free API above (this includes Lebanon)? Import a calendar file instead — works for any country, entirely offline, no API needed. Get one free from <a href="https://www.google.com/calendar" target="_blank" rel="noopener">Google Calendar</a> ("Other calendars" → browse holiday calendars → ⋮ → export), <a href="https://www.officeholidays.com/" target="_blank" rel="noopener">officeholidays.com</a>, or <a href="https://www.calendarlabs.com/ical-calendar/holidays" target="_blank" rel="noopener">calendarlabs.com</a> — search "[country] holidays ics" and download/subscribe, then import the .ics file here.</p>
+        <div class="btn-row">
+          <input type="file" id="holiday-ics-file" accept=".ics,text/calendar" style="display:none;">
+          <button type="button" class="btn small ghost-teal" id="holiday-ics-btn">📅 Import from calendar file (.ics)</button>
+        </div>
+        <div id="holiday-ics-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
       </div>
     </div>
 
@@ -2294,6 +2305,11 @@
           <div class="lbl">⛽ Diesel · Lebanon<button type="button" class="live-refresh-btn" id="ov-fueldiesel-edit" title="Edit fuel prices">✏️</button></div>
           <div class="val" id="ov-kpi-fueldiesel">—</div>
           <div class="sub" id="ov-kpi-fueldiesel-sub">Set your price ↓</div>
+        </div>
+        <div class="stat-box live" id="ov-kpi-gas-box">
+          <div class="lbl">🔥 Cooking gas · Lebanon<button type="button" class="live-refresh-btn" id="ov-gas-edit" title="Edit fuel prices">✏️</button></div>
+          <div class="val" id="ov-kpi-gas">—</div>
+          <div class="sub" id="ov-kpi-gas-sub">Set your price ↓</div>
         </div>
       </div>
       <div class="card" id="ov-converter-card">
@@ -2382,6 +2398,48 @@
           <button type="button" class="btn small brass" id="fuel-save-btn">✅ Save prices</button>
         </div>
         <div id="fuel-save-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
+      </div>
+      <div class="card" id="ov-goldfuel-calc-card">
+        <h2>🧮 Gold &amp; Fuel Calculator</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Type in a quantity and get the price, using the live gold rate and the fuel prices saved above.</p>
+        <div class="scope-toggle" id="calc-type-toggle">
+          <button class="on" data-type="gold">🪙 Gold</button>
+          <button data-type="fuel">⛽ Fuel</button>
+        </div>
+        <div class="conv-row" id="calc-gold-row">
+          <div class="field">
+            <label>Karat</label>
+            <select id="calc-gold-karat">
+              <option value="k24">24K (pure)</option>
+              <option value="k22">22K</option>
+              <option value="k21" selected>21K</option>
+              <option value="k18">18K</option>
+              <option value="k14">14K</option>
+              <option value="k10">10K</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Grams</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="calc-gold-grams" placeholder="e.g. 5">
+          </div>
+        </div>
+        <div class="conv-row" id="calc-fuel-row" style="display:none;">
+          <div class="field">
+            <label>Fuel type</label>
+            <select id="calc-fuel-type">
+              <option value="octane95">95 Octane</option>
+              <option value="octane98">98 Octane</option>
+              <option value="diesel">Diesel</option>
+              <option value="gas">Cooking gas</option>
+            </select>
+          </div>
+          <div class="field">
+            <label id="calc-fuel-qty-label">Liters</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="calc-fuel-qty" placeholder="e.g. 20">
+          </div>
+        </div>
+        <div class="conv-result" id="calc-result">≈ $0.00</div>
+        <div id="calc-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
       </div>
       <div class="card" id="ov-reminders-card">
         <h2>🔔 Reminders</h2>
@@ -2883,17 +2941,12 @@
             <label>Job title</label>
             <input type="text" id="profile-jobtitle" placeholder="e.g. Freelance Designer" maxlength="60">
           </div>
-          <div class="field" style="max-width:170px;">
-            <label>Effective from</label>
-            <input type="date" id="profile-jobtitle-date">
-          </div>
           <div class="field" style="flex:0;">
             <label>&nbsp;</label>
             <button class="btn small brass" id="btn-jobtitle-save" type="button">💾 Save job title</button>
           </div>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Shown on your printed reports. Reports use whichever job title was effective for the period being reported — so a report for an old month shows the old job title, even if you've changed it since. Reports you've already printed or downloaded keep the job title they were made with.</p>
-        <div id="profile-jobtitle-history" style="margin-top:10px;"></div>
+        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Shown on your printed reports. Changing it only affects reports you generate from now on — reports you've already printed or downloaded keep the job title they were made with.</p>
         <div id="profile-info" style="margin-top:10px;"></div>
       </div>
       <div class="card">
@@ -2995,7 +3048,7 @@
       <div class="footer-divider"></div>
 
       <div class="footer-inner">
-        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.6</span></div>
+        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.2</span></div>
         <div class="footer-links">
           <button type="button" id="btn-footer-about">ℹ️ About Us</button>
           <button type="button" id="btn-footer-rules">📜 Rules &amp; Terms</button>
@@ -3298,56 +3351,7 @@
   const ACCOUNTS_KEY = 'accounts';
   const BUDGETS_KEY = 'budgets';
   const RECURRING_KEY = 'recurring';
-  let myProfile = { username:'', avatar:'', notifyOptIn:false, jobTitle:'', jobHistory:[] };
-  // Returns the job title that was effective on a given date (YYYY-MM-DD),
-  // by looking through jobHistory for the most recent entry on or before
-  // that date. Falls back to the earliest known title if the date is
-  // before any recorded change, or to the plain jobTitle field if there's
-  // no history at all (e.g. an older save from before this feature).
-  function jobTitleAsOf(dateStr){
-    const hist = Array.isArray(myProfile.jobHistory) ? myProfile.jobHistory : [];
-    if(!hist.length) return myProfile.jobTitle || '';
-    const sorted = [...hist].sort((a,b)=> a.date.localeCompare(b.date));
-    let match = null;
-    for(const h of sorted){ if(h.date <= dateStr) match = h; else break; }
-    return (match || sorted[0]).title;
-  }
-  function monthEndStr(y, m1){
-    // last calendar day of month m1 (1-12) in year y, as 'YYYY-MM-DD'
-    const d = new Date(y, m1, 0);
-    return `${y}-${String(m1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-  function renderJobTitleHistory(){
-    const wrap = $('profile-jobtitle-history');
-    if(!wrap) return;
-    const hist = Array.isArray(myProfile.jobHistory) ? [...myProfile.jobHistory] : [];
-    if(!hist.length){ wrap.innerHTML = ''; return; }
-    hist.sort((a,b)=> b.date.localeCompare(a.date));
-    wrap.innerHTML = `
-      <div style="font-size:11.5px;color:var(--muted);margin-bottom:4px;">Job title history</div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        ${hist.map((h,i)=> `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;padding:6px 10px;background:var(--paper-2);border-radius:8px;">
-            <span><b>${escapeHtml(h.title)}</b> <span style="color:var(--muted);">— from ${h.date}</span></span>
-            <button type="button" class="btn small ghost jobhist-remove" data-idx="${i}" style="padding:3px 8px;font-size:11px;">🗑️</button>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    wrap.querySelectorAll('.jobhist-remove').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const idx = parseInt(btn.dataset.idx, 10);
-        const sorted = [...myProfile.jobHistory].sort((a,b)=> b.date.localeCompare(a.date));
-        const target = sorted[idx];
-        myProfile.jobHistory = myProfile.jobHistory.filter(h=> !(h.date===target.date && h.title===target.title));
-        const latest = [...myProfile.jobHistory].sort((a,b)=> a.date.localeCompare(b.date)).pop();
-        myProfile.jobTitle = latest ? latest.title : '';
-        $('profile-jobtitle').value = myProfile.jobTitle;
-        await saveProfile('Job title entry removed');
-        renderJobTitleHistory();
-      });
-    });
-  }
+  let myProfile = { username:'', avatar:'', notifyOptIn:false, jobTitle:'' };
   // Recurring transaction rules. Each rule looks like:
   // { id, name, type:'expense'|'income', amount, currency, category,
   //   accountId, frequency:'daily'|'weekly'|'monthly'|'yearly',
@@ -3613,9 +3617,14 @@
   // Uses xaus.com's free, no-key, CORS-open XAU/USD spot endpoint.
   // Purely informational, like the live exchange-rate KPI above.
   let ovGoldTimer = null;
-  // Gold purity fractions for the karats commonly traded in Lebanon.
-  // 24K is (nominally) pure gold; 21K and 18K are simple fractions of it.
-  const GOLD_KARATS = { k24: 1, k21: 21/24, k18: 18/24 };
+  // Gold purity fractions for the karats commonly traded in Lebanon and
+  // beyond. 24K is (nominally) pure gold; the rest are simple fractions
+  // of it. k22/k14/k10 exist only for the calculator below — the KPI
+  // grid above still only shows 24/21/18, the karats actually traded here.
+  const GOLD_KARATS = { k24: 1, k22: 22/24, k21: 21/24, k18: 18/24, k14: 14/24, k10: 10/24 };
+  // Last fetched XAU/USD spot price (per ounce), kept around so the
+  // calculator card can price gold without re-fetching on every keystroke.
+  let lastGoldPriceUSD = null;
   function renderGoldCard(price){
     const ozUsdEl = $('gold-oz-usd'), ozLbpEl = $('gold-oz-lbp');
     const statusEl = $('gold-card-status');
@@ -3654,6 +3663,7 @@
       const data = await res.json();
       const price = data && Number(data.spot_usd_oz);
       if(!price || price <= 0) throw new Error('Price unavailable');
+      lastGoldPriceUSD = price;
       valEl.textContent = fmtUSD(price) + ' / oz';
       const now = new Date();
       // Gold is bought and sold by the gram in Lebanon (not by the ounce),
@@ -3667,10 +3677,12 @@
         ' · 1g ≈ ' + fmtUSD(perGramUSD) + ' · ' + Math.round(perGramLBP).toLocaleString('en-US') + ' LBP';
       subEl.style.color = 'var(--muted)';
       renderGoldCard(price);
+      renderGoldFuelCalc();
     }catch(e){
       subEl.textContent = '⚠️ Couldn\'t fetch — check your connection';
       subEl.style.color = 'var(--brick)';
       renderGoldCard(null);
+      renderGoldFuelCalc();
     }finally{
       if(btn) btn.classList.remove('spinning');
       if(btn2) btn2.classList.remove('spinning');
@@ -3744,6 +3756,19 @@
       vD.textContent = '—';
       sD.textContent = 'Set your price ↓';
     }
+    const vG = $('ov-kpi-gas'), sG = $('ov-kpi-gas-sub');
+    if(vG && sG){
+      // Cooking gas is priced per 10kg bottle in Lebanon, not per liter —
+      // shown and used that way everywhere, including the calculator card.
+      if(fuelPrices.gas){
+        vG.textContent = Math.round(fuelPrices.gas).toLocaleString('en-US') + ' LBP/bottle';
+        sG.textContent = '≈ ' + fmtUSD(fuelPrices.gas / currentExchangeRate) + '/bottle' + (asOfLabel ? ' · ' + asOfLabel : '');
+      } else {
+        vG.textContent = '—';
+        sG.textContent = 'Set your price ↓';
+      }
+    }
+    renderGoldFuelCalc();
   }
   function initFuelPricesCard(){
     if(!$('fuel-95-lbp')) return;
@@ -3764,6 +3789,7 @@
     const btn95 = $('ov-fuel95-edit'); if(btn95) btn95.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
     const btn98 = $('ov-fuel98-edit'); if(btn98) btn98.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
     const btnD = $('ov-fueldiesel-edit'); if(btnD) btnD.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
+    const btnG = $('ov-gas-edit'); if(btnG) btnG.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
 
     $('fuel-save-btn').addEventListener('click', async ()=>{
       const n95 = rawAmountNumber($('fuel-95-lbp').value);
@@ -3788,6 +3814,89 @@
       statusEl.textContent = '✅ Saved';
       toast('Fuel prices saved');
     });
+  }
+
+  // ---------- gold & fuel calculator (Overview card) ----------
+  // Prices whatever grams/liters/bottles the person types in, using the
+  // live gold spot price and the fuel prices saved just above. Cooking
+  // gas is the one exception: Lebanon prices it per 10kg bottle, not per
+  // liter, so its quantity field and math both switch to "bottles".
+  const FUEL_LABELS = { octane95: '95 Octane', octane98: '98 Octane', diesel: 'Diesel', gas: 'Cooking gas' };
+  function initGoldFuelCalculator(){
+    const toggle = $('calc-type-toggle');
+    if(!toggle) return;
+    attachAmountFormatter('calc-gold-grams');
+    attachAmountFormatter('calc-fuel-qty');
+    let calcType = 'gold';
+    toggle.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        calcType = btn.dataset.type;
+        toggle.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b===btn));
+        $('calc-gold-row').style.display = calcType === 'gold' ? '' : 'none';
+        $('calc-fuel-row').style.display = calcType === 'fuel' ? '' : 'none';
+        renderGoldFuelCalc();
+      });
+    });
+    $('calc-gold-karat').addEventListener('change', renderGoldFuelCalc);
+    $('calc-gold-grams').addEventListener('input', renderGoldFuelCalc);
+    $('calc-fuel-type').addEventListener('change', ()=>{
+      const isGas = $('calc-fuel-type').value === 'gas';
+      $('calc-fuel-qty-label').textContent = isGas ? 'Bottles (10kg)' : 'Liters';
+      $('calc-fuel-qty').placeholder = isGas ? 'e.g. 1' : 'e.g. 20';
+      renderGoldFuelCalc();
+    });
+    $('calc-fuel-qty').addEventListener('input', renderGoldFuelCalc);
+    window.__calcType = () => calcType;
+    renderGoldFuelCalc();
+  }
+  function renderGoldFuelCalc(){
+    const resultEl = $('calc-result'), statusEl = $('calc-status');
+    if(!resultEl || !window.__calcType) return;
+    const calcType = window.__calcType();
+    if(calcType === 'gold'){
+      const grams = rawAmountNumber($('calc-gold-grams').value);
+      const karat = $('calc-gold-karat').value;
+      if(!lastGoldPriceUSD){
+        resultEl.textContent = '≈ $0.00';
+        statusEl.textContent = '⚠️ Live gold price not available yet';
+        statusEl.style.color = 'var(--brick)';
+        return;
+      }
+      if(!grams || grams <= 0){
+        resultEl.textContent = '≈ $0.00';
+        statusEl.textContent = 'Enter a weight in grams';
+        statusEl.style.color = 'var(--muted)';
+        return;
+      }
+      const perGramUSD = (lastGoldPriceUSD / 31.1034768) * GOLD_KARATS[karat];
+      const totalUSD = perGramUSD * grams;
+      const totalLBP = totalUSD * currentExchangeRate;
+      resultEl.textContent = '≈ ' + fmtUSD(totalUSD) + ' · ' + Math.round(totalLBP).toLocaleString('en-US') + ' LBP';
+      statusEl.textContent = grams + 'g of ' + karat.replace('k','') + 'K at ' + fmtUSD(perGramUSD) + '/g';
+      statusEl.style.color = 'var(--muted)';
+    } else {
+      const fuelType = $('calc-fuel-type').value;
+      const qty = rawAmountNumber($('calc-fuel-qty').value);
+      const unitPriceLBP = fuelPrices[fuelType];
+      const isGas = fuelType === 'gas';
+      if(!unitPriceLBP){
+        resultEl.textContent = '≈ $0.00';
+        statusEl.textContent = '⚠️ Set the ' + FUEL_LABELS[fuelType] + ' price in the card above';
+        statusEl.style.color = 'var(--brick)';
+        return;
+      }
+      if(!qty || qty <= 0){
+        resultEl.textContent = '≈ $0.00';
+        statusEl.textContent = isGas ? 'Enter a number of bottles' : 'Enter a quantity in liters';
+        statusEl.style.color = 'var(--muted)';
+        return;
+      }
+      const totalLBP = unitPriceLBP * qty;
+      const totalUSD = totalLBP / currentExchangeRate;
+      resultEl.textContent = '≈ ' + fmtUSD(totalUSD) + ' · ' + Math.round(totalLBP).toLocaleString('en-US') + ' LBP';
+      statusEl.textContent = qty + (isGas ? ' bottle(s) of ' : 'L of ') + FUEL_LABELS[fuelType];
+      statusEl.style.color = 'var(--muted)';
+    }
   }
   // USD-equivalent of an entry's original amount, using THAT entry's own
   // frozen rate. This is the one function every mixed-currency total,
@@ -4759,16 +4868,6 @@
         myProfile.avatar = parsed.avatar || '';
         myProfile.notifyOptIn = !!parsed.notifyOptIn;
         myProfile.jobTitle = parsed.jobTitle || '';
-        if(Array.isArray(parsed.jobHistory) && parsed.jobHistory.length){
-          myProfile.jobHistory = parsed.jobHistory;
-        } else if(myProfile.jobTitle){
-          // Migrating a profile saved before job title history existed —
-          // treat the single saved title as effective from the very start
-          // so old reports still resolve to something sensible.
-          myProfile.jobHistory = [{ date:'2000-01-01', title: myProfile.jobTitle }];
-        } else {
-          myProfile.jobHistory = [];
-        }
       }
     }catch(e){ /* keep defaults */ }
   }
@@ -4951,16 +5050,8 @@
   });
   $('btn-jobtitle-save').addEventListener('click', async ()=>{
     const title = $('profile-jobtitle').value.trim();
-    const effDate = $('profile-jobtitle-date').value || todayISO();
-    if(!title){ alertInline('Enter a job title first.'); return; }
     myProfile.jobTitle = title;
-    if(!Array.isArray(myProfile.jobHistory)) myProfile.jobHistory = [];
-    // Replace any existing entry for the same date (re-saving the same
-    // day just corrects it) rather than piling up duplicates.
-    myProfile.jobHistory = myProfile.jobHistory.filter(h=> h.date !== effDate);
-    myProfile.jobHistory.push({ date: effDate, title });
-    const ok = await saveProfile('Job title saved');
-    if(ok) renderJobTitleHistory();
+    await saveProfile('Job title saved');
   });
   if($('btn-export-my-csv')){
     $('btn-export-my-csv').addEventListener('click', ()=>{
@@ -8687,7 +8778,7 @@
       }
       if(res.status === 404){
         statusEl.style.color = 'var(--brick)';
-        statusEl.textContent = `This API doesn't have holiday data for "${country}" — try a different country.`;
+        statusEl.textContent = `This free API doesn't have holiday data for "${country}" (Lebanon isn't in its country list). Use "Import from calendar file (.ics)" below instead — it works for any country.`;
         return;
       }
       if(!res.ok) throw new Error(`Holiday API returned an error (status ${res.status}). Try again in a moment.`);
@@ -8747,6 +8838,109 @@
       statusEl.textContent = '⚠️ ' + (e.message || 'Could not fetch holidays — check your connection and try again.');
     }finally{
       btn.disabled = false;
+    }
+  });
+
+  // ---------- public holidays: import from .ics calendar file ----------
+  // Fallback for countries the free Nager/nagerholidays API doesn't cover
+  // (e.g. Lebanon). Works entirely offline: parses a standard iCalendar
+  // (.ics) file — the kind you get by subscribing to/exporting a "Holidays
+  // in <country>" calendar from Google Calendar, Outlook, officeholidays.com
+  // or calendarlabs.com — and stamps the built-in 'holiday' activity onto
+  // each event date found in it. Same merge behavior as the API loader:
+  // activities already logged on a day are kept.
+  function unfoldIcsLines(raw){
+    // RFC 5545 line folding: a line that starts with a space or tab is a
+    // continuation of the previous line and must be joined to it.
+    const rawLines = raw.split(/\r\n|\n|\r/);
+    const lines = [];
+    for(const line of rawLines){
+      if((line.startsWith(' ') || line.startsWith('\t')) && lines.length){
+        lines[lines.length-1] += line.slice(1);
+      } else {
+        lines.push(line);
+      }
+    }
+    return lines;
+  }
+  function parseIcsHolidays(raw){
+    const lines = unfoldIcsLines(raw);
+    const events = [];
+    let cur = null;
+    for(const line of lines){
+      const trimmed = line.trim();
+      if(trimmed === 'BEGIN:VEVENT'){ cur = {}; continue; }
+      if(trimmed === 'END:VEVENT'){ if(cur && cur.date) events.push(cur); cur = null; continue; }
+      if(!cur) continue;
+      const idx = trimmed.indexOf(':');
+      if(idx === -1) continue;
+      const propRaw = trimmed.slice(0, idx);
+      const value = trimmed.slice(idx+1);
+      const prop = propRaw.split(';')[0].toUpperCase();
+      if(prop === 'DTSTART'){
+        // Matches "20260101" (all-day) or "20260101T000000Z" (timed) —
+        // either way we only need the calendar date portion.
+        const m = value.match(/^(\d{4})(\d{2})(\d{2})/);
+        if(m) cur.date = `${m[1]}-${m[2]}-${m[3]}`;
+      } else if(prop === 'SUMMARY'){
+        // Unescape the handful of iCalendar escape sequences that show up
+        // in holiday names (commas, semicolons, literal backslashes).
+        cur.name = value.replace(/\\n/gi,' ').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+      }
+    }
+    return events;
+  }
+  $('holiday-ics-btn') && $('holiday-ics-btn').addEventListener('click', ()=>{
+    $('holiday-ics-file').click();
+  });
+  $('holiday-ics-file') && $('holiday-ics-file').addEventListener('change', async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if(!file) return;
+    const statusEl = $('holiday-ics-status');
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Reading calendar file…';
+    try{
+      const raw = await file.text();
+      if(!/BEGIN:VCALENDAR/i.test(raw)){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = "That doesn't look like a valid .ics calendar file — make sure you downloaded the actual calendar file, not a webpage.";
+        return;
+      }
+      const events = parseIcsHolidays(raw);
+      if(!events.length){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = 'No dated events were found in that calendar file.';
+        return;
+      }
+      if(!activityTypeById('holiday')){
+        activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
+        await saveActivityTypes();
+      }
+      let added = 0;
+      events.forEach(ev=>{
+        const dateStr = ev.date;
+        const existing = activityRecords[dateStr];
+        const existingActs = (existing && existing.activities) || [];
+        if(existingActs.includes('holiday')) return;
+        activityRecords[dateStr] = {
+          activities: Array.from(new Set([...existingActs, 'holiday'])),
+          note: (existing && existing.note) ? existing.note : (ev.name || '')
+        };
+        added++;
+      });
+      const ok = await saveActivityRecords(`Imported ${added} holiday${added===1?'':'s'} from calendar file`);
+      if(ok){
+        statusEl.style.color = 'var(--green-ok)';
+        statusEl.textContent = `✅ Marked ${added} holiday${added===1?'':'s'} on your calendar from ${file.name}.`;
+        renderActivityTypeManager();
+        renderActivityCalendar();
+        renderActivityStats();
+        renderOverviewActivities(actCalState.year, actCalState.month);
+      }
+    }catch(e){
+      statusEl.style.color = 'var(--brick)';
+      statusEl.textContent = '⚠️ ' + (e.message || 'Could not read that calendar file.');
     }
   });
 
@@ -9147,13 +9341,10 @@
   // reportHead() bakes these values directly into the returned HTML string,
   // so a report that's already been generated/printed/downloaded is frozen —
   // editing the username, photo, or job title in the Profile tab afterward
-  // only affects reports generated from that point on. The job title itself
-  // is picked from jobHistory using the asOfDate passed in (roughly, the end
-  // of the period being reported), so a report for an old month still shows
-  // whichever job title was effective back then, not today's.
-  function reportUserBlockHtml(asOfDate){
+  // only affects reports generated from that point on.
+  function reportUserBlockHtml(){
     const name = escapeHtml(myProfile.username) || (currentUser && escapeHtml(currentUser.email)) || 'Unnamed user';
-    const title = escapeHtml(jobTitleAsOf(asOfDate || todayISO()));
+    const title = escapeHtml(myProfile.jobTitle);
     const initial = (myProfile.username || (currentUser && currentUser.email) || '?').trim().charAt(0).toUpperCase();
     const avatarHtml = myProfile.avatar
       ? `<img src="${myProfile.avatar}" alt="">`
@@ -9168,7 +9359,7 @@
       </div>
     `;
   }
-  function reportHead(title, sub, count, genDate, asOfDate){
+  function reportHead(title, sub, count, genDate){
     return `
       <div class="report-letterhead">
         <div class="lh-name">TDA Accounting</div>
@@ -9182,7 +9373,7 @@
         </div>
         <div class="sub meta-right">Generated ${genDate}<br>${count} ${count === 1 ? 'entry' : 'entries'}</div>
       </div>
-      ${reportUserBlockHtml(asOfDate)}
+      ${reportUserBlockHtml()}
     `;
   }
   function reportFoot(genDate){
@@ -9208,7 +9399,7 @@
       lastReportName = `tracker-${y}-${String(m).padStart(2,'0')}`;
       return `
         <div class="report-doc">
-          ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate, monthEndStr(y, m))}
+          ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate)}
           ${activityReportHtml(y, m-1, genDate)}
           ${reportFoot(genDate)}
         </div>
@@ -9219,7 +9410,7 @@
       lastReportName = `tracker-${y}-annual`;
       return `
         <div class="report-doc">
-          ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate, `${y}-12-31`)}
+          ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate)}
           ${activityYearReportHtml(y)}
           ${reportFoot(genDate)}
         </div>
@@ -9259,7 +9450,7 @@
       lastReportName = `accounting-${y}-${String(m).padStart(2,'0')}`;
       html = `
         <div class="report-doc">
-          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate, monthEndStr(y, m))}
+          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate)}
           <div class="report-section"><h3><span class="idx">1</span>Summary</h3>${statBoxesHtml(s)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Highlights</h3>${highlightsHtml(list, s) || '<p style="font-size:13px;color:var(--muted);">No entries recorded this month.</p>'}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category</h3>
@@ -9291,7 +9482,7 @@
       lastReportName = `accounting-${y}-selected-months`;
       html = `
         <div class="report-doc">
-          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate, monthEndStr(y, checked[checked.length-1]+1))}
+          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate)}
           <div class="report-section"><h3><span class="idx">1</span>Combined summary</h3>${statBoxesHtml(overall)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>Detail per month</h3>
@@ -9309,7 +9500,7 @@
       lastReportName = `accounting-${y}-annual`;
       html = `
         <div class="report-doc">
-          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate, `${y}-12-31`)}
+          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate)}
           <div class="report-section"><h3><span class="idx">1</span>Year summary</h3>${statBoxesHtml(yearStats)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Year total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category (full year)</h3>
@@ -9454,6 +9645,7 @@
     initLiveRateKpi();
     initGoldKpi();
     initFuelPricesCard();
+    initGoldFuelCalculator();
     renderFuelKpis();
     await migrateLegacyEntriesToAccounts();
     await processRecurringTransactions();
@@ -9572,8 +9764,6 @@
     const actions = $('profile-account-actions');
     $('profile-username').value = myProfile.username || '';
     $('profile-jobtitle').value = myProfile.jobTitle || '';
-    $('profile-jobtitle-date').value = todayISO();
-    renderJobTitleHistory();
     renderAvatar();
 
     const bal = computeStats(entries);
