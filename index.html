@@ -3584,14 +3584,6 @@
       $('conv-manual-row').style.display = 'none';
       renderConverter();
       toast('Using your manual rate for this converter');
-      const saveLink = $('conv-live-save');
-      if(saveLink) saveLink.addEventListener('click', async (ev)=>{
-        ev.preventDefault();
-        currentExchangeRate = rate;
-        await saveExchangeRateSetting();
-        renderConverter();
-        renderFooterStats();
-        toast('Default exchange rate updated');
       });
     });
     $('conv-live-btn').addEventListener('click', fetchLiveRate);
