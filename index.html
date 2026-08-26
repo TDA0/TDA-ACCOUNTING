@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Accounting — Daily Spending & Income</title>
+<script>
+  // Applied as early as possible (before first paint) so the app never
+  // flashes the wrong theme or a Quick Add button the user chose to hide.
+  // Mirrored/persisted by the settings toggles in the Profile tab.
+  (function(){
+    try{
+      if(localStorage.getItem('tda_theme') === 'dark') document.documentElement.classList.add('theme-dark');
+      if(localStorage.getItem('tda_quickadd_visible') === 'hidden') document.documentElement.classList.add('qa-fab-hidden');
+    }catch(e){}
+  })();
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231E3D32'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,6 +34,50 @@
     --white:#FFFDF7;
     --muted:#7a7358;
   }
+  /* ===== Dark mode ===== */
+  /* Toggled by the "Dark mode" switch in Profile → App settings. Because
+     almost every surface/color in this file is drawn from these custom
+     properties, re-pointing them here re-skins the whole app. --white is
+     the "card surface" color (not literally white), so it gets a dark
+     elevated tone here rather than staying white. */
+  html.theme-dark{
+    --ink:#E9E6D8;
+    --paper:#161A16;
+    --paper-2:#1E231D;
+    --forest:#4C9578;
+    --forest-2:#3D8065;
+    --brass:#C9A96A;
+    --brass-dim:#E4C989;
+    --teal:#6FB2C9;
+    --rule:#33392F;
+    --brick:#E0897C;
+    --green-ok:#7FCB9A;
+    --white:#20261F;
+    --muted:#9C9A85;
+    color-scheme:dark;
+  }
+  html.theme-dark body{
+    background:
+      radial-gradient(circle at 12% 0%, rgba(76,149,120,0.07) 0%, transparent 45%),
+      radial-gradient(circle at 100% 18%, rgba(201,169,106,0.05) 0%, transparent 40%),
+      var(--paper);
+  }
+  /* A handful of spots use hardcoded pastel colors instead of the
+     variables above (badges, tags, ban notices) — patched individually
+     here so they stay legible on a dark background instead of showing
+     up as light-on-light. */
+  html.theme-dark .lr-tag.expense{background:rgba(224,137,124,0.18);}
+  html.theme-dark .lr-tag.income{background:rgba(127,203,154,0.18);}
+  html.theme-dark .lr-tag.salary{background:rgba(111,178,201,0.18);}
+  html.theme-dark .auth-error{background:rgba(224,137,124,0.16);}
+  html.theme-dark #forgot-sent{background:rgba(127,203,154,0.16);}
+  html.theme-dark .sync-badge.cloud{background:rgba(127,203,154,0.18);}
+  html.theme-dark .sync-badge.banned{background:rgba(224,137,124,0.2);}
+  html.theme-dark .admin-user-row .au-avatar.is-banned{background:linear-gradient(135deg,#8a5951 0%,var(--brick) 100%);}
+  html.theme-dark .ban-notice{background:linear-gradient(180deg,#2c1f1c,#241715);border-color:#5a3630;color:#f0c9c1;}
+  html.theme-dark #pdf-pages-wrap canvas{background:#fff;}
+  /* Quick Add floating button visibility, toggled by the settings switch */
+  html.qa-fab-hidden .fab-quickadd{display:none !important;}
   *{box-sizing:border-box;}
   html{height:100%;}
   body{
@@ -625,6 +680,7 @@
     transition:background-color .15s ease, color .15s ease;
   }
   .actcal-today-btn:hover{background:var(--teal);color:var(--white);}
+  .actcal-today-btn.active{background:var(--brass);border-color:var(--brass);color:var(--white);}
   .actcal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
   .actcal-weekday{
     font-family:'Space Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;
@@ -634,12 +690,20 @@
     background:var(--paper);border:1px solid var(--rule);border-radius:9px;
     min-height:74px;padding:6px 4px;display:flex;flex-direction:column;gap:4px;
     transition:box-shadow .15s ease, border-color .15s ease, background-color .15s ease;
-    min-width:0;overflow:hidden;cursor:pointer;
+    min-width:0;overflow:hidden;cursor:pointer;position:relative;
   }
   .actcal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
   .actcal-cell:not(.empty):hover{box-shadow:0 4px 14px -8px rgba(31,42,36,0.3);background:var(--white);}
   .actcal-cell:not(.empty):active{transform:scale(0.97);}
   .actcal-cell.today{border-color:var(--teal);box-shadow:0 0 0 2px rgba(47,100,120,0.18);}
+  .actcal-cell.bulk-selected{border-color:var(--brass);background:rgba(169,128,63,0.14);box-shadow:0 0 0 2px var(--brass) inset;}
+  .actcal-cell .bulk-check{position:absolute;top:3px;right:4px;font-size:12px;line-height:1;opacity:0;transition:opacity .12s ease;}
+  .actcal-cell.bulk-selected .bulk-check{opacity:1;}
+  .actcal-bulk-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    background:var(--paper-2);border:1px solid var(--brass-dim);border-radius:10px;
+    padding:10px 14px;margin-bottom:14px;font-size:12.5px;font-weight:600;color:var(--forest-2);
+  }
   .actcal-cell .acn{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);font-weight:700;}
   .actcal-cell.today .acn{color:var(--teal);}
   .actcal-cell .acdots{display:flex;flex-wrap:wrap;gap:3px;align-items:center;}
@@ -890,6 +954,22 @@
   }
   .ban-reason-box b{color:var(--brick);}
   .duration-hint{font-size:11.5px;color:var(--muted);margin-top:-8px;margin-bottom:12px;}
+
+  /* ===== App settings (Profile tab): toggle switches ===== */
+  .settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 2px;border-bottom:1px solid var(--rule);}
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row-title{font-weight:600;font-size:14px;color:var(--ink);}
+  .settings-row-sub{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4;}
+  .toggle-switch{position:relative;display:inline-block;width:44px;height:25px;flex-shrink:0;cursor:pointer;}
+  .toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+  .toggle-slider{position:absolute;inset:0;background:var(--rule);border-radius:999px;transition:background-color .18s ease;}
+  .toggle-slider::before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;background:var(--white);border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform .18s ease;}
+  .toggle-switch input:checked + .toggle-slider{background:var(--forest);}
+  .toggle-switch input:checked + .toggle-slider::before{transform:translateX(19px);}
+  .toggle-switch input:focus-visible + .toggle-slider{box-shadow:0 0 0 3px rgba(47,100,120,0.3);}
+
+  /* ===== Banned account lock screen ===== */
+  .banned-lock-card .ban-notice{margin:16px 0 20px;}
 
   /* ===== Menu button / responsive off-canvas nav ===== */
   .app{position:relative;}
@@ -1346,6 +1426,24 @@
   </div>
 </div>
 
+<!-- BANNED ACCOUNT LOCK SCREEN -->
+<!-- Shown instead of the app the moment a signed-in session is detected as
+     banned (checked on load, then polled while the app is open). While
+     this is visible, #main-app is hidden — a banned user can see nothing
+     but this message and the logout button below. -->
+<div id="banned-lock-screen" class="auth-screen" style="display:none;">
+  <div class="auth-card banned-lock-card" style="text-align:center;">
+    <p class="eyebrow">Account status</p>
+    <h1 style="color:var(--brick);">⛔ You've been banned</h1>
+    <p class="lead">You no longer have access to this account.</p>
+    <div class="ban-notice" style="text-align:left;">
+      <p class="bn-reason" id="banned-lock-reason">No reason was recorded for this ban.</p>
+      <p class="bn-until" id="banned-lock-until">This ban does not expire.</p>
+    </div>
+    <button class="btn brick" id="banned-lock-logout" type="button" style="width:100%;">🚪 Log out</button>
+  </div>
+</div>
+
 <div class="app" id="main-app" style="display:none;">
 
   <div class="site-header-sticky">
@@ -1794,10 +1892,22 @@
             <span class="cal-title" id="actcal-title"></span>
             <button class="cal-nav-btn" id="actcal-next" type="button" aria-label="Next month">&rarr;</button>
           </div>
-          <button class="actcal-today-btn" id="actcal-today" type="button">Today</button>
+          <div class="btn-row" style="gap:8px;">
+            <button class="actcal-today-btn" id="actcal-bulk-toggle" type="button">☑️ Select multiple days</button>
+            <button class="actcal-today-btn" id="actcal-today" type="button">Today</button>
+          </div>
+        </div>
+        <div class="actcal-bulk-bar" id="actcal-bulk-bar" style="display:none;">
+          <span id="actcal-bulk-count">0 days selected</span>
+          <div class="btn-row" style="gap:8px;">
+            <button class="btn small ghost-teal" id="actcal-bulk-selectall" type="button">Select all this month</button>
+            <button class="btn small subtle" id="actcal-bulk-clear" type="button">Clear</button>
+            <button class="btn small brass" id="actcal-bulk-apply" type="button">✅ Apply activity to selected</button>
+            <button class="btn small ghost" id="actcal-bulk-cancel" type="button">✖️ Done</button>
+          </div>
         </div>
         <div class="actcal-grid" id="actcal-grid-wrap"></div>
-        <p style="font-size:12px;color:var(--muted);margin:14px 0 0;">👆 Tap any day to mark work, gym, days off &amp; more.</p>
+        <p style="font-size:12px;color:var(--muted);margin:14px 0 0;">👆 Tap any day to mark work, gym, days off &amp; more. Use <b>Select multiple days</b> to apply one activity — like a holiday — to several days at once.</p>
       </div>
 
       <div class="card">
@@ -1851,6 +1961,31 @@
       </div>
     </div>
 
+    <!-- BULK DAY ACTIVITY MODAL (applies to every day selected in bulk mode) -->
+    <div class="modal-overlay" id="modal-bulk-activity">
+      <div class="modal-box">
+        <button class="modal-close" id="modal-bulk-activity-close" type="button" aria-label="Close">&times;</button>
+        <h2 id="bulk-modal-title">🗂️ Apply to selected days</h2>
+        <p class="modal-sub" id="bulk-modal-sub"></p>
+        <div class="day-activity-list" id="bulk-activity-list"></div>
+        <button type="button" class="qa-note-toggle" id="bulk-note-toggle">+ Add a note</button>
+        <div class="field" id="bulk-note-wrap" style="display:none;margin:-6px 0 14px;">
+          <input type="text" id="bulk-note" placeholder="Optional note for all selected days">
+        </div>
+        <p class="qa-section-label">How to apply</p>
+        <div class="field" style="margin-bottom:14px;">
+          <select id="bulk-apply-mode">
+            <option value="add">➕ Add to whatever's already on each day</option>
+            <option value="replace">🔁 Replace each day's activities with this</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button class="btn brass" id="bulk-activity-save" type="button">✅ Apply to selected days</button>
+          <button class="btn ghost" id="bulk-activity-clear" type="button">🗑️ Clear selected days</button>
+        </div>
+      </div>
+    </div>
+
     <!-- OVERVIEW -->
     <div class="panel" id="panel-overview">
       <div class="quick-actions">
@@ -1875,6 +2010,11 @@
       <div class="card" id="ov-budgets-card">
         <h2>🎯 Budgets this month</h2>
         <div id="ov-budgets"></div>
+      </div>
+      <div class="card" id="ov-activities-card">
+        <h2>📅 This month's activities</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">From the Calendar tab — work days, holidays, gym and anything else you've logged this month.</p>
+        <div class="stat-grid" id="ov-activities-grid"></div>
       </div>
       <div class="dash-grid">
         <div>
@@ -2350,6 +2490,30 @@
           </div>
         </div>
         <div id="profile-info" style="margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h2>⚙️ App settings</h2>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-title">Quick Add button</div>
+            <div class="settings-row-sub">Show the floating ⚡ Quick Add button on every screen.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-quickadd-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-title">Dark mode</div>
+            <div class="settings-row-sub">Switch the app to a dark color theme.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-darkmode-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p style="font-size:11.5px;color:var(--muted);margin:10px 0 0;">These are saved on this device/browser.</p>
       </div>
       <div class="hero-card" id="profile-balance-card">
         <div class="hlbl">💰 Balance still available</div>
@@ -3093,13 +3257,14 @@
   const ACT_TYPES_KEY = 'activityTypes';
   const ACT_RECORDS_KEY = 'activityRecords';
   const DEFAULT_ACTIVITY_TYPES = [
-    {id:'work',   icon:'💼', name:'Work',    color:'#2F6478', enabled:true},
-    {id:'dayoff', icon:'🏖️', name:'Day Off', color:'#A9803F', enabled:true},
-    {id:'gym',    icon:'🏋️', name:'Gym',     color:'#3E6B4F', enabled:true},
-    {id:'home',   icon:'🏠', name:'Home',    color:'#7a7358', enabled:true},
-    {id:'study',  icon:'📚', name:'Study',   color:'#1E3D32', enabled:true},
-    {id:'travel', icon:'🚗', name:'Travel',  color:'#9C4438', enabled:true},
-    {id:'other',  icon:'⭐', name:'Other',   color:'#C9A96A', enabled:true}
+    {id:'work',    icon:'💼', name:'Work',    color:'#2F6478', enabled:true},
+    {id:'dayoff',  icon:'🏖️', name:'Day Off', color:'#A9803F', enabled:true},
+    {id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true},
+    {id:'gym',     icon:'🏋️', name:'Gym',     color:'#3E6B4F', enabled:true},
+    {id:'home',    icon:'🏠', name:'Home',    color:'#7a7358', enabled:true},
+    {id:'study',   icon:'📚', name:'Study',   color:'#1E3D32', enabled:true},
+    {id:'travel',  icon:'🚗', name:'Travel',  color:'#9C4438', enabled:true},
+    {id:'other',   icon:'⭐', name:'Other',   color:'#C9A96A', enabled:true}
   ];
   let activityTypes = DEFAULT_ACTIVITY_TYPES.map(t=>({...t}));
   let activityRecords = {};
@@ -3114,6 +3279,16 @@
         await saveActivityTypes();
       }
     }catch(e){ /* fall back to defaults already set */ }
+    // Rolling out a new built-in type (Holiday) to accounts that already
+    // had a saved activityTypes list from before it existed. Only adds it
+    // if missing — never touches or reorders anything the user already
+    // has, and never re-adds a type the user deliberately deleted... except
+    // this one, since it's a newly introduced built-in, not one that could
+    // have existed to be deleted yet.
+    if(!activityTypeById('holiday')){
+      activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
+      await saveActivityTypes();
+    }
   }
   async function saveActivityTypes(successMsg){
     busySaving();
@@ -7071,6 +7246,7 @@
     $('ov-net-usd').textContent = fmtUSD(s.netUSD);
     $('ov-net-lbp').textContent = fmtLBP(s.netLBP) + ' net this month';
     renderDashboardBudgets();
+    renderOverviewActivities(y, m);
 
     // ---- top KPI row: balance, this month's income, this month's expenses ----
     const allTime = computeStats(entries);
@@ -7278,6 +7454,13 @@
   let dayModalDate = null; // the date currently open in the day-activity modal
   let dayModalSelected = []; // typeIds currently checked in that modal
 
+  // Bulk multi-day selection ("Select multiple days" mode on the calendar).
+  // Lets one activity (e.g. Holiday) get applied to several dates at once
+  // instead of opening the single-day modal over and over.
+  let bulkSelectMode = false;
+  let bulkSelectedDates = new Set();
+  let bulkModalSelected = []; // typeIds checked in the bulk-apply modal
+
   function renderActivityCalendar(){
     const y = actCalState.year, m = actCalState.month;
     $('actcal-title').textContent = MONTH_NAMES[m] + ' ' + y;
@@ -7296,6 +7479,7 @@
       const rec = dayRecord(dateStr);
       const acts = (rec && rec.activities) || [];
       const isToday = dateStr === todayStr;
+      const isSelected = bulkSelectMode && bulkSelectedDates.has(dateStr);
       const chips = acts.slice(0,6).map(id=>{
         const t = activityTypeById(id);
         if(!t) return '';
@@ -7304,7 +7488,8 @@
       const more = acts.length > 6 ? `<span class="acmore">+${acts.length-6}</span>` : '';
       const noteOnly = (!acts.length && rec && rec.note) ? `<span class="actchip actchip-note" title="${escapeHtml(rec.note)}"><span class="ic">📝</span></span>` : '';
       html += `
-        <div class="actcal-cell${isToday ? ' today' : ''}" data-date="${dateStr}">
+        <div class="actcal-cell${isToday ? ' today' : ''}${isSelected ? ' bulk-selected' : ''}" data-date="${dateStr}">
+          <span class="bulk-check">✅</span>
           <span class="acn">${day}</span>
           <div class="acdots">${chips}${noteOnly}${more}</div>
         </div>
@@ -7312,9 +7497,51 @@
     }
     $('actcal-grid-wrap').innerHTML = html;
     $('actcal-grid-wrap').querySelectorAll('.actcal-cell:not(.empty)').forEach(cell=>{
-      cell.addEventListener('click', ()=> openDayActivityModal(cell.dataset.date));
+      cell.addEventListener('click', ()=>{
+        const dateStr = cell.dataset.date;
+        if(bulkSelectMode){
+          if(bulkSelectedDates.has(dateStr)) bulkSelectedDates.delete(dateStr);
+          else bulkSelectedDates.add(dateStr);
+          cell.classList.toggle('bulk-selected', bulkSelectedDates.has(dateStr));
+          updateBulkBar();
+        } else {
+          openDayActivityModal(dateStr);
+        }
+      });
     });
   }
+
+  function updateBulkBar(){
+    const n = bulkSelectedDates.size;
+    $('actcal-bulk-count').textContent = n === 1 ? '1 day selected' : `${n} days selected`;
+    $('actcal-bulk-apply').disabled = n === 0;
+  }
+
+  function setBulkSelectMode(on){
+    bulkSelectMode = on;
+    $('actcal-bulk-toggle').textContent = on ? '✖️ Cancel selection' : '☑️ Select multiple days';
+    $('actcal-bulk-toggle').classList.toggle('active', on);
+    $('actcal-bulk-bar').style.display = on ? 'flex' : 'none';
+    if(!on) bulkSelectedDates.clear();
+    updateBulkBar();
+    renderActivityCalendar();
+  }
+  $('actcal-bulk-toggle').addEventListener('click', ()=> setBulkSelectMode(!bulkSelectMode));
+  $('actcal-bulk-cancel').addEventListener('click', ()=> setBulkSelectMode(false));
+  $('actcal-bulk-clear').addEventListener('click', ()=>{
+    bulkSelectedDates.clear();
+    updateBulkBar();
+    renderActivityCalendar();
+  });
+  $('actcal-bulk-selectall').addEventListener('click', ()=>{
+    const y = actCalState.year, m = actCalState.month;
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    for(let day=1; day<=daysInMonth; day++){
+      bulkSelectedDates.add(`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`);
+    }
+    updateBulkBar();
+    renderActivityCalendar();
+  });
 
   function renderActivityStats(){
     const y = actCalState.year, m = actCalState.month, now = new Date();
@@ -7464,6 +7691,91 @@
   $('modal-day-activity-close').addEventListener('click', ()=> $('modal-day-activity').classList.remove('open'));
   $('modal-day-activity').addEventListener('click', (ev)=>{ if(ev.target.id === 'modal-day-activity') $('modal-day-activity').classList.remove('open'); });
 
+  // ---------- bulk activity modal (apply one set of activities to every selected day) ----------
+  function openBulkActivityModal(){
+    if(bulkSelectedDates.size === 0){ toast('Select at least one day first', true); return; }
+    bulkModalSelected = [];
+    $('bulk-modal-sub').textContent = `Applies to ${bulkSelectedDates.size} selected day${bulkSelectedDates.size===1?'':'s'} — e.g. mark a whole trip as Holiday in one go.`;
+    $('bulk-note').value = '';
+    $('bulk-note-wrap').style.display = 'none';
+    $('bulk-note-toggle').textContent = '+ Add a note';
+    $('bulk-apply-mode').value = 'add';
+    renderBulkActivityOptions();
+    $('modal-bulk-activity').classList.add('open');
+  }
+  function renderBulkActivityOptions(){
+    $('bulk-activity-list').innerHTML = enabledActivityTypes().map(t => `
+      <label class="day-activity-opt${bulkModalSelected.includes(t.id) ? ' checked' : ''}" data-id="${t.id}">
+        <input type="checkbox" ${bulkModalSelected.includes(t.id) ? 'checked' : ''}>
+        <span class="ic-badge" style="background:${t.color}">${t.icon}</span>
+        <span class="nm">${escapeHtml(t.name)}</span>
+        <span class="ck">✔️</span>
+      </label>
+    `).join('') || '<p style="font-size:13px;color:var(--muted);">Add an activity type first.</p>';
+    $('bulk-activity-list').querySelectorAll('.day-activity-opt').forEach(opt=>{
+      opt.addEventListener('click', (ev)=>{
+        ev.preventDefault();
+        const id = opt.dataset.id;
+        if(bulkModalSelected.includes(id)) bulkModalSelected = bulkModalSelected.filter(x=>x!==id);
+        else bulkModalSelected.push(id);
+        opt.classList.toggle('checked', bulkModalSelected.includes(id));
+        opt.querySelector('input').checked = bulkModalSelected.includes(id);
+      });
+    });
+  }
+  $('actcal-bulk-apply').addEventListener('click', openBulkActivityModal);
+  $('bulk-note-toggle').addEventListener('click', ()=>{
+    const showing = $('bulk-note-wrap').style.display !== 'none';
+    $('bulk-note-wrap').style.display = showing ? 'none' : '';
+    $('bulk-note-toggle').textContent = showing ? '+ Add a note' : '– Hide note';
+  });
+  $('bulk-activity-save').addEventListener('click', async ()=>{
+    const note = $('bulk-note').value.trim();
+    if(bulkModalSelected.length === 0 && !note){ toast('Pick at least one activity (or add a note)', true); return; }
+    const mode = $('bulk-apply-mode').value; // 'add' | 'replace'
+    const dates = Array.from(bulkSelectedDates);
+    dates.forEach(dateStr=>{
+      const existing = activityRecords[dateStr];
+      if(mode === 'replace'){
+        activityRecords[dateStr] = {
+          activities: bulkModalSelected.slice(),
+          note: note || ''
+        };
+      } else {
+        const existingActs = (existing && existing.activities) || [];
+        const merged = Array.from(new Set([...existingActs, ...bulkModalSelected]));
+        activityRecords[dateStr] = {
+          activities: merged,
+          note: note || (existing && existing.note) || ''
+        };
+      }
+    });
+    const ok = await saveActivityRecords(`Applied to ${dates.length} day${dates.length===1?'':'s'}`);
+    if(ok){
+      $('modal-bulk-activity').classList.remove('open');
+      bulkSelectedDates.clear();
+      updateBulkBar();
+      renderActivityCalendar();
+      renderActivityStats();
+    }
+  });
+  $('bulk-activity-clear').addEventListener('click', async ()=>{
+    const dates = Array.from(bulkSelectedDates);
+    if(dates.length === 0){ toast('Select at least one day first', true); return; }
+    if(!confirm(`Clear all activities and notes from ${dates.length} selected day${dates.length===1?'':'s'}?`)) return;
+    dates.forEach(dateStr=> delete activityRecords[dateStr]);
+    const ok = await saveActivityRecords(`Cleared ${dates.length} day${dates.length===1?'':'s'}`);
+    if(ok){
+      $('modal-bulk-activity').classList.remove('open');
+      bulkSelectedDates.clear();
+      updateBulkBar();
+      renderActivityCalendar();
+      renderActivityStats();
+    }
+  });
+  $('modal-bulk-activity-close').addEventListener('click', ()=> $('modal-bulk-activity').classList.remove('open'));
+  $('modal-bulk-activity').addEventListener('click', (ev)=>{ if(ev.target.id === 'modal-bulk-activity') $('modal-bulk-activity').classList.remove('open'); });
+
   $('actcal-prev').addEventListener('click', ()=>{
     actCalState.month -= 1;
     if(actCalState.month < 0){ actCalState.month = 11; actCalState.year -= 1; }
@@ -7492,6 +7804,23 @@
     const stats = {};
     activityTypes.forEach(t=>{ stats[t.id] = countActivityDays(t.id, {year:y, month:m}); });
     return stats;
+  }
+  // ---- Overview tab: this month's activity snapshot ----
+  function renderOverviewActivities(y, m){
+    const el = $('ov-activities-grid');
+    if(!el) return;
+    const stats = activityMonthSummary(y, m);
+    const shown = activityTypes.filter(t => t.enabled !== false);
+    if(shown.length === 0){
+      el.innerHTML = '<div class="empty">No activity types set up — add some in the Calendar tab.</div>';
+      return;
+    }
+    el.innerHTML = shown.map(t => `
+      <div class="stat-box" style="border-left-color:${t.color};">
+        <div class="lbl">${t.icon} ${escapeHtml(t.name)}</div>
+        <div class="val">${stats[t.id]||0} day${(stats[t.id]||0)===1?'':'s'}</div>
+      </div>
+    `).join('');
   }
   function activitySummaryGridHtml(y, m){
     const stats = activityMonthSummary(y, m);
@@ -7989,7 +8318,96 @@
     startPresenceTracking();
     renderNotifyBell();
     renderReminders();
+    initAppSettings();
+    startSelfBanWatch();
   }
+
+  // ---------- app settings (device-local: theme + quick add visibility) ----------
+  // Plain localStorage on purpose, not the account-scoped `store` — these
+  // are per-browser display preferences, not ledger data, so they apply
+  // instantly (see the inline <head> script) and work in local-only mode
+  // too, with no async round-trip needed before the app renders correctly.
+  const THEME_KEY = 'tda_theme';
+  const QUICKADD_VISIBLE_KEY = 'tda_quickadd_visible';
+
+  function applyTheme(isDark, persist){
+    document.documentElement.classList.toggle('theme-dark', isDark);
+    if($('setting-darkmode-toggle')) $('setting-darkmode-toggle').checked = isDark;
+    if(persist){ try{ localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light'); }catch(e){} }
+  }
+  function applyQuickAddVisibility(visible, persist){
+    document.documentElement.classList.toggle('qa-fab-hidden', !visible);
+    if($('setting-quickadd-toggle')) $('setting-quickadd-toggle').checked = visible;
+    if(persist){ try{ localStorage.setItem(QUICKADD_VISIBLE_KEY, visible ? 'shown' : 'hidden'); }catch(e){} }
+  }
+  function initAppSettings(){
+    applyTheme(document.documentElement.classList.contains('theme-dark'), false);
+    applyQuickAddVisibility(!document.documentElement.classList.contains('qa-fab-hidden'), false);
+    $('setting-darkmode-toggle').addEventListener('change', (e)=> applyTheme(e.target.checked, true));
+    $('setting-quickadd-toggle').addEventListener('change', (e)=> applyQuickAddVisibility(e.target.checked, true));
+  }
+
+  // ---------- self ban-check (locks a currently-open session out the ---------
+  // moment an admin bans the account it belongs to) ----------
+  // Supabase itself already refuses a *new* sign-in for a banned account
+  // (see showBanNoticeIfApplicable below), and banning already force-signs
+  // the target out server-side (see signOutUser/adminCall('sign_out_user')
+  // above). This closes the remaining gap: a tab that was already open and
+  // signed in, whose local session is still technically valid. It re-checks
+  // that session against the server periodically and on tab focus; the
+  // instant the server says "banned", every other button/tab/panel is
+  // hidden and replaced with the lock screen below.
+  let isLockedOut = false;
+  let selfBanWatchTimer = null;
+  let selfBanWatchVisListenerAdded = false;
+  let selfBanCheckInFlight = false;
+
+  async function checkIfIAmBanned(){
+    if(!supabaseClient || !currentUser || isLockedOut) return isLockedOut;
+    if(selfBanCheckInFlight) return isLockedOut;
+    selfBanCheckInFlight = true;
+    try{
+      const { error } = await supabaseClient.auth.getUser();
+      if(error && /banned/i.test(error.message || '')){
+        const info = await publicAdminCall('get_ban_info', { email: currentUser.email });
+        showBannedLockScreen(info || {});
+      }
+    } catch(e){ /* transient network error — never lock someone out over that */ }
+    selfBanCheckInFlight = false;
+    return isLockedOut;
+  }
+
+  function startSelfBanWatch(){
+    if(!supabaseClient || !currentUser || selfBanWatchTimer) return;
+    selfBanWatchTimer = setInterval(checkIfIAmBanned, 25000);
+    if(!selfBanWatchVisListenerAdded){
+      selfBanWatchVisListenerAdded = true;
+      document.addEventListener('visibilitychange', ()=>{
+        if(document.visibilityState === 'visible') checkIfIAmBanned();
+      });
+    }
+  }
+
+  function showBannedLockScreen(info){
+    isLockedOut = true;
+    if(selfBanWatchTimer){ clearInterval(selfBanWatchTimer); selfBanWatchTimer = null; }
+    if(onlineChannel){ try{ onlineChannel.unsubscribe(); }catch(e){} onlineChannel = null; }
+    document.querySelectorAll('.modal-overlay.open').forEach(m=> m.classList.remove('open'));
+    $('main-app').style.display = 'none';
+    $('auth-screen').style.display = 'none';
+    const reason = info && info.reason ? info.reason : null;
+    const until = info && info.until ? new Date(info.until).toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}) : null;
+    $('banned-lock-reason').textContent = reason ? 'Reason: ' + reason : 'No reason was recorded for this ban.';
+    $('banned-lock-until').textContent = until ? ('Banned until ' + until) : 'This ban does not expire.';
+    $('banned-lock-screen').style.display = 'flex';
+  }
+
+  $('banned-lock-logout').addEventListener('click', async ()=>{
+    const btn = $('banned-lock-logout');
+    btn.disabled = true; btn.textContent = 'Logging out…';
+    try{ if(supabaseClient) await supabaseClient.auth.signOut(); } catch(e){ /* still reload below */ }
+    location.reload();
+  });
 
   // ---------- profile ----------
   function renderProfile(){
@@ -8254,7 +8672,12 @@
       const { data } = await supabaseClient.auth.getSession();
       if(data && data.session && data.session.user){
         currentUser = data.session.user;
-        enterApp();
+        // getSession() only reads the locally cached token — it doesn't
+        // touch the network, so a session banned since it was cached would
+        // still look valid here. Force one real check before letting a
+        // restored session into the app.
+        const banned = await checkIfIAmBanned();
+        if(!banned) enterApp();
         return;
       }
     } else {
