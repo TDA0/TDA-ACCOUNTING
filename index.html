@@ -3584,6 +3584,24 @@
       $('conv-manual-row').style.display = 'none';
       renderConverter();
       toast('Using your manual rate for this converter');
+      const statusEl = $('conv-live-status');
+
+      statusEl.style.color = 'var(--green-ok)';
+      statusEl.innerHTML = `✅ Manual rate: 1 USD = ${Math.round(n).toLocaleString('en-US')} LBP — <a href="#" id="conv-manual-save" style="color:var(--forest);font-weight:700;">save as default rate</a>`;
+
+      const saveLink = $('conv-manual-save');
+
+      if(saveLink) saveLink.addEventListener('click', async (ev)=>{
+          ev.preventDefault();
+
+          currentExchangeRate = n;
+          await saveExchangeRateSetting();
+
+          renderConverter();
+          renderFooterStats();
+
+          toast('Default exchange rate updated');
+      });
       });
     });
     $('conv-live-btn').addEventListener('click', fetchLiveRate);
