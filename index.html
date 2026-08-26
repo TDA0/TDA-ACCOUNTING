@@ -289,6 +289,26 @@
     letter-spacing:0.1px;
   }
   .field-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end;}
+  .jth-list{margin:10px 0 0;padding:0;list-style:none;border:1px solid var(--rule);border-radius:10px;overflow:hidden;}
+  .jth-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);}
+  .jth-row + .jth-row{border-top:1px solid var(--rule);}
+  .jth-row .jth-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap;min-width:112px;}
+  .jth-row .jth-title{flex:1;font-size:13px;}
+  .jth-row .jth-current{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.5px;text-transform:uppercase;color:var(--green-ok);background:rgba(62,107,79,0.12);border-radius:6px;padding:2px 6px;}
+  .jth-row .jth-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 4px;line-height:1;}
+  .jth-row .jth-del:hover{color:var(--brick);}
+  .jth-empty{font-size:11.5px;color:var(--muted);margin:8px 0 0;}
+  .icsprev-list{max-height:360px;overflow-y:auto;margin:10px 0 0;padding:6px;border:1px solid var(--rule);border-radius:10px;background:var(--paper-2);display:flex;flex-direction:column;gap:6px;}
+  .icsprev-row{display:flex;align-items:center;gap:8px;padding:6px;background:var(--white);border:1px solid var(--rule);border-radius:8px;}
+  .icsprev-row .icsprev-date{width:150px;flex-shrink:0;font-size:12.5px;padding:8px 9px;}
+  .icsprev-row .icsprev-name{flex:1;min-width:0;font-size:13px;padding:8px 9px;font-family:'Work Sans',sans-serif;}
+  .icsprev-row .icsprev-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 6px;line-height:1;flex-shrink:0;}
+  .icsprev-row .icsprev-del:hover{color:var(--brick);}
+  @media (max-width:480px){
+    .icsprev-row{flex-wrap:wrap;}
+    .icsprev-row .icsprev-date{width:100%;}
+    .icsprev-row .icsprev-name{width:100%;}
+  }
   .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .field{flex:1;min-width:130px;display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);}
@@ -1006,6 +1026,14 @@
   .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;}
   .auth-divider::before, .auth-divider::after{content:"";flex:1;height:1px;background:var(--rule);}
   .auth-card .btn{font-size:clamp(14px,1.6vw,15.5px);padding:clamp(10px,1.4vw,13px) 20px;}
+  .pw-field{position:relative;}
+  .pw-field input{padding-right:42px;}
+  .pw-eye-btn{
+    position:absolute; right:4px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer;
+    font-size:16px; line-height:1; padding:8px; color:var(--muted);
+  }
+  .pw-eye-btn:hover{color:var(--ink);}
   @media (min-width:1600px){
     .auth-card{max-width:500px;}
   }
@@ -1652,7 +1680,10 @@
     </div>
     <div class="field" style="margin-bottom:8px;">
       <label>Password</label>
-      <input type="password" id="auth-password" placeholder="At least 6 characters" autocomplete="current-password">
+      <div class="pw-field">
+        <input type="password" id="auth-password" placeholder="At least 6 characters" autocomplete="current-password">
+        <button type="button" class="pw-eye-btn" id="auth-password-toggle" aria-label="Show password" tabindex="-1">👁️</button>
+      </div>
     </div>
     <div id="auth-forgot-row" style="text-align:right;margin-bottom:16px;">
       <button type="button" class="btn ghost-teal small" id="btn-forgot-password" style="border:none;background:transparent;padding:2px 0;">Forgot password?</button>
@@ -2937,16 +2968,21 @@
           </div>
         </div>
         <div class="field-row">
-          <div class="field" style="max-width:260px;">
+          <div class="field" style="max-width:220px;">
             <label>Job title</label>
             <input type="text" id="profile-jobtitle" placeholder="e.g. Freelance Designer" maxlength="60">
+          </div>
+          <div class="field" style="max-width:170px;">
+            <label>Effective from</label>
+            <input type="date" id="profile-jobtitle-date">
           </div>
           <div class="field" style="flex:0;">
             <label>&nbsp;</label>
             <button class="btn small brass" id="btn-jobtitle-save" type="button">💾 Save job title</button>
           </div>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Shown on your printed reports. Changing it only affects reports you generate from now on — reports you've already printed or downloaded keep the job title they were made with.</p>
+        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Reports use whichever job title was in effect on the dates they cover, so a report for an old period keeps your old title even after you update it here. Back-date "Effective from" if you're logging a title change that already happened.</p>
+        <div id="jobtitle-history"></div>
         <div id="profile-info" style="margin-top:10px;"></div>
       </div>
       <div class="card">
@@ -3048,7 +3084,7 @@
       <div class="footer-divider"></div>
 
       <div class="footer-inner">
-        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.2</span></div>
+        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v3.0</span></div>
         <div class="footer-links">
           <button type="button" id="btn-footer-about">ℹ️ About Us</button>
           <button type="button" id="btn-footer-rules">📜 Rules &amp; Terms</button>
@@ -3238,6 +3274,21 @@
   </div>
 </div>
 
+<!-- HOLIDAY .ICS IMPORT PREVIEW MODAL -->
+<div class="modal-overlay" id="modal-holiday-ics-preview">
+  <div class="modal-box modal-box-wide">
+    <button class="modal-close" id="modal-holiday-ics-preview-close" type="button" aria-label="Close">&times;</button>
+    <h2>🎉 Holidays found in calendar file</h2>
+    <p class="modal-sub" id="ics-preview-sub"></p>
+    <div id="ics-preview-list" class="icsprev-list"></div>
+    <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;">Edit any date or name, or remove a row with 🗑️. Nothing is added to your calendar until you confirm below.</p>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn brass" id="ics-preview-confirm" style="flex:1;">✅ Add to calendar</button>
+      <button class="btn subtle" id="ics-preview-cancel" type="button">❌ Reject</button>
+    </div>
+  </div>
+</div>
+
 <!-- QUICK ADD MODAL -->
 <div class="modal-overlay" id="modal-quickadd">
   <div class="modal-box">
@@ -3351,7 +3402,7 @@
   const ACCOUNTS_KEY = 'accounts';
   const BUDGETS_KEY = 'budgets';
   const RECURRING_KEY = 'recurring';
-  let myProfile = { username:'', avatar:'', notifyOptIn:false, jobTitle:'' };
+  let myProfile = { username:'', avatar:'', notifyOptIn:false, jobTitle:'', jobTitleHistory:[] };
   // Recurring transaction rules. Each rule looks like:
   // { id, name, type:'expense'|'income', amount, currency, category,
   //   accountId, frequency:'daily'|'weekly'|'monthly'|'yearly',
@@ -4868,8 +4919,77 @@
         myProfile.avatar = parsed.avatar || '';
         myProfile.notifyOptIn = !!parsed.notifyOptIn;
         myProfile.jobTitle = parsed.jobTitle || '';
+        myProfile.jobTitleHistory = Array.isArray(parsed.jobTitleHistory) ? parsed.jobTitleHistory.filter(h=>h && h.date && h.title) : [];
+        // Older copies of this app only ever stored one current job title with
+        // no date. If that's all we found, seed the history with it dated far
+        // enough back that it still applies to any older report someone
+        // generates — otherwise their one existing title would just vanish.
+        if(myProfile.jobTitleHistory.length === 0 && myProfile.jobTitle){
+          myProfile.jobTitleHistory = [{date:'1900-01-01', title: myProfile.jobTitle}];
+        }
+        sortJobTitleHistory();
       }
     }catch(e){ /* keep defaults */ }
+  }
+  function sortJobTitleHistory(){
+    myProfile.jobTitleHistory.sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  }
+  // Returns the title that was in effect on a given YYYY-MM-DD date, so
+  // reports for old periods keep showing the title that applied back then
+  // instead of whatever the current title is.
+  function jobTitleAsOf(dateStr){
+    const hist = myProfile.jobTitleHistory;
+    if(!hist || hist.length === 0) return myProfile.jobTitle || '';
+    let match = '';
+    for(const h of hist){
+      if(h.date <= dateStr) match = h.title; else break;
+    }
+    // A date before the earliest recorded change still gets the earliest
+    // known title, rather than showing blank.
+    return match || hist[0].title;
+  }
+  function currentJobTitle(){
+    return jobTitleAsOf(new Date().toISOString().slice(0,10));
+  }
+  function upsertJobTitleHistory(dateStr, title){
+    const hist = myProfile.jobTitleHistory;
+    const existing = hist.find(h=> h.date === dateStr);
+    if(existing) existing.title = title;
+    else hist.push({date:dateStr, title});
+    sortJobTitleHistory();
+    myProfile.jobTitle = currentJobTitle();
+  }
+  function renderJobTitleHistory(){
+    const wrap = $('jobtitle-history');
+    if(!wrap) return;
+    const hist = myProfile.jobTitleHistory;
+    if(!hist || hist.length === 0){
+      wrap.innerHTML = '<p class="jth-empty">No job title history yet.</p>';
+      return;
+    }
+    const todayStr = new Date().toISOString().slice(0,10);
+    const sorted = hist.slice().sort((a,b)=> a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+    const currentEntry = sorted.find(x=> x.date <= todayStr) || sorted[sorted.length-1];
+    wrap.innerHTML = `<ul class="jth-list">${sorted.map(h=>{
+      const isCurrent = h === currentEntry;
+      return `
+        <li class="jth-row" data-date="${escapeHtml(h.date)}">
+          <span class="jth-date">${h.date === '1900-01-01' ? 'Since always' : h.date}</span>
+          <span class="jth-title">${escapeHtml(h.title) || '<span style="color:var(--muted);">(blank)</span>'}</span>
+          ${isCurrent ? '<span class="jth-current">Current</span>' : ''}
+          <button class="jth-del" type="button" title="Remove this entry" data-del-date="${escapeHtml(h.date)}">🗑️</button>
+        </li>`;
+    }).join('')}</ul>`;
+    wrap.querySelectorAll('.jth-del').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const d = btn.dataset.delDate;
+        myProfile.jobTitleHistory = myProfile.jobTitleHistory.filter(h=> h.date !== d);
+        myProfile.jobTitle = currentJobTitle();
+        renderJobTitleHistory();
+        $('profile-jobtitle').value = currentJobTitle();
+        await saveProfile('Job title entry removed');
+      });
+    });
   }
   async function saveProfile(successMsg){
     busySaving();
@@ -5050,7 +5170,9 @@
   });
   $('btn-jobtitle-save').addEventListener('click', async ()=>{
     const title = $('profile-jobtitle').value.trim();
-    myProfile.jobTitle = title;
+    const dateVal = $('profile-jobtitle-date').value || new Date().toISOString().slice(0,10);
+    upsertJobTitleHistory(dateVal, title);
+    renderJobTitleHistory();
     await saveProfile('Job title saved');
   });
   if($('btn-export-my-csv')){
@@ -8890,6 +9012,96 @@
     }
     return events;
   }
+  let pendingIcsEvents = null; // array of {date, name} under review, editable before commit
+  let pendingIcsFileName = '';
+
+  function renderIcsPreview(){
+    const listEl = $('ics-preview-list');
+    const n = pendingIcsEvents ? pendingIcsEvents.length : 0;
+    if(n === 0){
+      listEl.innerHTML = '<p class="jth-empty">Nothing left to add — every row was removed.</p>';
+    } else {
+      listEl.innerHTML = pendingIcsEvents.map((ev, i) => `
+        <div class="icsprev-row">
+          <input type="date" class="icsprev-date" value="${ev.date}" data-idx="${i}">
+          <input type="text" class="icsprev-name" value="${escapeHtml(ev.name || '')}" placeholder="Holiday name" maxlength="80" data-idx="${i}">
+          <button type="button" class="icsprev-del" data-idx="${i}" title="Remove this holiday">🗑️</button>
+        </div>
+      `).join('');
+    }
+    $('ics-preview-sub').textContent = `${n} holiday${n===1?'':'s'} found in ${pendingIcsFileName}. Review, edit, or remove any before adding them to your calendar.`;
+    $('ics-preview-confirm').disabled = n === 0;
+    $('ics-preview-confirm').textContent = n === 0 ? 'Nothing to add' : `✅ Add ${n} holiday${n===1?'':'s'} to calendar`;
+  }
+  $('ics-preview-list') && $('ics-preview-list').addEventListener('input', (e)=>{
+    if(!pendingIcsEvents) return;
+    const idx = e.target.dataset.idx;
+    if(idx === undefined) return;
+    const i = parseInt(idx, 10);
+    if(!pendingIcsEvents[i]) return;
+    if(e.target.classList.contains('icsprev-date')) pendingIcsEvents[i].date = e.target.value;
+    else if(e.target.classList.contains('icsprev-name')) pendingIcsEvents[i].name = e.target.value;
+  });
+  $('ics-preview-list') && $('ics-preview-list').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.icsprev-del');
+    if(!btn || !pendingIcsEvents) return;
+    pendingIcsEvents.splice(parseInt(btn.dataset.idx, 10), 1);
+    renderIcsPreview();
+  });
+  function closeIcsPreview(){
+    pendingIcsEvents = null;
+    pendingIcsFileName = '';
+    closeModal('modal-holiday-ics-preview');
+  }
+  $('modal-holiday-ics-preview-close') && $('modal-holiday-ics-preview-close').addEventListener('click', closeIcsPreview);
+  $('ics-preview-cancel') && $('ics-preview-cancel').addEventListener('click', ()=>{
+    const statusEl = $('holiday-ics-status');
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Import rejected — nothing was added to your calendar.';
+    closeIcsPreview();
+  });
+  $('ics-preview-confirm') && $('ics-preview-confirm').addEventListener('click', async ()=>{
+    if(!pendingIcsEvents || pendingIcsEvents.length === 0) return;
+    const statusEl = $('holiday-ics-status');
+    const btn = $('ics-preview-confirm');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+    if(!activityTypeById('holiday')){
+      activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
+      await saveActivityTypes();
+    }
+    let added = 0, skippedBadDate = 0;
+    pendingIcsEvents.forEach(ev=>{
+      const dateStr = ev.date;
+      if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ skippedBadDate++; return; }
+      const existing = activityRecords[dateStr];
+      const existingActs = (existing && existing.activities) || [];
+      if(existingActs.includes('holiday')) return;
+      activityRecords[dateStr] = {
+        activities: Array.from(new Set([...existingActs, 'holiday'])),
+        note: (existing && existing.note) ? existing.note : (ev.name || '')
+      };
+      added++;
+    });
+    const ok = await saveActivityRecords(`Imported ${added} holiday${added===1?'':'s'} from calendar file`);
+    btn.disabled = false;
+    btn.textContent = original;
+    closeModal('modal-holiday-ics-preview');
+    pendingIcsEvents = null;
+    pendingIcsFileName = '';
+    if(ok){
+      statusEl.style.color = 'var(--green-ok)';
+      statusEl.textContent = `✅ Added ${added} holiday${added===1?'':'s'} on your calendar` + (skippedBadDate ? ` (${skippedBadDate} row${skippedBadDate===1?'':'s'} skipped — missing/invalid date)` : '') + '.';
+      renderActivityTypeManager();
+      renderActivityCalendar();
+      renderActivityStats();
+      renderOverviewActivities(actCalState.year, actCalState.month);
+    } else {
+      statusEl.style.color = 'var(--brick)';
+      statusEl.textContent = '⚠️ Could not save — try again.';
+    }
+  });
   $('holiday-ics-btn') && $('holiday-ics-btn').addEventListener('click', ()=>{
     $('holiday-ics-file').click();
   });
@@ -8913,31 +9125,13 @@
         statusEl.textContent = 'No dated events were found in that calendar file.';
         return;
       }
-      if(!activityTypeById('holiday')){
-        activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
-        await saveActivityTypes();
-      }
-      let added = 0;
-      events.forEach(ev=>{
-        const dateStr = ev.date;
-        const existing = activityRecords[dateStr];
-        const existingActs = (existing && existing.activities) || [];
-        if(existingActs.includes('holiday')) return;
-        activityRecords[dateStr] = {
-          activities: Array.from(new Set([...existingActs, 'holiday'])),
-          note: (existing && existing.note) ? existing.note : (ev.name || '')
-        };
-        added++;
-      });
-      const ok = await saveActivityRecords(`Imported ${added} holiday${added===1?'':'s'} from calendar file`);
-      if(ok){
-        statusEl.style.color = 'var(--green-ok)';
-        statusEl.textContent = `✅ Marked ${added} holiday${added===1?'':'s'} on your calendar from ${file.name}.`;
-        renderActivityTypeManager();
-        renderActivityCalendar();
-        renderActivityStats();
-        renderOverviewActivities(actCalState.year, actCalState.month);
-      }
+      pendingIcsEvents = events
+        .map(ev => ({date: ev.date, name: ev.name || ''}))
+        .sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+      pendingIcsFileName = file.name;
+      statusEl.textContent = '';
+      renderIcsPreview();
+      openModal('modal-holiday-ics-preview');
     }catch(e){
       statusEl.style.color = 'var(--brick)';
       statusEl.textContent = '⚠️ ' + (e.message || 'Could not read that calendar file.');
@@ -9341,10 +9535,13 @@
   // reportHead() bakes these values directly into the returned HTML string,
   // so a report that's already been generated/printed/downloaded is frozen —
   // editing the username, photo, or job title in the Profile tab afterward
-  // only affects reports generated from that point on.
-  function reportUserBlockHtml(){
+  // only affects reports generated from that point on. The job title is the
+  // exception: it's looked up as of the period the report covers (asOfDate),
+  // using the job title history, so an old report keeps showing the title
+  // that was actually in effect back then rather than today's title.
+  function reportUserBlockHtml(asOfDate){
     const name = escapeHtml(myProfile.username) || (currentUser && escapeHtml(currentUser.email)) || 'Unnamed user';
-    const title = escapeHtml(myProfile.jobTitle);
+    const title = escapeHtml(jobTitleAsOf(asOfDate || new Date().toISOString().slice(0,10)));
     const initial = (myProfile.username || (currentUser && currentUser.email) || '?').trim().charAt(0).toUpperCase();
     const avatarHtml = myProfile.avatar
       ? `<img src="${myProfile.avatar}" alt="">`
@@ -9359,7 +9556,7 @@
       </div>
     `;
   }
-  function reportHead(title, sub, count, genDate){
+  function reportHead(title, sub, count, genDate, asOfDate){
     return `
       <div class="report-letterhead">
         <div class="lh-name">TDA Accounting</div>
@@ -9373,9 +9570,16 @@
         </div>
         <div class="sub meta-right">Generated ${genDate}<br>${count} ${count === 1 ? 'entry' : 'entries'}</div>
       </div>
-      ${reportUserBlockHtml()}
+      ${reportUserBlockHtml(asOfDate)}
     `;
   }
+  // Helpers to find the "as of" date a report period ends on, so the report
+  // header can look up the job title that was in effect for that period.
+  function lastDayOfMonthStr(y, m){ // m is 1-12
+    const d = new Date(y, m, 0);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function lastDayOfYearStr(y){ return `${y}-12-31`; }
   function reportFoot(genDate){
     return `<div class="report-footer"><span>TDA Accounting — personal financial statement</span><span>Generated ${genDate}</span></div>`;
   }
@@ -9399,7 +9603,7 @@
       lastReportName = `tracker-${y}-${String(m).padStart(2,'0')}`;
       return `
         <div class="report-doc">
-          ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate)}
+          ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate, lastDayOfMonthStr(y,m))}
           ${activityReportHtml(y, m-1, genDate)}
           ${reportFoot(genDate)}
         </div>
@@ -9410,7 +9614,7 @@
       lastReportName = `tracker-${y}-annual`;
       return `
         <div class="report-doc">
-          ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate)}
+          ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate, lastDayOfYearStr(y))}
           ${activityYearReportHtml(y)}
           ${reportFoot(genDate)}
         </div>
@@ -9450,7 +9654,7 @@
       lastReportName = `accounting-${y}-${String(m).padStart(2,'0')}`;
       html = `
         <div class="report-doc">
-          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate)}
+          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate, lastDayOfMonthStr(y,m))}
           <div class="report-section"><h3><span class="idx">1</span>Summary</h3>${statBoxesHtml(s)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Highlights</h3>${highlightsHtml(list, s) || '<p style="font-size:13px;color:var(--muted);">No entries recorded this month.</p>'}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category</h3>
@@ -9482,7 +9686,7 @@
       lastReportName = `accounting-${y}-selected-months`;
       html = `
         <div class="report-doc">
-          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate)}
+          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate, lastDayOfMonthStr(y, checked[checked.length-1]+1))}
           <div class="report-section"><h3><span class="idx">1</span>Combined summary</h3>${statBoxesHtml(overall)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>Detail per month</h3>
@@ -9500,7 +9704,7 @@
       lastReportName = `accounting-${y}-annual`;
       html = `
         <div class="report-doc">
-          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate)}
+          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate, lastDayOfYearStr(y))}
           <div class="report-section"><h3><span class="idx">1</span>Year summary</h3>${statBoxesHtml(yearStats)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Year total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category (full year)</h3>
@@ -9763,7 +9967,9 @@
     const info = $('profile-info');
     const actions = $('profile-account-actions');
     $('profile-username').value = myProfile.username || '';
-    $('profile-jobtitle').value = myProfile.jobTitle || '';
+    $('profile-jobtitle').value = currentJobTitle();
+    $('profile-jobtitle-date').value = new Date().toISOString().slice(0,10);
+    renderJobTitleHistory();
     renderAvatar();
 
     const bal = computeStats(entries);
@@ -9817,6 +10023,17 @@
 
   // ---------- auth ----------
   let authTab = 'login';
+  function wirePasswordToggle(btnId, inputId){
+    const btn = $(btnId), input = $(inputId);
+    if(!btn || !input) return;
+    btn.addEventListener('click', ()=>{
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.textContent = showing ? '👁️' : '🙈';
+      btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    });
+  }
+  wirePasswordToggle('auth-password-toggle', 'auth-password');
   function setAuthTab(tab){
     authTab = tab;
     document.querySelectorAll('.auth-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.authtab === tab));
