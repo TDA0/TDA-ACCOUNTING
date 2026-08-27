@@ -672,6 +672,36 @@
   }
   .reminder-dismiss:hover{background:var(--paper-2);color:var(--ink);}
 
+  /* Reminders popover — opened by pressing the header bell, instead of
+     jumping the page to the Overview tab's reminders card. */
+  .rem-popover{
+    position:fixed;
+    width:min(340px, calc(100vw - 24px));
+    max-height:min(70vh, 440px);
+    overflow-y:auto;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    box-shadow:0 18px 40px -12px rgba(31,42,36,0.45), 0 4px 14px rgba(31,42,36,0.18);
+    z-index:600;
+    display:none;
+    flex-direction:column;
+  }
+  .rem-popover.open{display:flex;}
+  .rem-popover-head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 12px;border-bottom:1px solid var(--rule);
+    font-weight:700;font-size:13px;color:var(--ink);
+    position:sticky;top:0;background:var(--paper);border-radius:12px 12px 0 0;
+  }
+  .rem-popover-close{
+    background:transparent;border:none;cursor:pointer;color:var(--muted);
+    font-size:14px;padding:2px 6px;border-radius:6px;line-height:1;
+  }
+  .rem-popover-close:hover{background:var(--paper-2);color:var(--ink);}
+  .rem-popover-body{padding:10px;}
+  .rem-popover-body .reminder-item:last-child{margin-bottom:0;}
+
   /* Overview dashboard */
   .dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
   @media (max-width:720px){ .dash-grid{grid-template-columns:1fr;} }
@@ -1996,7 +2026,27 @@
         </div>
         <div class="head-toolbar">
           <div class="save-state"><span class="dot" id="save-dot"></span><span id="save-indicator">All entries saved</span></div>
-          <button type="button" class="rem-bell-btn" id="btn-reminders-bell" aria-label="Reminders" title="Reminders">🔔<span class="rem-badge" id="rem-badge" style="display:none;">0</span></button>
+          <!-- Single bell — pressing it opens a small popover with two
+               buttons, Reminders and Notifications, instead of jumping to
+               a tab. The bell itself only ever badges unread admin
+               notifications (reminders keep their own badge on their own
+               button inside the popover). Notifications are in-app only
+               and only admins can send them — the "Send notification"
+               button lives in the admin-only Admin panel; every other
+               account just reads this feed and marks items read. -->
+          <button type="button" class="rem-bell-btn" id="btn-bell" aria-label="Reminders and notifications" title="Reminders and notifications" aria-haspopup="dialog" aria-controls="bell-popover" aria-expanded="false">🔔<span class="rem-badge" id="bell-badge" style="display:none;">0</span></button>
+          <div class="rem-popover" id="bell-popover" role="dialog" aria-label="Reminders and notifications">
+            <div class="rem-popover-head">
+              <span>Reminders &amp; notifications</span>
+              <button type="button" class="rem-popover-close" id="bell-popover-close" aria-label="Close">✖</button>
+            </div>
+            <div class="scope-toggle" id="bell-popover-tabs" style="padding:10px 10px 0;margin-bottom:6px;">
+              <button type="button" class="on" data-bell-tab="reminders" style="position:relative;">🔔 Reminders<span class="rem-badge" id="rem-tab-badge" style="display:none;">0</span></button>
+              <button type="button" data-bell-tab="notifications" style="position:relative;">📨 Notifications<span class="rem-badge" id="notif-tab-badge" style="display:none;">0</span></button>
+            </div>
+            <div class="rem-popover-body" id="rem-popover-list"></div>
+            <div class="rem-popover-body" id="notif-popover-list" style="display:none;"></div>
+          </div>
           <button class="menu-btn" id="btn-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-tabs">
             <svg class="menu-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
               <line class="bar bar1" x1="4" y1="6" x2="20" y2="6"/>
@@ -3114,6 +3164,17 @@
         </div>
         <div id="admin-users-list"></div>
       </div>
+      <div class="card">
+        <h2>🔔 Admin — sent notifications</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">
+          Everything sent from "Send notification" above, in one place — edit a notification to fix a typo or
+          change who sees it (it updates in everyone's 📨 inbox), or delete it to pull it back entirely.
+        </p>
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn small subtle" id="admin-notif-refresh">🔄 Refresh</button>
+        </div>
+        <div id="admin-notif-list"></div>
+      </div>
     </div>
 
     <!-- Admin: single-user account modal -->
@@ -3230,8 +3291,10 @@
     <div class="modal-overlay" id="modal-admin-notify">
       <div class="modal-box modal-box-wide">
         <button class="modal-close" id="modal-admin-notify-close" type="button" aria-label="Close">&times;</button>
-        <h2>🔔 Send a notification</h2>
-        <p class="modal-sub">Sent as an email from your connected Gmail account through the server-side <code>admin-actions</code> function — nothing is emailed directly from this browser.</p>
+        <h2 id="notify-modal-title">🔔 Send a notification</h2>
+        <p class="modal-sub" id="notify-modal-sub">Sent as an email from your connected Gmail account through the server-side <code>admin-actions</code> function — nothing is emailed directly from this browser.</p>
+        <p class="keep-hint" id="notify-edit-note" style="display:none;">✏️ Editing an existing notification — this updates the message already sitting in everyone's 📨 inbox. It does not resend the email.</p>
+        <input type="hidden" id="notify-edit-id" value="">
         <div class="field" style="margin-bottom:12px;">
           <label>Send to</label>
           <div class="scope-toggle" id="notify-target-toggle">
@@ -3268,6 +3331,7 @@
         </p>
         <div class="btn-row">
           <button class="btn brass" id="notify-send">📤 Send</button>
+          <button class="btn ghost" id="notify-delete" type="button" style="display:none;">🗑️ Delete</button>
           <span id="notify-recipient-count" style="font-size:12px;color:var(--muted);align-self:center;"></span>
         </div>
       </div>
@@ -3775,6 +3839,18 @@
   const REMINDERS_DISMISSED_KEY = 'remindersDismissed';
   let remindersToastedOnce = false;
 
+  // In-app admin notifications: a small shared inbox, separate from the
+  // reminders above (which are computed locally from your own ledger).
+  // Only admins can add to `inboxNotifications` — everyone else only
+  // reads it and keeps a private list of which ids they've already seen.
+  // Shape of each item: { id, subject, body, date (ISO), targets:
+  // ['all'] or a list of recipient emails }.
+  let inboxNotifications = [];
+  let readNotificationIds = [];
+  const NOTIF_READ_KEY = 'notifReadIds';
+  let notifToastedOnce = false;
+  let notifPollTimer = null;
+
   // ---------- storage adapter ----------
   // Priority: Supabase (when logged in) -> window.storage (Claude artifact
   // host) -> localStorage (plain hosted/downloaded file, no account).
@@ -3818,6 +3894,86 @@
       }
       localStorage.setItem('accounting:' + key, value);
       return { key, value, shared: false };
+    }
+  };
+
+  // ---------- shared storage adapter (admin → everyone notifications) ----------
+  // Unlike `store` above (private, one value per user), this feed is the
+  // same for every visitor. Reading works everywhere out of the box;
+  // writing (i.e. sending) only ever happens from the admin-only "Send
+  // notification" flow, gated by isAdminUser + the server-side admin
+  // check in adminCall — see openAdminNotifyModal / the notify-send
+  // handler further down.
+  //   • Claude artifact hosting: window.storage with shared:true.
+  //   • Supabase configured: a public `notifications` table, written by
+  //     the admin-actions Edge Function (extend send_notification there
+  //     to insert a row — see ADMIN-SETUP.md) and simply read here.
+  //   • Local-only mode: a plain localStorage key (single device, so
+  //     this is mostly useful for trying the feature out).
+  async function supaNotifList(){
+    const { data, error } = await supabaseClient
+      .from('notifications')
+      .select('id,subject,body,targets,created_at')
+      .order('created_at', { ascending:false })
+      .limit(100);
+    if(error) throw error;
+    return (data || []).map(r => ({ id:r.id, subject:r.subject, body:r.body, targets: r.targets || ['all'], date: r.created_at }));
+  }
+  const sharedStore = {
+    async getNotifications(){
+      if(supabaseClient && currentUser){
+        try{ return await supaNotifList(); }catch(e){ return []; }
+      }
+      if(hasHostStorage()){
+        try{ const r = await window.storage.get('notifications', true); return r ? JSON.parse(r.value) : []; }
+        catch(e){ return []; }
+      }
+      try{ const raw = localStorage.getItem('accounting:shared:notifications'); return raw ? JSON.parse(raw) : []; }
+      catch(e){ return []; }
+    },
+    // No-op when Supabase is configured — sending goes through adminCall
+    // (server-side, service role) instead, since the anon key shouldn't
+    // be able to write a feed every account reads.
+    async addNotification(n){
+      if(supabaseClient && currentUser) return true;
+      if(hasHostStorage()){
+        try{
+          const list = await sharedStore.getNotifications();
+          list.unshift(n);
+          await window.storage.set('notifications', JSON.stringify(list.slice(0,100)), true);
+          return true;
+        }catch(e){ return false; }
+      }
+      try{
+        const list = await sharedStore.getNotifications();
+        list.unshift(n);
+        localStorage.setItem('accounting:shared:notifications', JSON.stringify(list.slice(0,100)));
+        return true;
+      }catch(e){ return false; }
+    },
+    // Same no-op-under-Supabase rule as addNotification — editing/deleting
+    // a feed everyone reads has to happen server-side there (extend
+    // edit_notification / delete_notification on admin-actions).
+    async updateNotification(id, patch){
+      if(supabaseClient && currentUser) return true;
+      try{
+        const list = await sharedStore.getNotifications();
+        const idx = list.findIndex(n=>n.id === id);
+        if(idx === -1) return false;
+        list[idx] = Object.assign({}, list[idx], patch);
+        if(hasHostStorage()) await window.storage.set('notifications', JSON.stringify(list), true);
+        else localStorage.setItem('accounting:shared:notifications', JSON.stringify(list));
+        return true;
+      }catch(e){ return false; }
+    },
+    async deleteNotification(id){
+      if(supabaseClient && currentUser) return true;
+      try{
+        const list = (await sharedStore.getNotifications()).filter(n=>n.id !== id);
+        if(hasHostStorage()) await window.storage.set('notifications', JSON.stringify(list), true);
+        else localStorage.setItem('accounting:shared:notifications', JSON.stringify(list));
+        return true;
+      }catch(e){ return false; }
     }
   };
 
@@ -4982,6 +5138,26 @@
     }catch(e){ /* non-fatal: worst case a dismissed reminder reappears */ }
   }
 
+  // ---------- storage: admin notifications inbox ----------
+  async function loadReadNotificationIds(){
+    try{
+      const res = await store.get(NOTIF_READ_KEY);
+      readNotificationIds = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){
+      readNotificationIds = [];
+    }
+  }
+  async function saveReadNotificationIds(){
+    try{
+      if(readNotificationIds.length > 300) readNotificationIds = readNotificationIds.slice(-300);
+      await store.set(NOTIF_READ_KEY, JSON.stringify(readNotificationIds));
+    }catch(e){ /* non-fatal: worst case a read notification looks unread again */ }
+  }
+  async function loadInboxNotifications(){
+    try{ inboxNotifications = await sharedStore.getNotifications(); }
+    catch(e){ inboxNotifications = []; }
+  }
+
   // ---------- storage: recurring transactions ----------
   async function loadRecurring(){
     try{
@@ -5380,7 +5556,7 @@
     await saveDismissedReminders();
   }
   function renderReminders(){
-    const badge = $('rem-badge');
+    const badge = $('rem-tab-badge');
     const list = reminderPrefs.enabled ? computeReminders() : [];
 
     if(badge){
@@ -6613,12 +6789,182 @@
       renderNotifyBell();
     }
   });
-  $('btn-reminders-bell').addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab === 'overview'));
-    document.querySelectorAll('.panel').forEach(p=> p.classList.toggle('active', p.id === 'panel-overview'));
-    renderOverview();
-    $('ov-reminders-card').scrollIntoView({behavior:'smooth', block:'start'});
+  // ---------- bell popover (reminders + notifications, one bell) ----------
+  // A single 🔔 opens one popover with two tab buttons inside it — no
+  // separate bells, no tab-switch on the page itself. The bell badge is
+  // driven only by unread admin notifications; each tab button carries
+  // its own count (reminders count / unread notification count).
+  let bellActiveTab = 'reminders';
+
+  function renderRemPopoverList(){
+    const wrap = $('rem-popover-list');
+    if(!wrap) return;
+    if(!reminderPrefs.enabled){
+      wrap.innerHTML = '<div class="budget-empty">Reminders are turned off.</div>';
+      return;
+    }
+    const list = computeReminders();
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="budget-empty">Nothing needs your attention right now.</div>';
+      return;
+    }
+    wrap.innerHTML = list.map(r => `
+      <div class="reminder-item ${r.urgent ? 'urgent' : ''}" data-id="${escapeHtml(r.id)}">
+        <span class="reminder-icon">${r.icon}</span>
+        <span class="reminder-text">${escapeHtml(r.text)}</span>
+        <button type="button" class="reminder-dismiss" title="Dismiss">✖</button>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.reminder-item').forEach(row=>{
+      const id = row.dataset.id;
+      const btn = row.querySelector('.reminder-dismiss');
+      if(btn) btn.addEventListener('click', ()=>{
+        dismissReminder(id); // also re-renders the Overview card if present
+        renderRemPopoverList();
+      });
+    });
+  }
+
+  // ---------- admin notifications (the "Notifications" tab) ----------
+  function notificationApplies(n){
+    if(!n || !n.targets || !n.targets.length || n.targets.includes('all')) return true;
+    const myEmail = (currentUser && currentUser.email) || '';
+    return !!myEmail && n.targets.includes(myEmail);
+  }
+  function visibleNotifications(){
+    return inboxNotifications.filter(notificationApplies).slice().sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')));
+  }
+  function unreadNotifications(){
+    return visibleNotifications().filter(n=> !readNotificationIds.includes(n.id));
+  }
+  // Bell badge + the Notifications tab badge both show this same number —
+  // reminders never affect the bell's own badge, only their own tab.
+  function renderNotifications(){
+    const unread = unreadNotifications();
+    const count = unread.length > 9 ? '9+' : String(unread.length);
+    [$('bell-badge'), $('notif-tab-badge')].forEach(badge=>{
+      if(!badge) return;
+      if(unread.length > 0){ badge.textContent = count; badge.style.display = 'flex'; }
+      else badge.style.display = 'none';
+    });
+    // Same one-toast-not-per-item pattern the reminders bell always used.
+    if(unread.length > 0 && !notifToastedOnce){
+      notifToastedOnce = true;
+      toast(unread.length === 1 ? '📨 You have 1 notification' : `📨 You have ${unread.length} notifications`);
+    }
+  }
+  function renderNotifPopoverList(){
+    const wrap = $('notif-popover-list');
+    if(!wrap) return;
+    const list = visibleNotifications();
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="budget-empty">No notifications yet.</div>';
+      return;
+    }
+    wrap.innerHTML = list.map(n => {
+      const isUnread = !readNotificationIds.includes(n.id);
+      const when = n.date ? new Date(n.date).toLocaleString() : '';
+      return `
+        <div class="reminder-item ${isUnread ? 'urgent' : ''}" data-id="${escapeHtml(n.id)}">
+          <span class="reminder-icon">${isUnread ? '🔵' : '📨'}</span>
+          <span class="reminder-text"><b>${escapeHtml(n.subject || '')}</b><br>${escapeHtml(n.body || '')}${when ? `<br><span style="color:var(--muted);font-size:11px;">${escapeHtml(when)}</span>` : ''}</span>
+        </div>
+      `;
+    }).join('');
+  }
+  async function markVisibleNotificationsRead(){
+    const ids = visibleNotifications().map(n=>n.id);
+    let changed = false;
+    ids.forEach(id=>{ if(!readNotificationIds.includes(id)){ readNotificationIds.push(id); changed = true; } });
+    if(changed){
+      renderNotifications();
+      await saveReadNotificationIds();
+    }
+  }
+  async function refreshInboxNotifications(){
+    await loadInboxNotifications();
+    renderNotifications();
+    if($('bell-popover').classList.contains('open') && bellActiveTab === 'notifications') renderNotifPopoverList();
+  }
+  function startNotifPoll(){
+    if(notifPollTimer) return;
+    notifPollTimer = setInterval(refreshInboxNotifications, 60000);
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible') refreshInboxNotifications();
+    });
+  }
+
+  // ---------- shared popover chrome: tabs, position, open/close ----------
+  function setBellTab(tab){
+    bellActiveTab = tab;
+    document.querySelectorAll('#bell-popover-tabs button').forEach(b=>{
+      b.classList.toggle('on', b.dataset.bellTab === tab);
+    });
+    $('rem-popover-list').style.display = tab === 'reminders' ? '' : 'none';
+    $('notif-popover-list').style.display = tab === 'notifications' ? '' : 'none';
+    if(tab === 'reminders') renderRemPopoverList();
+    else { renderNotifPopoverList(); markVisibleNotificationsRead(); }
+  }
+  document.querySelectorAll('#bell-popover-tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=> setBellTab(btn.dataset.bellTab));
   });
+  // Anchored with position:fixed and re-computed on open/scroll/resize
+  // so it stays correctly placed under the header/nav bar whether the
+  // header is full size or shrunk, and on any screen size — centered
+  // in the viewport rather than tucked under the bell itself, so it
+  // reads as a standalone panel instead of a little corner flyout.
+  function positionBellPopover(){
+    const pop = $('bell-popover');
+    if(!pop) return;
+    const headerWrap = document.querySelector('.site-header-sticky');
+    const headerBottom = headerWrap ? Math.max(0, headerWrap.getBoundingClientRect().bottom) : 0;
+    pop.style.top = Math.round(headerBottom + 12) + 'px';
+    pop.style.left = '50%';
+    pop.style.right = 'auto';
+    pop.style.transform = 'translateX(-50%)';
+  }
+  function onDocClickForBellPopover(ev){
+    const pop = $('bell-popover');
+    const btn = $('btn-bell');
+    if(!pop) return;
+    if(pop.contains(ev.target) || (btn && btn.contains(ev.target))) return;
+    closeBellPopover();
+  }
+  function onKeydownForBellPopover(ev){
+    if(ev.key === 'Escape') closeBellPopover();
+  }
+  function openBellPopover(){
+    const pop = $('bell-popover');
+    const btn = $('btn-bell');
+    if(!pop) return;
+    setBellTab(bellActiveTab);
+    positionBellPopover();
+    pop.classList.add('open');
+    if(btn) btn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onDocClickForBellPopover, true);
+    document.addEventListener('keydown', onKeydownForBellPopover);
+    window.addEventListener('resize', positionBellPopover);
+    window.addEventListener('scroll', positionBellPopover, {passive:true});
+  }
+  function closeBellPopover(){
+    const pop = $('bell-popover');
+    const btn = $('btn-bell');
+    if(!pop) return;
+    pop.classList.remove('open');
+    if(btn) btn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onDocClickForBellPopover, true);
+    document.removeEventListener('keydown', onKeydownForBellPopover);
+    window.removeEventListener('resize', positionBellPopover);
+    window.removeEventListener('scroll', positionBellPopover);
+  }
+  $('btn-bell').addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const pop = $('bell-popover');
+    if(pop && pop.classList.contains('open')) closeBellPopover();
+    else openBellPopover();
+  });
+  $('bell-popover-close').addEventListener('click', closeBellPopover);
+
   async function onReminderPrefToggle(key, checkbox){
     reminderPrefs[key] = checkbox.checked;
     renderReminders();
@@ -6674,10 +7020,14 @@
     updateNotifyRecipientCount();
   });
 
-  async function openAdminNotifyModal(){
+  async function openAdminNotifyModal(existing){
     $('notify-error').style.display = 'none';
-    $('notify-subject').value = '';
-    $('notify-body').value = '';
+    $('notify-edit-id').value = existing ? existing.id : '';
+    $('notify-modal-title').textContent = existing ? '✏️ Edit notification' : '🔔 Send a notification';
+    $('notify-modal-sub').style.display = existing ? 'none' : '';
+    $('notify-edit-note').style.display = existing ? '' : 'none';
+    $('notify-subject').value = existing ? (existing.subject || '') : '';
+    $('notify-body').value = existing ? (existing.body || '') : '';
     $('notify-specific-email').value = '';
     if(!adminUsersCache.length){
       try{ const res = await adminCall('list_users', { query: '' }); adminUsersCache = (res && res.users) || []; } catch(e){ /* fall through with empty cache */ }
@@ -6694,15 +7044,59 @@
           </label>
         `).join('')
       : '<div class="empty">No users loaded — open the Admin tab and refresh first.</div>';
+    // Restore who an edited notification was sent to, so re-saving
+    // doesn't silently widen or narrow the audience.
+    const existingTargets = existing ? (existing.targets || ['all']) : null;
+    let initialTarget = 'specific';
+    if(existingTargets){
+      if(existingTargets.includes('all')) initialTarget = 'all';
+      else if(existingTargets.length > 1) initialTarget = 'bunch';
+      else initialTarget = 'specific';
+    }
+    notifyTarget = initialTarget;
+    document.querySelectorAll('#notify-target-toggle button').forEach(b=> b.classList.toggle('on', b.dataset.target === initialTarget));
+    $('notify-specific-wrap').style.display = initialTarget === 'specific' ? '' : 'none';
+    $('notify-bunch-wrap').style.display = initialTarget === 'bunch' ? '' : 'none';
+    $('notify-all-note').style.display = initialTarget === 'all' ? '' : 'none';
+    if(existingTargets && initialTarget === 'specific') $('notify-specific-email').value = existingTargets[0] || '';
+    if(existingTargets && initialTarget === 'bunch'){
+      $('notify-bunch-list').querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        cb.checked = existingTargets.includes(cb.value);
+      });
+    }
     $('notify-config-note').style.display = isSupabaseConfigured ? '' : '';
+    $('notify-send').textContent = existing ? '💾 Save changes' : '📤 Send';
+    // Delete only ever makes sense once a notification already exists —
+    // composing a brand-new one has nothing to delete yet.
+    $('notify-delete').style.display = existing ? '' : 'none';
     updateNotifyRecipientCount();
     openModal('modal-admin-notify');
   }
-  $('btn-open-notify').addEventListener('click', openAdminNotifyModal);
+  $('btn-open-notify').addEventListener('click', ()=> openAdminNotifyModal(null));
   $('modal-admin-notify-close').addEventListener('click', ()=> closeModal('modal-admin-notify'));
+  $('notify-delete').addEventListener('click', async ()=>{
+    const id = $('notify-edit-id').value;
+    if(!id) return;
+    if(!confirm('Delete this notification? It will disappear from everyone\'s inbox.')) return;
+    const btn = $('notify-delete');
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Deleting…';
+    try{
+      if(isSupabaseConfigured) await adminCall('delete_notification', { id });
+      await sharedStore.deleteNotification(id);
+      await refreshInboxNotifications();
+      await renderAdminNotifList();
+      toast('Notification deleted');
+      closeModal('modal-admin-notify');
+    }catch(e){
+      showNotifyError(e.message || "Could not delete this notification — is delete_notification wired up server-side yet?");
+    }
+    btn.disabled = false; btn.textContent = original;
+  });
 
   $('notify-send').addEventListener('click', async ()=>{
     $('notify-error').style.display = 'none';
+    const editId = $('notify-edit-id').value || '';
     const subject = $('notify-subject').value.trim();
     const body = $('notify-body').value.trim();
     if(!subject || !body){ showNotifyError('Write a subject and a message.'); return; }
@@ -6721,10 +7115,42 @@
 
     const btn = $('notify-send');
     const original = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Sending…';
+    btn.disabled = true; btn.textContent = editId ? 'Saving…' : 'Sending…';
+
+    if(editId){
+      // Editing never re-sends the email — it only rewrites the message
+      // already sitting in everyone's in-app inbox.
+      try{
+        const patch = { subject, body, targets: notifyTarget === 'all' ? ['all'] : targets.slice() };
+        if(isSupabaseConfigured){
+          await adminCall('edit_notification', Object.assign({ id: editId }, patch));
+        }
+        await sharedStore.updateNotification(editId, patch);
+        await refreshInboxNotifications();
+        await renderAdminNotifList();
+        toast('Notification updated');
+        closeModal('modal-admin-notify');
+      } catch(e){
+        showNotifyError(e.message || "That didn't work — is edit_notification wired up server-side yet?");
+      }
+      btn.disabled = false; btn.textContent = original;
+      return;
+    }
+
     try{
       const res = await adminCall('send_notification', { targets, subject, body });
       const sentCount = (res && typeof res.sent === 'number') ? res.sent : targets.length;
+      // Also drop it in the in-app inbox (the 📨 bell), not just email —
+      // "all" is stored as-is so every account matches it; specific
+      // recipients are matched by their own email (see notificationApplies).
+      await sharedStore.addNotification({
+        id: 'notif:' + Date.now() + ':' + Math.random().toString(36).slice(2,8),
+        subject, body,
+        date: new Date().toISOString(),
+        targets: notifyTarget === 'all' ? ['all'] : targets.slice()
+      });
+      await refreshInboxNotifications();
+      await renderAdminNotifList();
       toast(`Sent to ${sentCount} recipient${sentCount===1?'':'s'}`);
       closeModal('modal-admin-notify');
     } catch(e){
@@ -6732,6 +7158,61 @@
     }
     btn.disabled = false; btn.textContent = original;
   });
+
+  // ---------- admin: manage sent notifications (edit / delete) ----------
+  async function renderAdminNotifList(){
+    const wrap = $('admin-notif-list');
+    if(!wrap) return;
+    let list = [];
+    try{ list = await sharedStore.getNotifications(); }catch(e){ list = []; }
+    list = list.slice().sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')));
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="empty">No notifications sent yet.</div>';
+      return;
+    }
+    wrap.innerHTML = list.map(n=>{
+      const when = n.date ? new Date(n.date).toLocaleString() : '';
+      const targets = (n.targets && n.targets.includes('all')) ? 'All users' : ((n.targets||[]).join(', ') || 'All users');
+      return `
+        <div class="admin-user-row" data-id="${escapeHtml(n.id)}">
+          <div class="au-left">
+            <div>
+              <div class="au-email">${escapeHtml(n.subject || '(no subject)')}</div>
+              <div class="au-meta">${escapeHtml(targets)}${when ? ' · ' + escapeHtml(when) : ''}</div>
+              <div class="au-meta" style="font-family:'Work Sans',sans-serif;color:var(--ink);margin-top:4px;">${escapeHtml(n.body || '')}</div>
+            </div>
+          </div>
+          <div class="au-actions">
+            <button class="btn small ghost-teal admin-notif-edit" type="button">✏️ Edit</button>
+            <button class="btn small ghost admin-notif-delete" type="button">🗑️ Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    wrap.querySelectorAll('.admin-notif-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.closest('.admin-user-row').dataset.id;
+        const n = list.find(x=>x.id === id);
+        if(n) openAdminNotifyModal(n);
+      });
+    });
+    wrap.querySelectorAll('.admin-notif-delete').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.closest('.admin-user-row').dataset.id;
+        if(!confirm('Delete this notification? It will disappear from everyone\'s inbox.')) return;
+        try{
+          if(isSupabaseConfigured) await adminCall('delete_notification', { id });
+          await sharedStore.deleteNotification(id);
+          await refreshInboxNotifications();
+          await renderAdminNotifList();
+          toast('Notification deleted');
+        }catch(e){
+          toast(e.message || "Could not delete this notification — is delete_notification wired up server-side yet?", true);
+        }
+      });
+    });
+  }
+  $('admin-notif-refresh').addEventListener('click', renderAdminNotifList);
 
   function renderAdminUserEntries(){
     const wrap = $('admin-user-entries');
@@ -6850,6 +7331,7 @@
     if(btn.dataset.tab === 'admin'){
       $('admin-not-ready').style.display = isSupabaseConfigured ? 'none' : '';
       if(isSupabaseConfigured) renderAdminUsers();
+      renderAdminNotifList();
     }
     closeNavMenu();
     window.scrollTo({top:0, behavior:'smooth'});
@@ -6887,22 +7369,28 @@
   // Compacts the sticky header once the page scrolls past a small
   // threshold, and restores it once scrolled back near the top.
   //
-  // Two things used to make this janky:
-  // 1) A manual debounce (wait ~140ms after scrolling stops before
-  //    deciding) added a visible delay between "user scrolls past the
-  //    threshold" and "header actually shrinks" — that's the lag. A
-  //    plain requestAnimationFrame throttle reacts on the very next
-  //    frame instead, so the shrink starts as soon as the threshold is
-  //    crossed.
-  // 2) Resizing the header while the page is scrolled triggers the
-  //    browser's scroll anchoring, which nudges the scroll position to
-  //    compensate for the size change — that nudge fires another
-  //    scroll event, which can flip the shrink class back off, which
-  //    resizes the header again, back and forth. `overflow-anchor:none`
-  //    on .site-header-sticky (see CSS) removes that feedback loop at
-  //    the source; the rAF throttle plus a fixed 40px+ hysteresis gap
-  //    between the "shrink" and "un-shrink" thresholds below keeps it
-  //    from re-triggering on ordinary small scroll jitter too.
+  // Root cause of the lag + the shrink/unshrink loop: resizing the
+  // header (the shrink class, or the nav row collapsing) removes real
+  // height from the page. On a page that isn't much taller than the
+  // viewport, that height change can shift the browser's max scroll
+  // position, so the browser clamps/nudges scrollY on its own right
+  // after we resize. That nudge fires another scroll event that looks
+  // like a real user scroll — reading as "back at the top" or "back
+  // past the threshold" — which flips the state right back, resizing
+  // the header again, and so on. `overflow-anchor:none` on
+  // .site-header-sticky (see CSS) removes one source of that; a
+  // previous fix here tried to cover the rest with a fixed-time
+  // cooldown after every flip, but that also blocked *genuine* scroll
+  // input for the same window, which is what read as lag — and on
+  // short/awkward-height pages the self-caused jump could still land
+  // outside that fixed window, letting the loop through anyway.
+  //
+  // Fix: use a ResizeObserver on the header itself, which only fires
+  // when the header's rendered size actually changes. When it does, we
+  // skip the next few scroll-driven decisions — just long enough for
+  // any self-caused scroll adjustment to finish — instead of guessing a
+  // duration. Every scroll event that isn't a side-effect of our own
+  // resize is handled immediately, on the next frame, with no delay.
   //
   // On desktop/wide screens, scrolling down also collapses the tab row
   // entirely (nav-collapsed) to reclaim vertical space, leaving a small
@@ -6939,22 +7427,58 @@
       navTabsEl.addEventListener('mouseenter', ()=>{ navHovered = true; });
       navTabsEl.addEventListener('mouseleave', ()=>{ navHovered = false; });
     }
+    // Number of upcoming scroll-driven checks to skip after the header's
+    // own size changes (set by the ResizeObserver below, consumed one
+    // per animation frame in applyShrink). This — not a timer — is what
+    // stops the loop.
+    let suppressChecks = 0;
     function applyShrink(){
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const rawY = window.scrollY || document.documentElement.scrollTop || 0;
+      // Being essentially at the very top of the page is unambiguous —
+      // no self-caused resize/clamp jump ever needs "settling" here, so
+      // this check runs before (and overrides) the suppression window
+      // below. This is the guaranteed fix for the header/menu getting
+      // stuck shrunk: no matter what state a pending resize-suppression
+      // left things in, the moment we're back at the top we force full
+      // size immediately, every time.
+      if(rawY <= 2){
+        suppressChecks = 0;
+        // Deliberately ignores navHovered too — resting the mouse over
+        // the nav shouldn't be able to keep it collapsed once the page
+        // is genuinely back at the top.
+        headerWrap.classList.remove('shrink', 'nav-collapsed', 'nav-scrolled');
+        navManuallyOpened = false;
+        updateRevealBtn();
+        return;
+      }
+      if(suppressChecks > 0){
+        suppressChecks--;
+        return;
+      }
+      // Clamp negative values from iOS/Android rubber-band overscroll so
+      // a bounce at the top never misreads as "scrolled past the top".
+      const y = Math.max(0, rawY);
       const hoveringNav = navHovered && window.innerWidth > 900;
 
-      if(y > 64) headerWrap.classList.add('shrink');
-      else if(y < 24) headerWrap.classList.remove('shrink');
+      const isShrunk = headerWrap.classList.contains('shrink');
+      if(y > 64 && !isShrunk){
+        headerWrap.classList.add('shrink');
+      } else if(y < 24 && isShrunk){
+        headerWrap.classList.remove('shrink');
+      }
 
       if(window.innerWidth > 900){
         // Hovering the nav only pauses it from auto-collapsing out from
         // under the cursor — the header itself still shrinks and
         // expands normally while that happens.
         if(!hoveringNav){
+          const isCollapsed = headerWrap.classList.contains('nav-collapsed');
           if(y > 80){
             headerWrap.classList.add('nav-scrolled');
-            if(!navManuallyOpened) headerWrap.classList.add('nav-collapsed');
-          } else if(y < 24){
+            if(!navManuallyOpened && !isCollapsed){
+              headerWrap.classList.add('nav-collapsed');
+            }
+          } else if(y < 24 && (isCollapsed || headerWrap.classList.contains('nav-scrolled'))){
             headerWrap.classList.remove('nav-scrolled', 'nav-collapsed');
             navManuallyOpened = false;
           }
@@ -6965,12 +7489,21 @@
         navManuallyOpened = false;
       }
     }
-    // Standard requestAnimationFrame scroll throttle: at most one
-    // decision per rendered frame, always on the next frame rather than
-    // after an artificial delay, so the shrink tracks the scroll
-    // smoothly instead of lagging behind it. classList.add/remove are
-    // no-ops when the class is already in the state requested, so
-    // calling them every frame costs nothing extra once settled.
+    // Whenever the header's rendered size actually changes — the shrink
+    // class, the nav row collapsing, or a text/orientation reflow — give
+    // any resulting scroll-position adjustment a few frames to settle
+    // before trusting scrollY again. Ties the fix to the real cause
+    // instead of a guessed duration, on any screen size.
+    let firstResize = true;
+    const ro = new ResizeObserver(()=>{
+      if(firstResize){ firstResize = false; return; } // ignore the initial layout measurement
+      suppressChecks = 3;
+    });
+    ro.observe(headerWrap);
+    // Standard requestAnimationFrame scroll throttle: at most one check
+    // per rendered frame, always on the next frame rather than after an
+    // artificial delay, so the shrink tracks the scroll smoothly with no
+    // added lag.
     let ticking = false;
     window.addEventListener('scroll', ()=>{
       if(!ticking){
@@ -10705,7 +11238,7 @@
     $('rec-start').value = todayISO();
     renderReceiptField();
     busySaving();
-    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting(), loadLanguageSetting()]);
+    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadReadNotificationIds(), loadInboxNotifications(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting(), loadLanguageSetting()]);
     applyTranslations();
     initLanguageSetting();
     $('f-rate').value = formatAmountValue(String(currentExchangeRate));
@@ -10736,6 +11269,8 @@
     startPresenceTracking();
     renderNotifyBell();
     renderReminders();
+    renderNotifications();
+    startNotifPoll();
     initAppSettings();
     startSelfBanWatch();
     renderFooterStats();
