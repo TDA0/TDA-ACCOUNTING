@@ -33,6 +33,11 @@
     --green-ok:#3E6B4F;
     --white:#FFFDF7;
     --muted:#7a7358;
+    /* Shared timing for the header/nav shrink-on-scroll effect so every
+       piece (logo, title, toolbar, tab row) animates in lockstep instead
+       of drifting in and out of sync at slightly different speeds. */
+    --hdr-dur:.26s;
+    --hdr-ease:cubic-bezier(.4,0,.2,1);
   }
   /* ===== Dark mode ===== */
   /* Toggled by the "Dark mode" switch in Profile → App settings. Because
@@ -111,6 +116,14 @@
     top:0;
     z-index:210;
     isolation:isolate;
+    /* The shrink effect resizes content inside this sticky header on
+       every scroll tick. Without this, browsers' scroll-anchoring can
+       "helpfully" re-adjust the scroll offset to compensate for that
+       size change, which fires another scroll event, which flips the
+       shrink class back, which resizes it again — a visible shrink/
+       unshrink flicker loop. Opting the whole header out of anchoring
+       removes the feedback loop at its source. */
+    overflow-anchor:none;
   }
   header.top{
     background:linear-gradient(160deg, var(--forest) 0%, var(--forest-2) 100%);
@@ -119,6 +132,16 @@
     position:relative;
     overflow:hidden;
     box-shadow:0 4px 20px rgba(0,0,0,0.18);
+    transition:padding var(--hdr-dur) var(--hdr-ease), box-shadow var(--hdr-dur) var(--hdr-ease);
+    will-change:padding;
+  }
+  /* Compact header on scroll — shrunk once the page scrolls past a small
+     threshold, back to full size once scrolled back near the top. Only
+     the padding + a few inner elements animate so it stays cheap. */
+  .site-header-sticky.shrink header.top{
+    padding-top:clamp(7px,1.1vw,10px);
+    padding-bottom:clamp(7px,1vw,9px);
+    padding-left:clamp(10px,2.4vw,20px);
   }
   header.top::before{
     content:"";
@@ -142,17 +165,35 @@
     background:linear-gradient(90deg, var(--brass-dim) 0%, var(--brass) 45%, var(--brass-dim) 100%);
   }
 
-  header.top .head-row{display:flex;justify-content:space-between;align-items:center;position:relative;gap:16px;flex-wrap:wrap;}
+  header.top .head-row{display:flex;justify-content:space-between;align-items:center;position:relative;gap:16px;flex-wrap:wrap;transition:gap var(--hdr-dur) var(--hdr-ease);}
+  .site-header-sticky.shrink header.top .head-row{gap:10px;flex-wrap:nowrap;}
   @media (max-width:480px){
     header.top .head-row{flex-direction:column;align-items:flex-start;gap:10px;}
+    /* Once shrunk there's no room (and no need) to stack — pull the
+       toolbar back up beside the title on one line, same as wider
+       screens, instead of leaving it hanging on its own row below. */
+    .site-header-sticky.shrink header.top .head-row{
+      flex-direction:row;align-items:center;gap:8px;
+    }
   }
-  header.top .brand-row{display:flex;align-items:center;gap:12px;}
+  header.top .brand-row{display:flex;align-items:center;gap:12px;transition:gap var(--hdr-dur) var(--hdr-ease);}
+  .site-header-sticky.shrink header.top .brand-row{gap:8px;}
   header.top .brand-mark{
     width:clamp(36px,7vw,46px);height:clamp(36px,7vw,46px);border-radius:12px;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;font-size:clamp(17px,3.6vw,22px);
     background:linear-gradient(150deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 100%);
     border:1px solid rgba(255,255,255,0.16);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 10px -4px rgba(0,0,0,0.4);
+    transition:width var(--hdr-dur) var(--hdr-ease), height var(--hdr-dur) var(--hdr-ease), font-size var(--hdr-dur) var(--hdr-ease), border-radius var(--hdr-dur) var(--hdr-ease), background .15s ease, transform .15s ease;
+    cursor:pointer;padding:0;line-height:1;-webkit-tap-highlight-color:transparent;
+  }
+  header.top .brand-mark:hover{
+    background:linear-gradient(150deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 100%);
+    transform:translateY(-1px);
+  }
+  header.top .brand-mark:active{transform:translateY(0) scale(0.95);}
+  .site-header-sticky.shrink header.top .brand-mark{
+    width:30px;height:30px;font-size:15px;border-radius:9px;
   }
   header.top .eyebrow{
     font-family:'Space Mono',monospace;
@@ -162,6 +203,11 @@
     color:var(--brass-dim);
     margin:0 0 3px;
     display:flex;align-items:center;gap:6px;
+    max-height:20px;opacity:1;overflow:hidden;
+    transition:max-height var(--hdr-dur) var(--hdr-ease), opacity var(--hdr-dur) var(--hdr-ease), margin var(--hdr-dur) var(--hdr-ease);
+  }
+  .site-header-sticky.shrink header.top .eyebrow{
+    max-height:0;opacity:0;margin:0;
   }
   header.top h1{
     font-family:'Fraunces', serif;
@@ -170,8 +216,17 @@
     margin:0 0 3px;
     letter-spacing:0.1px;
     line-height:1.08;
+    transition:font-size var(--hdr-dur) var(--hdr-ease), margin var(--hdr-dur) var(--hdr-ease);
   }
-  header.top p{margin:0;font-size:clamp(11px,1.8vw,13px);opacity:0.72;font-family:'Space Mono',monospace;}
+  .site-header-sticky.shrink header.top h1{
+    font-size:16px;margin:0;
+  }
+  header.top p{margin:0;font-size:clamp(11px,1.8vw,13px);opacity:0.72;font-family:'Space Mono',monospace;
+    max-height:20px;transition:max-height var(--hdr-dur) var(--hdr-ease), opacity var(--hdr-dur) var(--hdr-ease);
+  }
+  .site-header-sticky.shrink header.top .brand-row > div > p{
+    max-height:0;opacity:0;overflow:hidden;
+  }
 
   /* Right-side toolbar: save status + bell + menu grouped as one cohesive
      surface with subtle dividers, instead of loose floating controls. */
@@ -181,10 +236,22 @@
     border:1px solid rgba(255,255,255,0.09);
     border-radius:14px;
     padding:5px;
+    transition:padding var(--hdr-dur) var(--hdr-ease), gap var(--hdr-dur) var(--hdr-ease);
   }
+  .site-header-sticky.shrink header.top .head-toolbar{padding:1px;gap:0;}
+  .site-header-sticky.shrink header.top .save-state{padding:3px 5px;gap:0;}
+  .site-header-sticky.shrink header.top .dot{width:5px;height:5px;}
   header.top .save-state{
     font-family:'Space Mono',monospace;font-size:clamp(10px,1.5vw,11px);opacity:0.9;
     display:flex;align-items:center;gap:6px;padding:7px 12px;white-space:nowrap;
+    transition:padding var(--hdr-dur) var(--hdr-ease), gap var(--hdr-dur) var(--hdr-ease);
+  }
+  header.top .save-state span:not(.dot){
+    display:inline-block;max-width:200px;overflow:hidden;
+    transition:max-width var(--hdr-dur) var(--hdr-ease), opacity var(--hdr-dur) var(--hdr-ease);
+  }
+  .site-header-sticky.shrink header.top .save-state span:not(.dot){
+    max-width:0;opacity:0;
   }
   header.top .dot{width:6px;height:6px;border-radius:50%;background:var(--brass-dim);}
   header.top .dot.busy{background:#e0c66b;animation:pulse 1s infinite;}
@@ -202,6 +269,11 @@
     position:relative;
   }
   nav.tabs::-webkit-scrollbar{height:0;}
+  /* The hide-on-scroll chevron tab is a desktop-only affordance (see the
+     min-width:901px block below) — stay hidden by default so it can't
+     show up unstyled on phones/tablets, which keep the hamburger drawer
+     instead. */
+  .nav-reveal-btn{display:none;}
   .nav-group{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;}
   .nav-group-main{flex:1 1 auto;min-width:0;}
   .nav-group-account{flex:0 0 auto;margin-left:8px;padding-left:12px;border-left:1px solid rgba(255,255,255,0.14);}
@@ -253,12 +325,22 @@
   main{padding:clamp(14px,3.5vw,36px) clamp(14px,4vw,56px) 0;}
   .panel{display:none;}
   .panel.active{display:block; animation:fadeSlideUp .38s cubic-bezier(.22,.61,.36,1);}
+  /* The Quick Add (+) button is fixed to the bottom-right corner, so any
+     panel whose last element can end near the bottom of the page needs
+     enough clearance that its final buttons never sit under the FAB. */
+  #panel-report{padding-bottom:calc(76px + env(safe-area-inset-bottom));}
   @keyframes fadeSlideUp{
     from{opacity:0; transform:translateY(14px);}
     to{opacity:1; transform:translateY(0);}
   }
   @media (prefers-reduced-motion: reduce){
     .panel.active{animation:none;}
+    header.top, .site-header-sticky.shrink header.top,
+    header.top .head-row, header.top .brand-row, header.top .brand-mark,
+    header.top .eyebrow, header.top h1, header.top p,
+    header.top .head-toolbar, header.top .save-state, header.top .save-state span:not(.dot){
+      transition:none;
+    }
   }
 
   .card{
@@ -295,9 +377,20 @@
   .jth-row .jth-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap;min-width:112px;}
   .jth-row .jth-title{flex:1;font-size:13px;}
   .jth-row .jth-current{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.5px;text-transform:uppercase;color:var(--green-ok);background:rgba(62,107,79,0.12);border-radius:6px;padding:2px 6px;}
+  .jth-row .jth-edit{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 4px;line-height:1;}
+  .jth-row .jth-edit:hover{color:var(--forest);}
   .jth-row .jth-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 4px;line-height:1;}
   .jth-row .jth-del:hover{color:var(--brick);}
   .jth-empty{font-size:11.5px;color:var(--muted);margin:8px 0 0;}
+  .jth-row-edit{flex-wrap:wrap;gap:8px;}
+  .jth-row-edit input[type="date"]{min-width:130px;font-family:'Space Mono',monospace;font-size:11px;padding:5px 6px;}
+  .jth-row-edit input[type="text"]{flex:1;min-width:120px;font-size:13px;padding:5px 7px;}
+  .jth-row .jth-save{background:none;border:none;cursor:pointer;color:var(--green-ok);font-size:14px;padding:2px 4px;line-height:1;}
+  .jth-row .jth-cancel{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 4px;line-height:1;}
+  .jth-row .jth-cancel:hover{color:var(--brick);}
+  .jth-current-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px 12px;background:var(--white);border:1px solid var(--rule);border-radius:10px;flex-wrap:wrap;}
+  .jth-current-lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:var(--forest-2);}
+  .jth-current-val{font-size:15px;font-weight:600;margin-top:2px;}
   .icsprev-list{max-height:360px;overflow-y:auto;margin:10px 0 0;padding:6px;border:1px solid var(--rule);border-radius:10px;background:var(--paper-2);display:flex;flex-direction:column;gap:6px;}
   .icsprev-row{display:flex;align-items:center;gap:8px;padding:6px;background:var(--white);border:1px solid var(--rule);border-radius:8px;}
   .icsprev-row .icsprev-date{width:150px;flex-shrink:0;font-size:12.5px;padding:8px 9px;}
@@ -531,7 +624,13 @@
     font-size:16px;
     cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;
-    transition:background .15s ease, transform .15s ease;
+    transition:background .15s ease, transform .15s ease, width var(--hdr-dur) var(--hdr-ease), height var(--hdr-dur) var(--hdr-ease), font-size var(--hdr-dur) var(--hdr-ease), border-radius var(--hdr-dur) var(--hdr-ease);
+  }
+  .site-header-sticky.shrink header.top .rem-bell-btn{
+    width:20px;height:20px;font-size:10px;border-radius:5px;
+  }
+  .site-header-sticky.shrink header.top .rem-badge{
+    min-width:9px;height:9px;font-size:6px;top:-2px;right:-2px;padding:0 1px;
   }
   .rem-bell-btn:hover{background:rgba(243,238,217,0.14);transform:translateY(-1px);}
   .rem-bell-btn:active{transform:translateY(0);}
@@ -542,6 +641,19 @@
     min-width:16px; height:16px; padding:0 3px; border-radius:9px;
     display:flex;align-items:center;justify-content:center;
     line-height:1;
+    transition:min-width var(--hdr-dur) var(--hdr-ease), height var(--hdr-dur) var(--hdr-ease), font-size var(--hdr-dur) var(--hdr-ease), top var(--hdr-dur) var(--hdr-ease), right var(--hdr-dur) var(--hdr-ease);
+  }
+
+  /* Desktop has plenty of horizontal room even with the header shrunk, so
+     don't collapse the toolbar down to icon-only the way mobile does —
+     just trim it a touch and keep the "All entries saved" text legible. */
+  @media (min-width:901px){
+    .site-header-sticky.shrink header.top .save-state{padding:6px 12px;gap:6px;}
+    .site-header-sticky.shrink header.top .save-state span:not(.dot){
+      max-width:200px;opacity:1;
+    }
+    .site-header-sticky.shrink header.top .rem-bell-btn{width:28px;height:28px;font-size:13px;}
+    .site-header-sticky.shrink header.top .rem-badge{min-width:13px;height:13px;font-size:8px;}
   }
   .reminder-settings{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px dashed var(--rule);}
   .reminder-settings .keep-chk{font-size:12.5px;}
@@ -854,13 +966,86 @@
   .day-activity-opt .ck{font-size:15px;color:var(--forest);opacity:0;transition:opacity .15s ease;}
   .day-activity-opt.checked .ck{opacity:1;}
 
-  .rep-type-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-  .rep-type-toggle button{
-    flex:1;min-width:120px;padding:9px 8px;border:1px solid var(--rule);background:var(--paper);
-    border-radius:9px;cursor:pointer;font-family:'Work Sans',sans-serif;font-weight:600;font-size:12.5px;color:var(--muted);
-    transition:all .15s ease;
+  /* ===== Report page — modernized layout ===== */
+  .rep-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:22px;}
+  .rep-head-icon{
+    width:46px;height:46px;border-radius:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:21px;
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-2) 100%);
+    box-shadow:0 4px 12px -4px rgba(30,61,50,0.5);
   }
-  .rep-type-toggle button.on{background:var(--forest);color:var(--paper);border-color:var(--forest);}
+  .rep-head h2{margin:0 0 4px;}
+  .rep-head-sub{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0;max-width:56ch;}
+
+  .rep-label{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;
+    color:var(--forest-2);margin:0 0 9px;display:block;
+  }
+
+  .rep-type-toggle{
+    display:grid;grid-template-columns:repeat(3, 1fr);gap:4px;padding:4px;margin-bottom:22px;
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:12px;
+  }
+  .rep-type-toggle button{
+    min-width:0;width:100%;padding:9px 6px;border:none;background:transparent;
+    border-radius:9px;cursor:pointer;font-family:'Work Sans',sans-serif;font-weight:600;font-size:12.5px;color:var(--muted);
+    transition:all .18s ease;
+    white-space:normal;overflow-wrap:break-word;text-align:center;line-height:1.25;
+  }
+  .rep-type-toggle button:hover:not(.on){color:var(--forest-2);}
+  .rep-type-toggle button.on{background:var(--white);color:var(--forest);box-shadow:0 2px 8px -3px rgba(31,42,36,0.3);}
+  @media (max-width:380px){
+    .rep-type-toggle button{font-size:11.5px;padding:8px 4px;}
+  }
+
+  .rep-hr{border:none;border-top:1px solid var(--rule);margin:22px 0;}
+
+  /* Report page action buttons — Generate / Preview / Print, and the
+     Download/Print row inside the PDF preview card. One consistent
+     row that wraps gracefully, and stacks full-width on phones. */
+  .rep-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .rep-actions .btn{display:inline-flex;align-items:center;gap:7px;}
+  @media (max-width:600px){
+    .rep-actions{flex-direction:column;align-items:stretch;}
+    .rep-actions .btn{width:100%;justify-content:center;text-align:center;}
+  }
+
+  /* PDF preview pager — icon nav buttons + pill page label */
+  .pdf-page-label{
+    font-family:'Space Mono',monospace;font-size:12.5px;color:var(--forest-2);
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:999px;
+    padding:7px 16px;min-width:100px;text-align:center;
+  }
+  .pdf-nav-btn{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:var(--white);
+    display:inline-flex;align-items:center;justify-content:center;font-size:17px;color:var(--forest);
+    cursor:pointer;transition:all .15s ease;flex-shrink:0;
+  }
+  .pdf-nav-btn:hover:not(:disabled){background:var(--forest);color:var(--white);border-color:var(--forest);transform:translateY(-1px);}
+  .pdf-nav-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .pdf-nav-btn:active:not(:disabled){transform:translateY(0) scale(0.94);}
+
+  /* Enlarge / minimize — icon-only, set apart from the prev/next pager
+     group with a brass accent so it reads as a distinct action. */
+  .pdf-zoom-btn{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--brass-dim);background:var(--white);
+    display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:var(--forest);
+    cursor:pointer;transition:all .15s ease;flex-shrink:0;
+  }
+  .pdf-zoom-btn:hover{background:var(--brass);color:var(--white);border-color:var(--brass);transform:translateY(-1px);}
+  .pdf-zoom-btn:active{transform:translateY(0) scale(0.94);}
+  /* While maximized, keep the pager + close control pinned to the top
+     of the scroll area so they're reachable without scrolling back up
+     through a tall page. */
+  #pdf-preview-wrap.pdf-zoomed .pdf-pager-toolbar{
+    position:sticky; top:0; z-index:5; background:var(--white);
+    padding:4px 0 14px; margin-bottom:10px; border-bottom:1px solid var(--rule);
+  }
+
+  @media (max-width:900px){
+    .rep-head{gap:11px;}
+    .rep-head-icon{width:40px;height:40px;font-size:18px;border-radius:10px;}
+  }
 
   /* Printable activity calendar */
   .actcal-print{width:100%;border-collapse:collapse;table-layout:fixed;}
@@ -892,7 +1077,12 @@
 
   /* PDF preview */
   #pdf-preview-wrap{display:none;}
-  .printer-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .printer-note{
+    display:flex;gap:9px;align-items:flex-start;
+    font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;
+  }
+  .printer-note .pn-ic{flex-shrink:0;font-size:13px;line-height:1.5;}
 
   /* ===== Report / print ===== */
   #reportOutput{display:none;}
@@ -1139,7 +1329,7 @@
     gap:8px;
     flex-shrink:0;
     -webkit-tap-highlight-color:transparent;
-    transition:background .2s ease, border-color .2s ease, transform .15s ease, box-shadow .2s ease, width .2s ease;
+    transition:background .2s ease, border-color .2s ease, transform .15s ease, box-shadow .2s ease, width .22s ease, height .22s ease, top .22s ease, font-size .22s ease;
     box-shadow:0 4px 14px -3px rgba(0,0,0,0.45);
   }
   .menu-btn .menu-btn-label{display:none;}
@@ -1150,7 +1340,7 @@
     transform:translateY(-1px);
   }
   .menu-btn:active{transform:translateY(0) scale(0.96);}
-  .menu-btn .menu-icon{display:block;flex-shrink:0;overflow:visible;}
+  .menu-btn .menu-icon{display:block;flex-shrink:0;overflow:visible;width:22px;height:22px;transition:width .22s ease, height .22s ease;}
   .menu-btn .bar{
     stroke:var(--white);
     stroke-width:2.6px;
@@ -1189,7 +1379,19 @@
     /* The menu button floats fixed over the header — keep header text
        from running underneath it. */
     header.top{padding-right:max(72px, env(safe-area-inset-right));}
-    header.top .head-toolbar{padding-right:52px;}
+
+    /* Shrunk header state: the button (and its badge/icon) scale down and
+       tuck in closer to the top so it stays proportionate to the now-
+       compact header instead of overhanging it. */
+    .site-header-sticky.shrink .menu-btn{
+      width:34px; height:34px;
+      top:max(8px, env(safe-area-inset-top));
+      border-radius:9px;
+      padding:0;
+    }
+    .site-header-sticky.shrink .menu-btn .menu-icon{width:17px;height:17px;}
+    .site-header-sticky.shrink .menu-btn .menu-btn-label{display:none;}
+    .site-header-sticky.shrink header.top{padding-right:max(56px, env(safe-area-inset-right));}
     nav.tabs{
       display:flex;
       flex-direction:column;
@@ -1516,15 +1718,34 @@
   #receipt-view-body iframe{display:block;width:100%;height:70vh;border:0;}
 
   /* ===== PDF preview pager ===== */
-  .pdf-pager-toolbar{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
-  .pdf-pager-toolbar .pg-label{font-family:'Space Mono',monospace;font-size:13px;color:var(--muted);min-width:96px;text-align:center;}
+  .pdf-pager-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .pdf-pager-nav{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;flex:1;min-width:0;}
   #pdf-pages-wrap{
-    width:100%; max-height:70vh; overflow:auto;
+    width:100%; min-height:min(70vh, 420px); max-height:70vh; overflow:auto;
     background:#525659; border:1px solid var(--rule); border-radius:8px;
-    display:flex; justify-content:center; padding:14px 0;
+    display:flex; align-items:flex-start; justify-content:center; padding:14px 0;
+    transition:max-height .2s ease, min-height .2s ease;
   }
   #pdf-pages-wrap canvas{max-width:100%; height:auto; box-shadow:0 4px 18px rgba(0,0,0,0.35); background:#fff;}
   .pdf-fallback-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
+
+  /* PDF preview — maximized / fullscreen mode */
+  body.pdf-zoom-lock{overflow:hidden;}
+  #pdf-preview-wrap.pdf-zoomed{
+    position:fixed; inset:0; z-index:1100; margin:0; border-radius:0;
+    max-width:none; width:100%; height:100%;
+    display:flex; flex-direction:column;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+    background:var(--white); overflow-y:auto;
+  }
+  #pdf-preview-wrap.pdf-zoomed #pdf-pages-wrap{
+    flex:1 1 auto; min-height:0; max-height:none;
+  }
+  @media (max-width:600px){
+    .pdf-pager-toolbar{gap:8px;}
+    .pdf-page-label{min-width:76px;font-size:12px;padding:6px 12px;}
+    #pdf-pages-wrap{min-height:min(58vh, 360px); max-height:58vh;}
+  }
 
   @media print{
     body{background:#fff;}
@@ -1562,14 +1783,61 @@
        reflows to fit rather than clipping, scroll-hiding, or squeezing
        labels unreadably thin. */
     nav.tabs{flex-wrap:wrap;overflow-x:visible;row-gap:4px;}
-    .nav-group-main{flex-wrap:wrap;}
-    .nav-group-account{margin-left:0;padding-left:0;border-left:none;}
+    .nav-group-main{flex:1 1 100%;flex-wrap:wrap;}
+    .nav-group-account{
+      flex:1 1 100%;justify-content:center;
+      margin-left:0;padding-left:0;border-left:none;
+      margin-top:4px;padding-top:8px;
+      border-top:1px solid rgba(255,255,255,0.14);
+    }
     nav.tabs button{flex:0 1 auto;min-width:110px;}
     .card{padding:26px 30px 28px;}
     .card h2{font-size:21px;}
     .two-col{gap:28px;}
     .dash-grid{gap:22px;}
     .hero-card{padding:28px 32px;}
+
+    /* Hide-on-scroll nav bar (desktop/wide only). The tab row collapses
+       away once the page is scrolled, and a small chevron tab pokes out
+       from the bottom of the sticky header to bring it back — pulled
+       back down with the same animation it collapsed with. */
+    nav.tabs{
+      max-height:340px;
+      overflow:hidden;
+      transition:max-height .34s cubic-bezier(.4,0,.2,1), padding .34s cubic-bezier(.4,0,.2,1), opacity .26s cubic-bezier(.4,0,.2,1), border-color .26s cubic-bezier(.4,0,.2,1);
+    }
+    .site-header-sticky.nav-collapsed nav.tabs{
+      max-height:0;
+      padding-top:0;padding-bottom:0;
+      opacity:0;
+      border-bottom-color:transparent;
+    }
+    .nav-reveal-btn{
+      display:none;
+      position:absolute;
+      left:50%;bottom:-15px;
+      transform:translateX(-50%);
+      width:34px;height:16px;
+      align-items:center;justify-content:center;
+      background:var(--forest-2);
+      color:rgba(243,238,217,0.8);
+      border:1px solid rgba(255,255,255,0.14);
+      border-top:none;
+      border-radius:0 0 9px 9px;
+      cursor:pointer;
+      box-shadow:0 6px 14px -6px rgba(0,0,0,0.5);
+      z-index:5;
+      transition:background .15s ease, color .15s ease, height .15s ease;
+    }
+    .nav-reveal-btn svg{transition:transform .25s ease;}
+    .nav-reveal-btn:hover{background:var(--forest);color:var(--paper);height:19px;}
+    .nav-reveal-btn:active{transform:translateX(-50%) scale(0.92);}
+    .nav-reveal-btn:focus-visible{outline:2px solid var(--brass-dim); outline-offset:2px;}
+    .site-header-sticky.nav-scrolled .nav-reveal-btn{display:flex;}
+    .site-header-sticky.nav-scrolled:not(.nav-collapsed) .nav-reveal-btn svg{transform:rotate(180deg);}
+  }
+  @media (min-width:901px) and (prefers-reduced-motion: reduce){
+    nav.tabs, .nav-reveal-btn, .nav-reveal-btn svg{transition:none;}
   }
   @media (min-width:1200px){
     .app{max-width:1360px;}
@@ -1719,7 +1987,7 @@
     <header class="top">
       <div class="head-row">
         <div class="brand-row">
-          <div class="brand-mark" aria-hidden="true">💰</div>
+          <button type="button" class="brand-mark" id="btn-brand-home" aria-label="Go to New Entry">💰</button>
           <div>
             <p class="eyebrow">Personal Ledger</p>
             <h1>TDA Accounting</h1>
@@ -1743,25 +2011,29 @@
 
     <nav class="tabs" id="nav-tabs">
       <div class="nav-drawer-head">
-        <span>Menu</span>
+        <span data-i18n="nav_menu">Menu</span>
       </div>
       <div class="nav-group nav-group-main">
-        <button class="tab-btn active" data-tab="add"><span class="tab-ic">📝</span><span class="tab-lbl">New Entry</span></button>
-        <button class="tab-btn" data-tab="list"><span class="tab-ic">📋</span><span class="tab-lbl">Entries</span></button>
-        <button class="tab-btn" data-tab="recurring"><span class="tab-ic">🔁</span><span class="tab-lbl">Recurring</span></button>
-        <button class="tab-btn" data-tab="categories"><span class="tab-ic">🏷️</span><span class="tab-lbl">Categories</span></button>
-        <button class="tab-btn" data-tab="accounts"><span class="tab-ic">🏦</span><span class="tab-lbl">Accounts</span></button>
-        <button class="tab-btn" data-tab="budgets"><span class="tab-ic">🎯</span><span class="tab-lbl">Budgets</span></button>
-        <button class="tab-btn" data-tab="tracker"><span class="tab-ic">📅</span><span class="tab-lbl">Calendar</span></button>
-        <button class="tab-btn" data-tab="overview"><span class="tab-ic">📊</span><span class="tab-lbl">Overview</span></button>
-        <button class="tab-btn" data-tab="stats"><span class="tab-ic">📈</span><span class="tab-lbl">Statistics</span></button>
-        <button class="tab-btn" data-tab="report"><span class="tab-ic">🖨️</span><span class="tab-lbl">Print Report</span></button>
+        <button class="tab-btn active" data-tab="add"><span class="tab-ic">📝</span><span class="tab-lbl" data-i18n="nav_new_entry">New Entry</span></button>
+        <button class="tab-btn" data-tab="list"><span class="tab-ic">📋</span><span class="tab-lbl" data-i18n="nav_entries">Entries</span></button>
+        <button class="tab-btn" data-tab="recurring"><span class="tab-ic">🔁</span><span class="tab-lbl" data-i18n="nav_recurring">Recurring</span></button>
+        <button class="tab-btn" data-tab="categories"><span class="tab-ic">🏷️</span><span class="tab-lbl" data-i18n="nav_categories">Categories</span></button>
+        <button class="tab-btn" data-tab="accounts"><span class="tab-ic">🏦</span><span class="tab-lbl" data-i18n="nav_accounts">Accounts</span></button>
+        <button class="tab-btn" data-tab="budgets"><span class="tab-ic">🎯</span><span class="tab-lbl" data-i18n="nav_budgets">Budgets</span></button>
+        <button class="tab-btn" data-tab="tracker"><span class="tab-ic">📅</span><span class="tab-lbl" data-i18n="nav_calendar">Calendar</span></button>
+        <button class="tab-btn" data-tab="overview"><span class="tab-ic">📊</span><span class="tab-lbl" data-i18n="nav_overview">Overview</span></button>
+        <button class="tab-btn" data-tab="stats"><span class="tab-ic">📈</span><span class="tab-lbl" data-i18n="nav_statistics">Statistics</span></button>
+        <button class="tab-btn" data-tab="report"><span class="tab-ic">🖨️</span><span class="tab-lbl" data-i18n="nav_print_report">Print Report</span></button>
       </div>
       <div class="nav-group nav-group-account">
-        <span class="nav-group-label">Account</span>
-        <button class="tab-btn" data-tab="profile" id="nav-profile-tab"><span class="nav-profile-slot" id="nav-profile-slot"><span class="tab-ic">👤</span><span class="tab-lbl">Profile</span></span></button>
+        <span class="nav-group-label" data-i18n="nav_account_group">Account</span>
+        <button class="tab-btn" data-tab="profile" id="nav-profile-tab"><span class="nav-profile-slot" id="nav-profile-slot"><span class="tab-ic">👤</span><span class="tab-lbl" data-i18n="nav_profile">Profile</span></span></button>
       </div>
     </nav>
+
+    <button type="button" class="nav-reveal-btn" id="btn-nav-reveal" aria-label="Show navigation" aria-expanded="false" aria-controls="nav-tabs">
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 8l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
   </div>
 
   <div class="nav-backdrop" id="nav-backdrop"></div>
@@ -1784,10 +2056,10 @@
               <label class="keep-chk"><input type="checkbox" id="keep-type"> keep</label>
             </div>
             <div class="type-toggle">
-              <button type="button" class="sel-expense on" data-type="expense">Expense</button>
-              <button type="button" class="sel-income" data-type="income">Income</button>
-              <button type="button" class="sel-salary" data-type="salary">Salary</button>
-              <button type="button" class="sel-transfer" data-type="transfer">Transfer</button>
+              <button type="button" class="sel-expense on" data-type="expense" data-i18n="type_expense">Expense</button>
+              <button type="button" class="sel-income" data-type="income" data-i18n="type_income">Income</button>
+              <button type="button" class="sel-salary" data-type="salary" data-i18n="type_salary">Salary</button>
+              <button type="button" class="sel-transfer" data-type="transfer" data-i18n="type_transfer">Transfer / Exchange</button>
             </div>
           </div>
         </div>
@@ -1851,6 +2123,11 @@
               <label>Received amount</label>
             </div>
             <input type="text" inputmode="decimal" autocomplete="off" id="f-to-amount" placeholder="0.00">
+          </div>
+        </div>
+        <div class="field-row" id="f-exchange-hint-row" style="display:none;">
+          <div class="field" style="flex:1;">
+            <div id="f-exchange-hint" style="font-size:11.5px;color:var(--muted);line-height:1.4;">To log a USD ⇄ LBP exchange, pick a USD account as "From account" and an LBP account as "To account" (or vice versa), then enter what you actually received — this keeps both account balances accurate even if the rate you got differs from the official one.</div>
           </div>
         </div>
         <div class="field-row">
@@ -1983,8 +2260,8 @@
           <div class="field" style="flex:0 0 100%;">
             <label>Type</label>
             <div class="rtype-toggle" id="rec-type-toggle">
-              <button type="button" class="sel-expense on" data-rtype="expense">Expense</button>
-              <button type="button" class="sel-income" data-rtype="income">Income</button>
+              <button type="button" class="sel-expense on" data-rtype="expense" data-i18n="type_expense">Expense</button>
+              <button type="button" class="sel-income" data-rtype="income" data-i18n="type_income">Income</button>
             </div>
           </div>
         </div>
@@ -2040,7 +2317,7 @@
         </div>
       </div>
       <div class="card">
-        <h2>🔁 Your recurring transactions</h2>
+        <h2 data-i18n="h_recurring">🔁 Your recurring transactions</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Pause one to stop it from generating new entries without losing its settings, or delete it entirely. Nothing here ever edits or removes entries it already generated.</p>
         <div id="rec-list"></div>
       </div>
@@ -2049,7 +2326,7 @@
     <!-- CATEGORIES -->
     <div class="panel" id="panel-categories">
       <div class="card">
-        <h2>🏷️ Manage categories</h2>
+        <h2 data-i18n="h_categories">🏷️ Manage categories</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Add, rename, or remove the categories used for expenses and income. Renaming updates every past entry that used it; removing a category only takes it out of the picker — past entries keep their original label.</p>
         <div class="two-col">
           <div>
@@ -2075,7 +2352,7 @@
     <!-- ACCOUNTS -->
     <div class="panel" id="panel-accounts">
       <div class="card">
-        <h2>🏦 Manage accounts</h2>
+        <h2 data-i18n="h_accounts">🏦 Manage accounts</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Track balances across cash, bank, credit card, or digital wallet accounts. Pick an account when logging an entry and its balance updates automatically — it's always calculated fresh from starting balance + every entry tied to it, so it can't drift out of sync.</p>
         <div id="acct-list"></div>
         <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:16px 0 6px;">Add an account</h3>
@@ -2115,7 +2392,7 @@
     <!-- BUDGETS -->
     <div class="panel" id="panel-budgets">
       <div class="card">
-        <h2>🎯 Overall monthly budget</h2>
+        <h2 data-i18n="h_overall_budget">🎯 Overall monthly budget</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">A total spending cap for the month across every category. Compared against your real expense entries only — transfers between your own accounts are never counted as spending.</p>
         <div class="field-row">
           <div class="field">
@@ -2133,7 +2410,7 @@
         <div id="budget-overall-status" style="margin-top:14px;"></div>
       </div>
       <div class="card">
-        <h2>🏷️ Category budgets</h2>
+        <h2 data-i18n="h_category_budgets">🏷️ Category budgets</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">e.g. Food → $300/month, Transport → $100/month. Leave a currency blank if you don't budget in it.</p>
         <div id="budget-cat-list"></div>
         <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:16px 0 6px;">Add a category budget</h3>
@@ -2160,7 +2437,7 @@
     <!-- CALENDAR & ACTIVITY TRACKER -->
     <div class="panel" id="panel-tracker">
       <div class="card">
-        <h2>📅 Calendar &amp; Activity Tracker</h2>
+        <h2 data-i18n="h_calendar_tracker">📅 Calendar &amp; Activity Tracker</h2>
         <div class="actcal-controls">
           <div class="actcal-nav">
             <button class="cal-nav-btn" id="actcal-prev" type="button" aria-label="Previous month">&larr;</button>
@@ -2343,8 +2620,26 @@
           <div class="sub" id="ov-kpi-gas-sub">Set your price ↓</div>
         </div>
       </div>
+      <div class="card" id="ov-default-rate-card">
+        <h2 data-i18n="h_default_rate">💵 Default Exchange Rate</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">This is the rate that pre-fills whenever you add a new entry or transfer. Changing it here never touches rates already frozen on past entries.</p>
+        <div class="conv-rate-row">
+          <span id="default-rate-current">Current default: 1 USD = 90,000 LBP</span>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex:1;">
+            <label>Set manually (LBP per $1)</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="default-rate-input" placeholder="e.g. 89,500">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:6px;">
+          <button type="button" class="btn small brass" id="default-rate-save">✅ Save as default</button>
+          <button type="button" class="btn small ghost" id="default-rate-live">🌐 Use live rate</button>
+        </div>
+        <div id="default-rate-status" style="font-size:11.5px;color:var(--muted);min-height:14px;margin-top:4px;"></div>
+      </div>
       <div class="card" id="ov-converter-card">
-        <h2>💱 Currency Converter</h2>
+        <h2 data-i18n="h_converter">💱 Currency Converter</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Converts automatically using the current exchange rate. Fetch a live rate or type your own.</p>
         <div class="conv-row">
           <div class="field">
@@ -2397,7 +2692,7 @@
         <div id="gold-card-status" style="font-size:11.5px;color:var(--muted);min-height:14px;">Fetching live price…</div>
       </div>
       <div class="card" id="ov-fuel-card">
-        <h2>⛽ Fuel Prices (Lebanon)</h2>
+        <h2 data-i18n="h_fuel_prices">⛽ Fuel Prices (Lebanon)</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Lebanon's Ministry of Energy &amp; Water sets these weekly and there's no free live feed for them — check <a href="https://www.thefuelprice.com/Flb/en" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">thefuelprice.com</a> or <a href="https://en.dgo.gov.lb/prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">the Ministry's price list</a>, then save this week's figures here.</p>
         <div class="conv-row">
           <div class="field">
@@ -2431,7 +2726,7 @@
         <div id="fuel-save-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
       </div>
       <div class="card" id="ov-goldfuel-calc-card">
-        <h2>🧮 Gold &amp; Fuel Calculator</h2>
+        <h2 data-i18n="h_gold_fuel_calc">🧮 Gold &amp; Fuel Calculator</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Type in a quantity and get the price, using the live gold rate and the fuel prices saved above.</p>
         <div class="scope-toggle" id="calc-type-toggle">
           <button class="on" data-type="gold">🪙 Gold</button>
@@ -2473,7 +2768,7 @@
         <div id="calc-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
       </div>
       <div class="card" id="ov-reminders-card">
-        <h2>🔔 Reminders</h2>
+        <h2 data-i18n="h_reminders">🔔 Reminders</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Heads-up on bills and subscriptions coming due, and budgets running high. Dismiss one you've handled — it won't come back for that same bill or threshold.</p>
         <div class="reminder-settings">
           <label class="keep-chk"><input type="checkbox" id="rem-toggle-enabled"> Enable reminders</label>
@@ -2483,11 +2778,11 @@
         <div id="ov-reminders-list"></div>
       </div>
       <div class="card" id="ov-budgets-card">
-        <h2>🎯 Budgets this month</h2>
+        <h2 data-i18n="h_budgets_month">🎯 Budgets this month</h2>
         <div id="ov-budgets"></div>
       </div>
       <div class="card" id="ov-activities-card">
-        <h2>📅 This month's activities</h2>
+        <h2 data-i18n="h_month_activities">📅 This month's activities</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">From the Calendar tab — work days, holidays, gym and anything else you've logged this month.</p>
         <div class="stat-grid" id="ov-activities-grid"></div>
       </div>
@@ -2500,11 +2795,11 @@
             <div class="hsub" id="ov-net-lbp">0 LBP net</div>
           </div>
           <div class="card">
-            <h2>⚖️ Income vs Expenses (this month)</h2>
+            <h2 data-i18n="h_income_vs_expenses">⚖️ Income vs Expenses (this month)</h2>
             <div id="ov-vs-bars"></div>
           </div>
           <div class="card">
-            <h2>⚡ Quick insights</h2>
+            <h2 data-i18n="h_quick_insights">⚡ Quick insights</h2>
             <div id="ov-insights" class="stat-grid"></div>
           </div>
           <div class="card chart-card">
@@ -2537,34 +2832,34 @@
             <div class="legend"><span><i style="background:var(--green-ok);"></i>Income + Salary</span><span><i style="background:var(--brick);"></i>Expenses</span></div>
           </div>
           <div class="card chart-card">
-            <h2>🗓️ This week</h2>
+            <h2 data-i18n="h_this_week">🗓️ This week</h2>
             <div class="bars" id="ov-week-bars" style="height:110px;"></div>
             <div class="legend"><span><i style="background:var(--green-ok);"></i>Income + Salary</span><span><i style="background:var(--brick);"></i>Expenses</span></div>
           </div>
           <div class="card">
-            <h2>🕓 Recent entries</h2>
+            <h2 data-i18n="h_recent_entries">🕓 Recent entries</h2>
             <div class="mini-list" id="ov-recent"></div>
           </div>
         </div>
         <div>
           <div class="card">
-            <h2>🍩 Category split (this month)</h2>
+            <h2 data-i18n="h_category_split">🍩 Category split (this month)</h2>
             <div id="ov-donut"></div>
           </div>
           <div class="card">
-            <h2>🏆 Top 10 categories</h2>
+            <h2 data-i18n="h_top10_categories">🏆 Top 10 categories</h2>
             <div id="ov-top-cats"></div>
           </div>
           <div class="card">
-            <h2>💵 Top income sources</h2>
+            <h2 data-i18n="h_top_income">💵 Top income sources</h2>
             <div id="ov-top-income"></div>
           </div>
           <div class="card">
-            <h2>🔥 Momentum</h2>
+            <h2 data-i18n="h_momentum">🔥 Momentum</h2>
             <div id="ov-momentum" class="stat-grid"></div>
           </div>
           <div class="card">
-            <h2>📅 Notable days (this month)</h2>
+            <h2 data-i18n="h_notable_days">📅 Notable days (this month)</h2>
             <div id="ov-notable-days" class="stat-grid"></div>
           </div>
         </div>
@@ -2666,13 +2961,22 @@
     <!-- REPORT -->
     <div class="panel" id="panel-report">
       <div class="card no-print">
-        <h2>🖨️ Printable A4 Report</h2>
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);">Report content</label>
+        <div class="rep-head">
+          <div class="rep-head-icon">🖨️</div>
+          <div>
+            <h2>Printable A4 Report</h2>
+            <p class="rep-head-sub">Build a polished financial &amp; activity report, then preview it, download as PDF, or print directly.</p>
+          </div>
+        </div>
+
+        <label class="rep-label">Report content</label>
         <div class="rep-type-toggle" id="rep-type-toggle">
           <button type="button" class="on" data-reptype="financial">💰 Financial</button>
           <button type="button" data-reptype="activity">📅 Calendar &amp; Activity</button>
           <button type="button" data-reptype="combined">📑 Combined</button>
         </div>
+
+        <label class="rep-label">Scope &amp; period</label>
         <div class="field-row">
           <div class="field">
             <label>Scope</label>
@@ -2704,27 +3008,41 @@
             <label>Year</label>
             <input type="number" id="rep-multi-year" class="scope-input" placeholder="2026">
           </div>
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);">Select months</label>
+          <label class="rep-label">Select months</label>
           <div class="month-grid" id="rep-month-grid"></div>
         </div>
-        <button class="btn brass" id="btn-generate">📑 Generate Report</button>
-        <button class="btn" id="btn-pdf" style="display:none;margin-left:8px;">Preview &amp; Download PDF</button>
-        <button class="btn subtle" id="btn-print" style="display:none;margin-left:8px;">🖨️ Print (choose any printer)</button>
-        <p class="printer-note">"Print" opens your device's normal print dialog, where you can pick any printer set up on your phone or computer — including WiFi and Bluetooth printers — the same as printing from any other app.</p>
+
+        <hr class="rep-hr">
+
+        <div class="rep-actions">
+          <button class="btn brass" id="btn-generate">📑 Generate Report</button>
+          <button class="btn" id="btn-pdf" style="display:none;">⬇️ Preview &amp; Download PDF</button>
+          <button class="btn subtle" id="btn-print" style="display:none;">🖨️ Print (choose any printer)</button>
+        </div>
+        <p class="printer-note"><span class="pn-ic">💡</span><span>"Print" opens your device's normal print dialog, where you can pick any printer set up on your phone or computer — including WiFi and Bluetooth printers — the same as printing from any other app.</span></p>
       </div>
 
       <div id="reportOutput"></div>
 
       <div id="pdf-preview-wrap" class="card no-print">
-        <h2>📄 PDF preview</h2>
+        <div class="rep-head">
+          <div class="rep-head-icon">📄</div>
+          <div>
+            <h2>PDF Preview</h2>
+            <p class="rep-head-sub">Every page rendered live — use Enlarge for a closer look, then download or print when you're ready.</p>
+          </div>
+        </div>
         <div class="pdf-pager-toolbar">
-          <button class="btn small subtle" id="btn-pdf-prev" type="button">&larr; Prev</button>
-          <span class="pg-label" id="pdf-page-label">Page 1 / 1</span>
-          <button class="btn small subtle" id="btn-pdf-next" type="button">Next &rarr;</button>
+          <div class="pdf-pager-nav">
+            <button class="pdf-nav-btn" id="btn-pdf-prev" type="button" aria-label="Previous page">‹</button>
+            <span class="pdf-page-label" id="pdf-page-label">Page 1 / 1</span>
+            <button class="pdf-nav-btn" id="btn-pdf-next" type="button" aria-label="Next page">›</button>
+          </div>
+          <button class="pdf-zoom-btn" id="btn-pdf-zoom" type="button" aria-label="Enlarge preview" title="Enlarge">⛶</button>
         </div>
         <div id="pdf-pages-wrap"><canvas id="pdf-page-canvas"></canvas></div>
         <p class="pdf-fallback-note" id="pdf-fallback-note" style="display:none;">Live preview isn't available in this browser — use Download or Print below to view every page.</p>
-        <div class="field-row" style="margin-top:14px;">
+        <div class="rep-actions" style="margin-top:16px;">
           <a class="btn brass" id="btn-download-pdf" href="#" download="accounting-report.pdf">⬇️ Download PDF</a>
           <button class="btn subtle" id="btn-print-from-preview">🖨️ Print this PDF</button>
         </div>
@@ -2898,6 +3216,16 @@
       </div>
     </div>
 
+    <!-- Job title history: view, edit or delete past titles -->
+    <div class="modal-overlay" id="modal-jobtitle-history">
+      <div class="modal-box">
+        <button class="modal-close" id="modal-jobtitle-history-close" type="button" aria-label="Close">&times;</button>
+        <h2>🕒 Job title history</h2>
+        <p class="modal-sub">Every title you've had, with the date it took effect. Tap ✏️ to edit an entry or 🗑️ to remove it.</p>
+        <div id="jobtitle-history"></div>
+      </div>
+    </div>
+
     <!-- Admin: send a notification (email via Gmail, through admin-actions) -->
     <div class="modal-overlay" id="modal-admin-notify">
       <div class="modal-box modal-box-wide">
@@ -2948,7 +3276,7 @@
     <!-- PROFILE -->
     <div class="panel" id="panel-profile">
       <div class="card">
-        <h2>👤 Your profile</h2>
+        <h2 data-i18n="h_your_profile">👤 Your profile</h2>
         <div class="avatar-row">
           <div class="avatar-circle" id="avatar-circle">?</div>
           <div class="avatar-actions">
@@ -2982,15 +3310,32 @@
           </div>
         </div>
         <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Reports use whichever job title was in effect on the dates they cover, so a report for an old period keeps your old title even after you update it here. Back-date "Effective from" if you're logging a title change that already happened.</p>
-        <div id="jobtitle-history"></div>
+        <div class="jth-current-row">
+          <div>
+            <span class="jth-current-lbl">Current job title</span>
+            <div class="jth-current-val" id="profile-jobtitle-current-display">—</div>
+          </div>
+          <button class="btn small subtle" id="btn-jobtitle-history" type="button">🕒 History</button>
+        </div>
         <div id="profile-info" style="margin-top:10px;"></div>
       </div>
       <div class="card">
-        <h2>⚙️ App settings</h2>
+        <h2 data-i18n="settings_title">⚙️ App settings</h2>
         <div class="settings-row">
           <div>
-            <div class="settings-row-title">Quick Add button</div>
-            <div class="settings-row-sub">Show the floating ⚡ Quick Add button on every screen.</div>
+            <div class="settings-row-title" data-i18n="settings_language_title">Language</div>
+            <div class="settings-row-sub" data-i18n="settings_language_sub">Choose the language the app is displayed in.</div>
+          </div>
+          <select id="setting-language" style="min-width:130px;">
+            <option value="en">English</option>
+            <option value="ar">العربية (Arabic)</option>
+            <option value="fr">Français (French)</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-title" data-i18n="settings_quickadd_title">Quick Add button</div>
+            <div class="settings-row-sub" data-i18n="settings_quickadd_sub">Show the floating ⚡ Quick Add button on every screen.</div>
           </div>
           <label class="toggle-switch">
             <input type="checkbox" id="setting-quickadd-toggle">
@@ -2999,15 +3344,15 @@
         </div>
         <div class="settings-row">
           <div>
-            <div class="settings-row-title">Dark mode</div>
-            <div class="settings-row-sub">Switch the app to a dark color theme.</div>
+            <div class="settings-row-title" data-i18n="settings_darkmode_title">Dark mode</div>
+            <div class="settings-row-sub" data-i18n="settings_darkmode_sub">Switch the app to a dark color theme.</div>
           </div>
           <label class="toggle-switch">
             <input type="checkbox" id="setting-darkmode-toggle">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:10px 0 0;">These are saved on this device/browser.</p>
+        <p style="font-size:11.5px;color:var(--muted);margin:10px 0 0;" data-i18n="settings_saved_device">These are saved on this device/browser.</p>
       </div>
       <div class="hero-card" id="profile-balance-card">
         <div class="hlbl">💰 Balance still available</div>
@@ -3015,11 +3360,11 @@
         <div class="hsub" id="profile-balance-lbp">0 LBP</div>
       </div>
       <div class="card" id="profile-account-card">
-        <h2>🔐 Account</h2>
+        <h2 data-i18n="h_account">🔐 Account</h2>
         <div id="profile-account-actions"></div>
       </div>
       <div class="card">
-        <h2>📤 Backup &amp; restore</h2>
+        <h2 data-i18n="h_backup_restore">📤 Backup &amp; restore</h2>
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Download your data any time, or restore it from a previous backup. A restore never deletes or changes anything already in your account — it only adds items you don't already have.</p>
 
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);margin:14px 0 8px;">Export</div>
@@ -3512,12 +3857,187 @@
   async function saveExchangeRateSetting(){
     try{ await store.set(RATE_KEY, JSON.stringify({rate: currentExchangeRate})); }catch(e){ /* best-effort only, never blocks saving the entry itself */ }
   }
+
+  // ---------- language / i18n ----------
+  // English stays the default and the "source of truth" — any key missing
+  // from ar/fr silently falls back to its English text rather than
+  // breaking. Static UI text uses [data-i18n] attributes on the element
+  // itself (see applyTranslations() below); dates, numbers and month
+  // names are intentionally left as-is in every language, since mixing
+  // translated month names into currency/report tables that also key off
+  // English three-letter abbreviations elsewhere in the app risks
+  // breaking those, not just relabeling them.
+  let currentLang = 'en';
+  const LANG_KEY = 'appLanguage';
+  const TRANSLATIONS = {
+    en: {
+      nav_menu:'Menu', nav_new_entry:'New Entry', nav_entries:'Entries', nav_recurring:'Recurring',
+      nav_categories:'Categories', nav_accounts:'Accounts', nav_budgets:'Budgets', nav_calendar:'Calendar',
+      nav_overview:'Overview', nav_statistics:'Statistics', nav_print_report:'Print Report',
+      nav_account_group:'Account', nav_profile:'Profile',
+      settings_title:'⚙️ App settings', settings_language_title:'Language',
+      settings_language_sub:'Choose the language the app is displayed in.',
+      settings_quickadd_title:'Quick Add button', settings_quickadd_sub:'Show the floating ⚡ Quick Add button on every screen.',
+      settings_darkmode_title:'Dark mode', settings_darkmode_sub:'Switch the app to a dark color theme.',
+      settings_saved_device:'These are saved on this device/browser.',
+      h_recurring:'🔁 Your recurring transactions', h_categories:'🏷️ Manage categories', h_accounts:'🏦 Manage accounts',
+      h_overall_budget:'🎯 Overall monthly budget', h_category_budgets:'🏷️ Category budgets',
+      h_calendar_tracker:'📅 Calendar & Activity Tracker', h_default_rate:'💵 Default Exchange Rate',
+      h_converter:'💱 Currency Converter', h_fuel_prices:'⛽ Fuel Prices (Lebanon)',
+      h_gold_fuel_calc:'🧮 Gold & Fuel Calculator', h_reminders:'🔔 Reminders', h_budgets_month:'🎯 Budgets this month',
+      h_month_activities:"📅 This month's activities", h_income_vs_expenses:'⚖️ Income vs Expenses (this month)',
+      h_quick_insights:'⚡ Quick insights', h_this_week:'🗓️ This week', h_recent_entries:'🕓 Recent entries',
+      h_category_split:'🍩 Category split (this month)', h_top10_categories:'🏆 Top 10 categories',
+      h_top_income:'💵 Top income sources', h_momentum:'🔥 Momentum', h_notable_days:'📅 Notable days (this month)',
+      h_your_profile:'👤 Your profile', h_account:'🔐 Account', h_backup_restore:'📤 Backup & restore',
+      type_expense:'Expense', type_income:'Income', type_salary:'Salary', type_transfer:'Transfer / Exchange'
+    },
+    ar: {
+      nav_menu:'القائمة', nav_new_entry:'إدخال جديد', nav_entries:'المعاملات', nav_recurring:'المتكررة',
+      nav_categories:'الفئات', nav_accounts:'الحسابات', nav_budgets:'الميزانيات', nav_calendar:'التقويم',
+      nav_overview:'نظرة عامة', nav_statistics:'الإحصائيات', nav_print_report:'طباعة تقرير',
+      nav_account_group:'الحساب', nav_profile:'الملف الشخصي',
+      settings_title:'⚙️ إعدادات التطبيق', settings_language_title:'اللغة',
+      settings_language_sub:'اختر اللغة التي يظهر بها التطبيق.',
+      settings_quickadd_title:'زر الإضافة السريعة', settings_quickadd_sub:'إظهار زر ⚡ الإضافة السريعة في كل شاشة.',
+      settings_darkmode_title:'الوضع الداكن', settings_darkmode_sub:'التبديل إلى المظهر الداكن للتطبيق.',
+      settings_saved_device:'يتم حفظ هذه الإعدادات على هذا الجهاز/المتصفح.',
+      h_recurring:'🔁 معاملاتك المتكررة', h_categories:'🏷️ إدارة الفئات', h_accounts:'🏦 إدارة الحسابات',
+      h_overall_budget:'🎯 الميزانية الشهرية الإجمالية', h_category_budgets:'🏷️ ميزانيات الفئات',
+      h_calendar_tracker:'📅 التقويم ومتابعة النشاط', h_default_rate:'💵 سعر الصرف الافتراضي',
+      h_converter:'💱 محوّل العملات', h_fuel_prices:'⛽ أسعار الوقود (لبنان)',
+      h_gold_fuel_calc:'🧮 حاسبة الذهب والوقود', h_reminders:'🔔 التذكيرات', h_budgets_month:'🎯 ميزانيات هذا الشهر',
+      h_month_activities:'📅 أنشطة هذا الشهر', h_income_vs_expenses:'⚖️ الدخل مقابل المصاريف (هذا الشهر)',
+      h_quick_insights:'⚡ ملاحظات سريعة', h_this_week:'🗓️ هذا الأسبوع', h_recent_entries:'🕓 أحدث المعاملات',
+      h_category_split:'🍩 توزيع الفئات (هذا الشهر)', h_top10_categories:'🏆 أعلى 10 فئات',
+      h_top_income:'💵 أهم مصادر الدخل', h_momentum:'🔥 الزخم', h_notable_days:'📅 أيام بارزة (هذا الشهر)',
+      h_your_profile:'👤 ملفك الشخصي', h_account:'🔐 الحساب', h_backup_restore:'📤 النسخ الاحتياطي والاستعادة',
+      type_expense:'مصروف', type_income:'دخل', type_salary:'راتب', type_transfer:'تحويل / صرف عملة'
+    },
+    fr: {
+      nav_menu:'Menu', nav_new_entry:'Nouvelle entrée', nav_entries:'Transactions', nav_recurring:'Récurrentes',
+      nav_categories:'Catégories', nav_accounts:'Comptes', nav_budgets:'Budgets', nav_calendar:'Calendrier',
+      nav_overview:'Aperçu', nav_statistics:'Statistiques', nav_print_report:'Imprimer un rapport',
+      nav_account_group:'Compte', nav_profile:'Profil',
+      settings_title:'⚙️ Paramètres de l\u2019application', settings_language_title:'Langue',
+      settings_language_sub:'Choisissez la langue d\u2019affichage de l\u2019application.',
+      settings_quickadd_title:'Bouton Ajout rapide', settings_quickadd_sub:'Afficher le bouton flottant ⚡ Ajout rapide sur chaque écran.',
+      settings_darkmode_title:'Mode sombre', settings_darkmode_sub:'Basculer l\u2019application vers un thème sombre.',
+      settings_saved_device:'Ces réglages sont enregistrés sur cet appareil/navigateur.',
+      h_recurring:'🔁 Vos transactions récurrentes', h_categories:'🏷️ Gérer les catégories', h_accounts:'🏦 Gérer les comptes',
+      h_overall_budget:'🎯 Budget mensuel global', h_category_budgets:'🏷️ Budgets par catégorie',
+      h_calendar_tracker:'📅 Calendrier et suivi d\u2019activité', h_default_rate:'💵 Taux de change par défaut',
+      h_converter:'💱 Convertisseur de devises', h_fuel_prices:'⛽ Prix du carburant (Liban)',
+      h_gold_fuel_calc:'🧮 Calculateur or et carburant', h_reminders:'🔔 Rappels', h_budgets_month:'🎯 Budgets de ce mois',
+      h_month_activities:'📅 Activités de ce mois', h_income_vs_expenses:'⚖️ Revenus vs dépenses (ce mois)',
+      h_quick_insights:'⚡ Aperçus rapides', h_this_week:'🗓️ Cette semaine', h_recent_entries:'🕓 Transactions récentes',
+      h_category_split:'🍩 Répartition par catégorie (ce mois)', h_top10_categories:'🏆 Top 10 des catégories',
+      h_top_income:'💵 Principales sources de revenus', h_momentum:'🔥 Tendance', h_notable_days:'📅 Jours notables (ce mois)',
+      h_your_profile:'👤 Votre profil', h_account:'🔐 Compte', h_backup_restore:'📤 Sauvegarde et restauration',
+      type_expense:'Dépense', type_income:'Revenu', type_salary:'Salaire', type_transfer:'Virement / Change'
+    }
+  };
+  function t(key){
+    const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    return (dict && dict[key]) || TRANSLATIONS.en[key] || key;
+  }
+  // Walks every element carrying a data-i18n attribute and sets its text
+  // to the current language — safe to call repeatedly (e.g. after a
+  // language change, or after re-rendering a panel that contains tagged
+  // elements). Also flips text direction for Arabic; layout itself
+  // (flex/grid ordering) isn't mirrored, only text shaping/alignment.
+  function applyTranslations(){
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.documentElement.setAttribute('lang', currentLang);
+    document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+  }
+  async function loadLanguageSetting(){
+    try{
+      const res = await store.get(LANG_KEY);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        if(TRANSLATIONS[parsed.lang]) currentLang = parsed.lang;
+      }
+    }catch(e){ /* keep default 'en' already set */ }
+  }
+  async function saveLanguageSetting(){
+    try{ await store.set(LANG_KEY, JSON.stringify({lang: currentLang})); }catch(e){ /* best-effort only */ }
+  }
+  function initLanguageSetting(){
+    const sel = $('setting-language');
+    if(!sel) return;
+    sel.value = currentLang;
+    sel.addEventListener('change', async ()=>{
+      currentLang = sel.value;
+      await saveLanguageSetting();
+      applyTranslations();
+      toast(currentLang === 'ar' ? 'تم تغيير اللغة' : currentLang === 'fr' ? 'Langue changée' : 'Language changed');
+    });
+  }
   // The rate actually in effect for a given entry: its own stored rate if
   // present, otherwise the legacy fallback constant. NEVER mutates the
   // entry — old records are read-compatible, not rewritten.
   function entryRate(e){
     const r = e && Number(e.rate);
     return (r && r > 0) ? r : LBP_PER_USD;
+  }
+
+  // ---------- default exchange rate card (Overview) ----------
+  // Distinct from the converter above: this changes currentExchangeRate
+  // itself — the rate pre-filled on every new entry/transfer form — not
+  // just this card's own math. Manual save and live-fetch both go through
+  // here so there's one obvious place to see and change it.
+  function renderDefaultRateCard(){
+    if(!$('default-rate-current')) return;
+    $('default-rate-current').textContent = 'Current default: 1 USD = ' + Math.round(currentExchangeRate).toLocaleString('en-US') + ' LBP';
+  }
+  function initDefaultRateCard(){
+    if(!$('default-rate-save')) return;
+    renderDefaultRateCard();
+    $('default-rate-save').addEventListener('click', async ()=>{
+      const n = rawAmountNumber($('default-rate-input').value);
+      const statusEl = $('default-rate-status');
+      if(!n || n <= 0){ toast('Enter a valid rate', true); return; }
+      currentExchangeRate = n;
+      await saveExchangeRateSetting();
+      renderDefaultRateCard();
+      renderConverter();
+      renderFooterStats();
+      $('default-rate-input').value = '';
+      statusEl.style.color = 'var(--green-ok)';
+      statusEl.textContent = '✅ Default rate updated.';
+      toast('Default exchange rate updated');
+    });
+    $('default-rate-live').addEventListener('click', async ()=>{
+      const btn = $('default-rate-live');
+      const statusEl = $('default-rate-status');
+      btn.disabled = true;
+      statusEl.style.color = 'var(--muted)';
+      statusEl.textContent = 'Fetching live rate…';
+      try{
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if(!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        const rate = data && data.rates && Number(data.rates.LBP);
+        if(!rate || rate <= 0) throw new Error('Rate unavailable');
+        currentExchangeRate = rate;
+        await saveExchangeRateSetting();
+        renderDefaultRateCard();
+        renderConverter();
+        renderFooterStats();
+        const stamp = data.time_last_update_utc ? ' (' + data.time_last_update_utc + ')' : '';
+        statusEl.style.color = 'var(--green-ok)';
+        statusEl.textContent = `✅ Set default to 1 USD = ${Math.round(rate).toLocaleString('en-US')} LBP${stamp}`;
+        toast('Default exchange rate updated');
+      }catch(e){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = '⚠️ Could not fetch a live rate — check your connection, or enter one manually.';
+      }finally{
+        btn.disabled = false;
+      }
+    });
   }
 
   // ---------- currency converter (Overview card) ----------
@@ -3584,25 +4104,7 @@
       $('conv-manual-row').style.display = 'none';
       renderConverter();
       toast('Using your manual rate for this converter');
-      const statusEl = $('conv-live-status');
-
-      statusEl.style.color = 'var(--green-ok)';
-      statusEl.innerHTML = `✅ Manual rate: 1 USD = ${Math.round(n).toLocaleString('en-US')} LBP — <a href="#" id="conv-manual-save" style="color:var(--forest);font-weight:700;">save as default rate</a>`;
-
-      const saveLink = $('conv-manual-save');
-
-      if(saveLink) saveLink.addEventListener('click', async (ev)=>{
-          ev.preventDefault();
-
-          currentExchangeRate = n;
-          await saveExchangeRateSetting();
-
-          renderConverter();
-          renderFooterStats();
-
-          toast('Default exchange rate updated');
-      });
-      });
+    });
     $('conv-live-btn').addEventListener('click', fetchLiveRate);
   }
   // Pulls a live USD→LBP rate from a free, no-key exchange-rate API.
@@ -4034,6 +4536,8 @@
   attachAmountFormatter('acct-new-balance');
   attachAmountFormatter('rec-amount');
   attachAmountFormatter('qa-amount');
+  attachAmountFormatter('f-to-amount');
+  attachAmountFormatter('default-rate-input');
   const escapeHtml = (s) => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   if($('footer-year')) $('footer-year').textContent = new Date().getFullYear();
 
@@ -4977,9 +5481,19 @@
     sortJobTitleHistory();
     myProfile.jobTitle = currentJobTitle();
   }
+  // Which history entry (by original date) is currently open for inline
+  // editing in the history modal, if any.
+  let jthEditingDate = null;
+  function renderCurrentJobTitleDisplay(){
+    const el = $('profile-jobtitle-current-display');
+    if(!el) return;
+    const title = currentJobTitle();
+    el.textContent = title || '—';
+  }
   function renderJobTitleHistory(){
     const wrap = $('jobtitle-history');
     if(!wrap) return;
+    renderCurrentJobTitleDisplay();
     const hist = myProfile.jobTitleHistory;
     if(!hist || hist.length === 0){
       wrap.innerHTML = '<p class="jth-empty">No job title history yet.</p>';
@@ -4990,19 +5504,59 @@
     const currentEntry = sorted.find(x=> x.date <= todayStr) || sorted[sorted.length-1];
     wrap.innerHTML = `<ul class="jth-list">${sorted.map(h=>{
       const isCurrent = h === currentEntry;
+      if(h.date === jthEditingDate){
+        return `
+          <li class="jth-row jth-row-edit" data-date="${escapeHtml(h.date)}">
+            <input type="date" class="jth-edit-date" value="${escapeHtml(h.date === '1900-01-01' ? '' : h.date)}">
+            <input type="text" class="jth-edit-title" maxlength="60" value="${escapeHtml(h.title)}">
+            <button class="jth-save" type="button" title="Save changes" data-save-date="${escapeHtml(h.date)}">💾</button>
+            <button class="jth-del" type="button" title="Delete this entry" data-del-date="${escapeHtml(h.date)}">🗑️</button>
+            <button class="jth-cancel" type="button" title="Cancel" data-cancel-date="${escapeHtml(h.date)}">✖️</button>
+          </li>`;
+      }
       return `
         <li class="jth-row" data-date="${escapeHtml(h.date)}">
           <span class="jth-date">${h.date === '1900-01-01' ? 'Since always' : h.date}</span>
           <span class="jth-title">${escapeHtml(h.title) || '<span style="color:var(--muted);">(blank)</span>'}</span>
           ${isCurrent ? '<span class="jth-current">Current</span>' : ''}
-          <button class="jth-del" type="button" title="Remove this entry" data-del-date="${escapeHtml(h.date)}">🗑️</button>
+          <button class="jth-edit" type="button" title="Edit this entry" data-edit-date="${escapeHtml(h.date)}">✏️</button>
         </li>`;
     }).join('')}</ul>`;
+    wrap.querySelectorAll('.jth-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        jthEditingDate = btn.dataset.editDate;
+        renderJobTitleHistory();
+      });
+    });
+    wrap.querySelectorAll('.jth-cancel').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        jthEditingDate = null;
+        renderJobTitleHistory();
+      });
+    });
+    wrap.querySelectorAll('.jth-save').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const origDate = btn.dataset.saveDate;
+        const row = btn.closest('.jth-row-edit');
+        const newDate = row.querySelector('.jth-edit-date').value || '1900-01-01';
+        const newTitle = row.querySelector('.jth-edit-title').value.trim();
+        if(!newTitle){ toast('Job title cannot be blank', true); return; }
+        // Remove the original entry, then upsert under the (possibly new) date
+        // so editing the date merges into that day if one already exists.
+        myProfile.jobTitleHistory = myProfile.jobTitleHistory.filter(h=> h.date !== origDate);
+        upsertJobTitleHistory(newDate, newTitle);
+        jthEditingDate = null;
+        renderJobTitleHistory();
+        $('profile-jobtitle').value = currentJobTitle();
+        await saveProfile('Job title entry updated');
+      });
+    });
     wrap.querySelectorAll('.jth-del').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const d = btn.dataset.delDate;
         myProfile.jobTitleHistory = myProfile.jobTitleHistory.filter(h=> h.date !== d);
         myProfile.jobTitle = currentJobTitle();
+        if(jthEditingDate === d) jthEditingDate = null;
         renderJobTitleHistory();
         $('profile-jobtitle').value = currentJobTitle();
         await saveProfile('Job title entry removed');
@@ -6322,8 +6876,129 @@
   document.addEventListener('keydown', (ev)=>{
     if(ev.key === 'Escape' && $('nav-tabs').classList.contains('open')) closeNavMenu();
   });
+
+  // Money-bag brand mark in the header — quick shortcut back to New Entry.
+  $('btn-brand-home').addEventListener('click', ()=>{
+    const addTabBtn = document.querySelector('.tab-btn[data-tab="add"]');
+    if(addTabBtn) addTabBtn.click(); // delegated tab handler swaps panels + scrolls to top
+  });
+
+  // ---------- shrinking header on scroll ----------
+  // Compacts the sticky header once the page scrolls past a small
+  // threshold, and restores it once scrolled back near the top.
+  //
+  // Two things used to make this janky:
+  // 1) A manual debounce (wait ~140ms after scrolling stops before
+  //    deciding) added a visible delay between "user scrolls past the
+  //    threshold" and "header actually shrinks" — that's the lag. A
+  //    plain requestAnimationFrame throttle reacts on the very next
+  //    frame instead, so the shrink starts as soon as the threshold is
+  //    crossed.
+  // 2) Resizing the header while the page is scrolled triggers the
+  //    browser's scroll anchoring, which nudges the scroll position to
+  //    compensate for the size change — that nudge fires another
+  //    scroll event, which can flip the shrink class back off, which
+  //    resizes the header again, back and forth. `overflow-anchor:none`
+  //    on .site-header-sticky (see CSS) removes that feedback loop at
+  //    the source; the rAF throttle plus a fixed 40px+ hysteresis gap
+  //    between the "shrink" and "un-shrink" thresholds below keeps it
+  //    from re-triggering on ordinary small scroll jitter too.
+  //
+  // On desktop/wide screens, scrolling down also collapses the tab row
+  // entirely (nav-collapsed) to reclaim vertical space, leaving a small
+  // chevron tab to bring it back. That same tab flips to point up once
+  // the nav is open (while still scrolled down) so it can be collapsed
+  // again without leaving the page. Scrolling back to the top always
+  // resets everything to normal, tab included.
+  (function(){
+    const headerWrap = document.querySelector('.site-header-sticky');
+    const navRevealBtn = $('btn-nav-reveal');
+    if(!headerWrap) return;
+    let navManuallyOpened = false;
+    function updateRevealBtn(){
+      if(!navRevealBtn) return;
+      const collapsed = headerWrap.classList.contains('nav-collapsed');
+      navRevealBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      navRevealBtn.setAttribute('aria-label', collapsed ? 'Show navigation' : 'Hide navigation');
+    }
+    // Keyboard users tabbing through the nav shouldn't have it collapse
+    // out from under them mid-navigation — while focus is inside it,
+    // treat it the same as a manual open and leave it alone.
+    const navTabsEl = $('nav-tabs');
+    if(navTabsEl){
+      navTabsEl.addEventListener('focusin', ()=>{
+        if(window.innerWidth > 900){
+          headerWrap.classList.remove('nav-collapsed');
+          navManuallyOpened = true;
+          updateRevealBtn();
+        }
+      });
+    }
+    let navHovered = false;
+    if(navTabsEl){
+      navTabsEl.addEventListener('mouseenter', ()=>{ navHovered = true; });
+      navTabsEl.addEventListener('mouseleave', ()=>{ navHovered = false; });
+    }
+    function applyShrink(){
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const hoveringNav = navHovered && window.innerWidth > 900;
+
+      if(y > 64) headerWrap.classList.add('shrink');
+      else if(y < 24) headerWrap.classList.remove('shrink');
+
+      if(window.innerWidth > 900){
+        // Hovering the nav only pauses it from auto-collapsing out from
+        // under the cursor — the header itself still shrinks and
+        // expands normally while that happens.
+        if(!hoveringNav){
+          if(y > 80){
+            headerWrap.classList.add('nav-scrolled');
+            if(!navManuallyOpened) headerWrap.classList.add('nav-collapsed');
+          } else if(y < 24){
+            headerWrap.classList.remove('nav-scrolled', 'nav-collapsed');
+            navManuallyOpened = false;
+          }
+          updateRevealBtn();
+        }
+      } else {
+        headerWrap.classList.remove('nav-collapsed', 'nav-scrolled');
+        navManuallyOpened = false;
+      }
+    }
+    // Standard requestAnimationFrame scroll throttle: at most one
+    // decision per rendered frame, always on the next frame rather than
+    // after an artificial delay, so the shrink tracks the scroll
+    // smoothly instead of lagging behind it. classList.add/remove are
+    // no-ops when the class is already in the state requested, so
+    // calling them every frame costs nothing extra once settled.
+    let ticking = false;
+    window.addEventListener('scroll', ()=>{
+      if(!ticking){
+        window.requestAnimationFrame(()=>{
+          applyShrink();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, {passive:true});
+    if(navRevealBtn){
+      navRevealBtn.addEventListener('click', ()=>{
+        const collapsed = headerWrap.classList.contains('nav-collapsed');
+        if(collapsed){
+          headerWrap.classList.remove('nav-collapsed');
+          navManuallyOpened = true;
+        } else {
+          headerWrap.classList.add('nav-collapsed');
+          navManuallyOpened = false;
+        }
+        updateRevealBtn();
+      });
+    }
+    applyShrink();
+  })();
   window.addEventListener('resize', ()=>{
     if(window.innerWidth > 900) closeNavMenu();
+    else document.querySelector('.site-header-sticky')?.classList.remove('nav-collapsed', 'nav-scrolled');
   });
 
   // ---------- modals ----------
@@ -6332,6 +7007,13 @@
   document.querySelectorAll('.modal-overlay').forEach(ov=>{
     ov.addEventListener('click', (ev)=>{ if(ev.target === ov) closeModal(ov.id); });
   });
+
+  $('btn-jobtitle-history').addEventListener('click', ()=>{
+    jthEditingDate = null;
+    renderJobTitleHistory();
+    openModal('modal-jobtitle-history');
+  });
+  $('modal-jobtitle-history-close').addEventListener('click', ()=> closeModal('modal-jobtitle-history'));
 
   $('btn-footer-rules').addEventListener('click', ()=> openModal('modal-rules'));
   $('modal-rules-close').addEventListener('click', ()=> closeModal('modal-rules'));
@@ -6452,6 +7134,33 @@
   }
   // The "received amount" field only appears when the two accounts don't
   // share a currency — same-currency transfers just move one amount.
+  // Shows the effective rate implied by what was actually sent vs. received,
+  // e.g. "≈ 89,750 LBP per $1" — computed fresh from the two typed amounts,
+  // never stored separately, so it can't drift from what's really entered.
+  function updateExchangeRateReadout(){
+    const hintRow = $('f-exchange-hint-row');
+    const hintEl = $('f-exchange-hint');
+    if(!hintRow || !hintEl) return;
+    const fromAcct = accounts.find(a=>a.id===($('f-account')?$('f-account').value:''));
+    const toAcct = accounts.find(a=>a.id===($('f-to-account')?$('f-to-account').value:''));
+    const crossCurrency = !!(fromAcct && toAcct && fromAcct.currency !== toAcct.currency);
+    if(!crossCurrency){
+      hintRow.style.display = '';
+      hintEl.textContent = 'To log a USD ⇄ LBP exchange, pick a USD account as "From account" and an LBP account as "To account" (or vice versa), then enter what you actually received — this keeps both account balances accurate even if the rate you got differs from the official one.';
+      return;
+    }
+    const sent = rawAmountNumber($('f-amount') ? $('f-amount').value : '');
+    const received = rawAmountNumber($('f-to-amount') ? $('f-to-amount').value : '');
+    hintRow.style.display = '';
+    if(sent > 0 && received > 0){
+      const usdAmt = fromAcct.currency === 'USD' ? sent : received;
+      const lbpAmt = fromAcct.currency === 'USD' ? received : sent;
+      const rate = lbpAmt / usdAmt;
+      hintEl.textContent = '≈ ' + Math.round(rate).toLocaleString('en-US') + ' LBP per $1 on this exchange';
+    } else {
+      hintEl.textContent = 'Enter the amount you sent and the amount you actually received to see your effective exchange rate.';
+    }
+  }
   function updateTransferAmountFields(){
     const fromAcct = accounts.find(a=>a.id===($('f-account')?$('f-account').value:''));
     const toAcct = accounts.find(a=>a.id===($('f-to-account')?$('f-to-account').value:''));
@@ -6461,10 +7170,12 @@
       $('f-to-amount-wrap').style.display = 'none';
       $('f-to-amount').value = '';
     }
+    updateExchangeRateReadout();
   }
   function applyTransferUI(){
     const isTransfer = currentType === 'transfer';
     $('f-to-account-row').style.display = isTransfer ? '' : 'none';
+    $('f-exchange-hint-row').style.display = isTransfer ? '' : 'none';
     $('f-account-label-text').textContent = isTransfer ? 'From account' : 'Account (optional)';
     if(isTransfer){
       populateToAccountSelect($('f-to-account').value);
@@ -6473,6 +7184,8 @@
   }
   if($('f-account')) $('f-account').addEventListener('change', ()=>{ if(currentType === 'transfer') updateTransferAmountFields(); });
   if($('f-to-account')) $('f-to-account').addEventListener('change', ()=>{ if(currentType === 'transfer') updateTransferAmountFields(); });
+  if($('f-amount')) $('f-amount').addEventListener('input', ()=>{ if(currentType === 'transfer') updateExchangeRateReadout(); });
+  if($('f-to-amount')) $('f-to-amount').addEventListener('input', ()=>{ if(currentType === 'transfer') updateExchangeRateReadout(); });
 
   function setType(type){
     currentType = type;
@@ -7605,6 +8318,20 @@
       // display currency.
       expenseRelUSD:0, incomeRelUSD:0, salaryRelUSD:0,
       expenseRelLBP:0, incomeRelLBP:0, salaryRelLBP:0,
+      // Transfer flow per currency, tracked separately from income/expense
+      // so the existing "Net" figure (used in Overview/Reports/footer)
+      // keeps meaning exactly what it always has: income+salary-expense
+      // for the period. transferOut/In are only consumed by the Profile
+      // "balance still available" card below, where a USD⇄LBP exchange
+      // SHOULD move money out of one currency's balance and into the
+      // other's — that's the whole point of tracking exchanges.
+      transferOutUSD:0, transferOutLBP:0, transferInUSD:0, transferInLBP:0,
+      // Every expense/income/salary entry carries its own frozen rate (the
+      // rate typed into the form at the time it was recorded — see
+      // entryRate() below). rateSamples collects those so a report can
+      // show the rate(s) that were actually in effect for its period,
+      // instead of today's rate.
+      rateSamples:[],
       biggestExpense:null, biggestIncome:null
     };
     list.forEach(e=>{
@@ -7615,7 +8342,11 @@
       // account breakdown above.
       if(e.type === 'transfer'){
         s.transferCount++;
+        s['transferOut'+key] += e.amount;
+        const toKey = (e.toCurrency || e.currency) === 'USD' ? 'USD' : 'LBP';
+        s['transferIn'+toKey] += (e.toAmount != null ? e.toAmount : e.amount);
       } else if(e.type === 'expense'){
+        s.rateSamples.push(entryRate(e));
         s['expense'+key] += e.amount;
         s.expenseRelUSD += relUSD(e);
         s.expenseRelLBP += relLBP(e);
@@ -7631,6 +8362,7 @@
         s.expenseByAccount[eAcc].relLBP += relLBP(e);
         if(!s.biggestExpense || relUSD(e) > relUSD(s.biggestExpense)) s.biggestExpense = e;
       } else if(e.type === 'income'){
+        s.rateSamples.push(entryRate(e));
         s['income'+key] += e.amount;
         s.incomeRelUSD += relUSD(e);
         s.incomeRelLBP += relLBP(e);
@@ -7646,6 +8378,7 @@
         s.incomeByAccount[iAcc].relLBP += relLBP(e);
         if(!s.biggestIncome || relUSD(e) > relUSD(s.biggestIncome)) s.biggestIncome = e;
       } else if(e.type === 'salary'){
+        s.rateSamples.push(entryRate(e));
         s['salary'+key] += e.amount;
         s.salaryRelUSD += relUSD(e);
         s.salaryRelLBP += relLBP(e);
@@ -7660,6 +8393,24 @@
     });
     s.netUSD = s.incomeUSD + s.salaryUSD - s.expenseUSD;
     s.netLBP = s.incomeLBP + s.salaryLBP - s.expenseLBP;
+    // Balance including transfers/exchanges: same as Net, but also moves
+    // money out of the sent currency and into the received currency for
+    // every transfer — so converting USD to LBP (at whatever real rate you
+    // got) shows up as less USD and more LBP left, exactly like it would
+    // in real life. Same-currency transfers cancel out to zero, same as
+    // before.
+    s.balanceUSD = s.netUSD - s.transferOutUSD + s.transferInUSD;
+    s.balanceLBP = s.netLBP - s.transferOutLBP + s.transferInLBP;
+    // Rate range actually used across this period's entries — min/max/avg,
+    // computed fresh from rateSamples so it always reflects real entries,
+    // never today's default.
+    if(s.rateSamples.length){
+      s.rateMin = Math.min(...s.rateSamples);
+      s.rateMax = Math.max(...s.rateSamples);
+      s.rateAvg = s.rateSamples.reduce((a,b)=>a+b,0) / s.rateSamples.length;
+    } else {
+      s.rateMin = s.rateMax = s.rateAvg = null;
+    }
     // Avg expense per transaction, and a rough combined savings rate — both
     // computed from the per-entry relUSD sums above, so mixed-currency
     // entries recorded at different rates are still averaged/compared
@@ -8424,6 +9175,7 @@
     renderDashboardBudgets();
     renderOverviewActivities(y, m);
     renderConverter();
+    renderDefaultRateCard();
     renderFuelKpis();
 
     // ---- top KPI row: balance, this month's income, this month's expenses ----
@@ -9574,7 +10326,23 @@
       </div>
     `;
   }
-  function reportHead(title, sub, count, genDate, asOfDate){
+  // Turns a stats object's rate range into a display string for report
+  // headers/footers — a single figure when every entry in the period used
+  // the same rate, a range when the rate changed during the period (which
+  // is normal over months/years in Lebanon), and a fallback to today's
+  // rate only when the period has no rate-bearing entries at all (e.g. an
+  // empty month, or a period containing only transfers).
+  function periodRateLabel(s){
+    const fmtRate = (r) => Math.round(r).toLocaleString('en-US');
+    if(s.rateMin == null){
+      return `1 USD = ${fmtRate(currentExchangeRate)} LBP (current rate — no rate-bearing entries this period)`;
+    }
+    if(s.rateMin === s.rateMax){
+      return `1 USD = ${fmtRate(s.rateMin)} LBP`;
+    }
+    return `${fmtRate(s.rateMin)}–${fmtRate(s.rateMax)} LBP per $1 (avg ${fmtRate(s.rateAvg)}) — varied during this period`;
+  }
+  function reportHead(title, sub, count, genDate, asOfDate, rateLabel){
     return `
       <div class="report-letterhead">
         <div class="lh-name">TDA Accounting</div>
@@ -9586,7 +10354,7 @@
           <h1>${title}</h1>
           <div class="sub">${sub}</div>
         </div>
-        <div class="sub meta-right">Generated ${genDate}<br>${count} ${count === 1 ? 'entry' : 'entries'}</div>
+        <div class="sub meta-right">Generated ${genDate}<br>${count} ${count === 1 ? 'entry' : 'entries'}<br>Exchange rate: ${rateLabel}</div>
       </div>
       ${reportUserBlockHtml(asOfDate)}
     `;
@@ -9598,8 +10366,8 @@
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
   function lastDayOfYearStr(y){ return `${y}-12-31`; }
-  function reportFoot(genDate){
-    return `<div class="report-footer"><span>TDA Accounting — personal financial statement</span><span>Generated ${genDate}</span></div>`;
+  function reportFoot(genDate, rateLabel){
+    return `<div class="report-footer"><span>TDA Accounting — personal financial statement</span><span>Rate used: ${rateLabel || ('1 USD = ' + Math.round(currentExchangeRate).toLocaleString('en-US') + ' LBP')} · Generated ${genDate}</span></div>`;
   }
 
   function alertInline(msg){
@@ -9672,7 +10440,7 @@
       lastReportName = `accounting-${y}-${String(m).padStart(2,'0')}`;
       html = `
         <div class="report-doc">
-          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate, lastDayOfMonthStr(y,m))}
+          ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate, lastDayOfMonthStr(y,m), periodRateLabel(s))}
           <div class="report-section"><h3><span class="idx">1</span>Summary</h3>${statBoxesHtml(s)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Highlights</h3>${highlightsHtml(list, s) || '<p style="font-size:13px;color:var(--muted);">No entries recorded this month.</p>'}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category</h3>
@@ -9690,7 +10458,7 @@
             </table>` : '<p style="font-size:13px;color:var(--muted);">No transactions.</p>'}
           </div>
           ${reportType === 'combined' ? activityReportHtml(y, m-1, genDate) : ''}
-          ${reportFoot(genDate)}
+          ${reportFoot(genDate, periodRateLabel(s))}
         </div>
       `;
     } else if(scope === 'multi'){
@@ -9704,13 +10472,13 @@
       lastReportName = `accounting-${y}-selected-months`;
       html = `
         <div class="report-doc">
-          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate, lastDayOfMonthStr(y, checked[checked.length-1]+1))}
+          ${reportHead('Multi-Month Financial Report', `${checked.map(m=>MONTH_NAMES[m]).join(', ')} — ${y}`, overall.count, genDate, lastDayOfMonthStr(y, checked[checked.length-1]+1), periodRateLabel(overall))}
           <div class="report-section"><h3><span class="idx">1</span>Combined summary</h3>${statBoxesHtml(overall)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>Detail per month</h3>
             ${checked.map((m,i)=> monthSection(y, m, i+1)).join('')}
           </div>
-          ${reportFoot(genDate)}
+          ${reportFoot(genDate, periodRateLabel(overall))}
         </div>
       `;
     } else if(scope === 'year'){
@@ -9722,7 +10490,7 @@
       lastReportName = `accounting-${y}-annual`;
       html = `
         <div class="report-doc">
-          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate, lastDayOfYearStr(y))}
+          ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate, lastDayOfYearStr(y), periodRateLabel(yearStats))}
           <div class="report-section"><h3><span class="idx">1</span>Year summary</h3>${statBoxesHtml(yearStats)}</div>
           <div class="report-section"><h3><span class="idx">2</span>Statistics by month</h3>${combinedTableHtml(rows, 'Year total')}</div>
           <div class="report-section"><h3><span class="idx">3</span>By category (full year)</h3>
@@ -9730,7 +10498,7 @@
             ${categoryTableHtml(yearStats.incomeByCat, 'Income category')}
           </div>
           ${reportType === 'combined' ? activityYearReportHtml(y) : ''}
-          ${reportFoot(genDate)}
+          ${reportFoot(genDate, periodRateLabel(yearStats))}
         </div>
       `;
     } else {
@@ -9740,14 +10508,14 @@
       lastReportName = 'accounting-all-time';
       html = `
         <div class="report-doc">
-          ${reportHead('All-Time Financial Report', 'Full history', allStats.count, genDate)}
+          ${reportHead('All-Time Financial Report', 'Full history', allStats.count, genDate, undefined, periodRateLabel(allStats))}
           <div class="report-section"><h3><span class="idx">1</span>Overall summary</h3>${statBoxesHtml(allStats)}</div>
           ${years.length ? `<div class="report-section"><h3><span class="idx">2</span>Statistics by year</h3>${combinedTableHtml(rows, 'Grand total')}</div>` : ''}
           <div class="report-section"><h3><span class="idx">3</span>By category (all time)</h3>
             ${categoryTableHtml(allStats.expenseByCat, 'Expense category') || '<p style="font-size:13px;color:var(--muted);">No expenses recorded.</p>'}
             ${categoryTableHtml(allStats.incomeByCat, 'Income category')}
           </div>
-          ${reportFoot(genDate)}
+          ${reportFoot(genDate, periodRateLabel(allStats))}
         </div>
       `;
     }
@@ -9771,28 +10539,101 @@
   let pdfDoc = null;
   let pdfPageNum = 1;
   let pdfRendering = false;
+  let pdfRenderTask = null; // in-flight pdf.js render task, so we can cancel it instead of racing it
 
-  async function renderPdfPage(num){
+  async function renderPdfPage(num, attempt){
+    attempt = attempt || 0;
     if(!pdfDoc) return;
+
+    // If a previous render is still in flight (e.g. the user zoomed right
+    // after generating, or a resize fired mid-render), cancel it instead of
+    // letting it fight the new one — otherwise the canvas can get cleared by
+    // one call and never repainted by the other, leaving it permanently blank.
+    if(pdfRenderTask){
+      try{ pdfRenderTask.cancel(); }catch(_e){}
+      pdfRenderTask = null;
+    }
+
+    const wrap = $('pdf-pages-wrap');
+    let wrapWidth = Math.min(wrap.clientWidth - 20, 900);
+    if(!(wrapWidth > 0)){
+      // Layout hasn't settled yet (common right after toggling the fixed-
+      // position zoomed overlay on mobile) — wait a frame and retry a few
+      // times rather than rendering at a bogus size or giving up blank.
+      if(attempt < 5){
+        requestAnimationFrame(()=> renderPdfPage(num, attempt + 1));
+        return true;
+      }
+      wrapWidth = 600;
+    }
+
     pdfRendering = true;
-    const page = await pdfDoc.getPage(num);
-    const wrapWidth = Math.min($('pdf-pages-wrap').clientWidth - 20, 900) || 600;
-    const baseViewport = page.getViewport({scale:1});
-    const scale = (wrapWidth / baseViewport.width) * (window.devicePixelRatio || 1);
-    const viewport = page.getViewport({scale: Math.max(scale, 0.5)});
-    const canvas = $('pdf-page-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    await page.render({canvasContext: ctx, viewport}).promise;
-    pdfPageNum = num;
-    $('pdf-page-label').textContent = `Page ${num} / ${pdfDoc.numPages}`;
-    $('btn-pdf-prev').disabled = num <= 1;
-    $('btn-pdf-next').disabled = num >= pdfDoc.numPages;
-    pdfRendering = false;
+    try{
+      const page = await pdfDoc.getPage(num);
+      const baseViewport = page.getViewport({scale:1});
+      const scale = (wrapWidth / baseViewport.width) * (window.devicePixelRatio || 1);
+      const viewport = page.getViewport({scale: Math.max(scale, 0.5)});
+      const canvas = $('pdf-page-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const task = page.render({canvasContext: ctx, viewport});
+      pdfRenderTask = task;
+      await task.promise;
+      pdfRenderTask = null;
+      pdfPageNum = num;
+      $('pdf-page-label').textContent = `Page ${num} / ${pdfDoc.numPages}`;
+      $('btn-pdf-prev').disabled = num <= 1;
+      $('btn-pdf-next').disabled = num >= pdfDoc.numPages;
+      return true;
+    }catch(err){
+      // A cancelled render (from the guard above) is expected — the call
+      // that superseded it will finish the job, so just bow out quietly.
+      // Any other error means the preview genuinely failed: fall back to
+      // the download/print note instead of leaving a blank canvas behind.
+      if(err && err.name === 'RenderingCancelledException') return true;
+      $('pdf-pages-wrap').style.display = 'none';
+      const toolbar = document.querySelector('.pdf-pager-toolbar');
+      if(toolbar) toolbar.style.display = 'none';
+      $('pdf-fallback-note').style.display = 'block';
+      return false;
+    }finally{
+      pdfRendering = false;
+    }
   }
   $('btn-pdf-prev').addEventListener('click', ()=>{ if(!pdfRendering && pdfPageNum > 1) renderPdfPage(pdfPageNum - 1); });
   $('btn-pdf-next').addEventListener('click', ()=>{ if(!pdfRendering && pdfDoc && pdfPageNum < pdfDoc.numPages) renderPdfPage(pdfPageNum + 1); });
+
+  // ---------- PDF preview enlarge / minimize ----------
+  const pdfZoomBtn = $('btn-pdf-zoom');
+  function setPdfZoom(on){
+    const wrap = $('pdf-preview-wrap');
+    wrap.classList.toggle('pdf-zoomed', on);
+    document.body.classList.toggle('pdf-zoom-lock', on);
+    pdfZoomBtn.textContent = on ? '✕' : '⛶';
+    pdfZoomBtn.setAttribute('aria-label', on ? 'Minimize preview' : 'Enlarge preview');
+    pdfZoomBtn.title = on ? 'Minimize' : 'Enlarge';
+    // Canvas is sized off the wrap's clientWidth. A single rAF isn't always
+    // enough for the fixed-position fullscreen layout to have settled
+    // (especially in mobile in-app webviews), so wait two frames — and
+    // renderPdfPage itself will retry further if the width still isn't
+    // ready — instead of rendering at a stale/zero size.
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{ if(pdfDoc) renderPdfPage(pdfPageNum); });
+    });
+  }
+  pdfZoomBtn.addEventListener('click', ()=>{
+    setPdfZoom(!$('pdf-preview-wrap').classList.contains('pdf-zoomed'));
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && $('pdf-preview-wrap').classList.contains('pdf-zoomed')) setPdfZoom(false);
+  });
+  let pdfResizeTimer = null;
+  window.addEventListener('resize', ()=>{
+    if(!pdfDoc) return;
+    clearTimeout(pdfResizeTimer);
+    pdfResizeTimer = setTimeout(()=>{ renderPdfPage(pdfPageNum); }, 150);
+  });
 
   $('btn-pdf').addEventListener('click', async ()=>{
     const el = document.querySelector('#reportOutput .report-doc');
@@ -9825,8 +10666,12 @@
           $('pdf-pages-wrap').style.display = 'flex';
           document.querySelector('.pdf-pager-toolbar').style.display = 'flex';
           $('pdf-fallback-note').style.display = 'none';
-          await renderPdfPage(1);
-          toast('PDF ready — ' + pdfDoc.numPages + (pdfDoc.numPages===1 ? ' page' : ' pages'));
+          const rendered = await renderPdfPage(1);
+          if(rendered){
+            toast('PDF ready — ' + pdfDoc.numPages + (pdfDoc.numPages===1 ? ' page' : ' pages'));
+          } else {
+            toast('PDF ready — use Download to view it');
+          }
         }catch(pdfErr){
           $('pdf-pages-wrap').style.display = 'none';
           document.querySelector('.pdf-pager-toolbar').style.display = 'none';
@@ -9860,10 +10705,13 @@
     $('rec-start').value = todayISO();
     renderReceiptField();
     busySaving();
-    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting()]);
+    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting(), loadLanguageSetting()]);
+    applyTranslations();
+    initLanguageSetting();
     $('f-rate').value = formatAmountValue(String(currentExchangeRate));
     initConverter();
     renderConverter();
+    initDefaultRateCard();
     initLiveRateKpi();
     initGoldKpi();
     initFuelPricesCard();
@@ -9991,10 +10839,10 @@
     renderAvatar();
 
     const bal = computeStats(entries);
-    $('profile-balance-usd').textContent = fmtUSD(bal.netUSD) + ' left';
-    $('profile-balance-lbp').textContent = fmtLBP(bal.netLBP) + ' left';
+    $('profile-balance-usd').textContent = fmtUSD(bal.balanceUSD) + ' left';
+    $('profile-balance-lbp').textContent = fmtLBP(bal.balanceLBP) + ' left';
     const balCard = $('profile-balance-card');
-    balCard.style.background = (bal.netUSD < 0 || bal.netLBP < 0)
+    balCard.style.background = (bal.balanceUSD < 0 || bal.balanceLBP < 0)
       ? 'linear-gradient(135deg, var(--brick) 0%, #7a332a 100%)'
       : 'linear-gradient(135deg, var(--forest) 0%, var(--forest-2) 100%)';
     if(currentUser){
