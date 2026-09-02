@@ -209,6 +209,16 @@
   .site-header-sticky.shrink header.top .eyebrow{
     max-height:0;opacity:0;margin:0;
   }
+  /* Time-of-day greeting shown in place of the eyebrow line once the
+     user's profile has loaded — a short greeting phrase plus their
+     name, with the current clock time trailing in a smaller, dimmer
+     type so it reads as a timestamp rather than part of the message. */
+  header.top .hdr-greeting-time{
+    font-size:0.85em;
+    opacity:0.6;
+    margin-left:7px;
+    letter-spacing:1.2px;
+  }
   header.top h1{
     font-family:'Fraunces', serif;
     font-weight:700;
@@ -393,6 +403,8 @@
   .jth-current-val{font-size:15px;font-weight:600;margin-top:2px;}
   .icsprev-list{max-height:360px;overflow-y:auto;margin:10px 0 0;padding:6px;border:1px solid var(--rule);border-radius:10px;background:var(--paper-2);display:flex;flex-direction:column;gap:6px;}
   .icsprev-row{display:flex;align-items:center;gap:8px;padding:6px;background:var(--white);border:1px solid var(--rule);border-radius:8px;}
+  .icsprev-row.rejected{opacity:.45;}
+  .icsprev-row .icsprev-check{width:18px;height:18px;flex-shrink:0;accent-color:var(--forest);cursor:pointer;}
   .icsprev-row .icsprev-date{width:150px;flex-shrink:0;font-size:12.5px;padding:8px 9px;}
   .icsprev-row .icsprev-name{flex:1;min-width:0;font-size:13px;padding:8px 9px;font-family:'Work Sans',sans-serif;}
   .icsprev-row .icsprev-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 6px;line-height:1;flex-shrink:0;}
@@ -666,8 +678,6 @@
   .reminder-item.urgent{border-color:var(--brick);background:rgba(156,68,56,0.06);}
   .reminder-icon{font-size:16px;line-height:1.3;flex-shrink:0;}
   .reminder-text{flex:1;font-size:13px;line-height:1.4;}
-  #notif-popover-list .reminder-text{color:#8A6220;}
-  html.theme-dark #notif-popover-list .reminder-text{color:var(--brass);}
   .reminder-dismiss{
     flex-shrink:0;background:transparent;border:none;color:var(--muted);
     font-size:13px;cursor:pointer;padding:2px 4px;border-radius:6px;
@@ -909,6 +919,8 @@
   .actcal-cell.bulk-selected{border-color:var(--brass);background:rgba(169,128,63,0.14);box-shadow:0 0 0 2px var(--brass) inset;}
   .actcal-cell .bulk-check{position:absolute;top:3px;right:4px;font-size:12px;line-height:1;opacity:0;transition:opacity .12s ease;}
   .actcal-cell.bulk-selected .bulk-check{opacity:1;}
+  .actcal-note-badge{position:absolute;top:4px;right:5px;font-size:10px;line-height:1;filter:drop-shadow(0 1px 1px rgba(31,42,36,0.3));}
+  .actcal-cell.bulk-selected .actcal-note-badge{display:none;}
   .actcal-bulk-bar{
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     background:var(--paper-2);border:1px solid var(--brass-dim);border-radius:10px;
@@ -925,7 +937,15 @@
     box-shadow:0 1px 2px rgba(31,42,36,0.25);
   }
   .actchip .ic{font-size:10px;line-height:1;}
-  .actchip-note{background:var(--muted);}
+  .actchip-wrap{position:relative;display:inline-flex;flex-shrink:0;}
+  .actchip-count{
+    position:absolute;bottom:-3px;right:-3px;
+    min-width:11px;height:11px;padding:0 2px;
+    border-radius:999px;background:var(--ink);color:var(--paper);
+    font-family:'Space Mono',monospace;font-size:8px;font-weight:700;
+    line-height:11px;text-align:center;
+    box-shadow:0 0 0 1.5px var(--paper);
+  }
   .actcal-cell .acmore{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);font-weight:700;}
   @media (max-width:560px){
     .actcal-grid{gap:3px;}
@@ -933,6 +953,8 @@
     .actcal-cell .acn{font-size:10px;}
     .actchip{width:14px;height:14px;}
     .actchip .ic{font-size:9px;}
+    .actchip-count{font-size:7px;min-width:10px;height:10px;line-height:10px;bottom:-2px;right:-2px;}
+    .actcal-note-badge{font-size:9px;top:3px;right:4px;}
   }
 
   /* ===== Currency Converter ===== */
@@ -1087,11 +1109,14 @@
   }
   .actcal-print td{
     border:1px solid var(--rule);vertical-align:top;height:76px;padding:4px 5px;font-size:10px;
+    position:relative;
   }
   .actcal-print td.pad{background:var(--paper-2);}
   .actcal-print .pdn{font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:var(--forest);margin-bottom:3px;}
   .actcal-print .pdacts{display:flex;flex-direction:column;gap:2px;}
   .actcal-print .pdchip{font-size:9px;font-family:'Work Sans',sans-serif;font-weight:600;line-height:1.35;}
+  .actcal-print .pdnote{font-size:9px;font-family:'Work Sans',sans-serif;font-style:italic;color:var(--muted);line-height:1.35;}
+  .actcal-print .pd-note-badge{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;}
   .actcal-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;}
 
   /* Toast */
@@ -1130,7 +1155,7 @@
     box-shadow:0 2px 4px rgba(31,42,36,0.05), 0 18px 40px -20px rgba(31,42,36,0.28);
     box-sizing:border-box;
     position:relative;
-    overflow:hidden;
+    overflow:visible;
   }
   /* Tiled "TDA" watermark behind the report content. An SVG tile (rotated,
      low-opacity text) repeated as a background image, rather than a single
@@ -1173,9 +1198,34 @@
     .month-block{padding:12px 12px;}
     .highlight-box{padding:8px 10px;}
   }
-  table.report-table tr, .month-block, .report-section, .highlight-grid{
+  /* Move a whole section to the next page rather than splitting it —
+     a table row, one month block, one grid of stat tiles, and a whole
+     .report-section are all treated as "don't split me" units. This is
+     best-effort: if a single section genuinely runs taller than one full
+     page (e.g. a very long bill list or an activity-heavy month), the
+     renderer can't honor "avoid" on something bigger than the page itself,
+     so it falls back to breaking at the next safe point — the row-level
+     avoid rule below — instead of pushing to endless blank pages. Keep
+     this list matched to the pagebreak.avoid selector in the PDF export
+     script further down. */
+  table.report-table tr, .actcal-print tr, .month-block, .highlight-grid, .report-section, .report-footer{
     page-break-inside:avoid;
     break-inside:avoid;
+  }
+  /* Keep a section/month heading glued to the content that follows it,
+     instead of letting it end up alone at the bottom of a page. */
+  .report-section h3, .month-block h4{
+    page-break-after:avoid;
+    break-after:avoid;
+  }
+  @media print{
+    /* Repeat table headers on every printed page — real browser print
+       engines support this natively; html2canvas-based PDF export doesn't
+       understand page fragmentation at all, so this is scoped to native
+       print only rather than applied to the on-screen/captured layout. */
+    table.report-table thead, .actcal-print thead{
+      display:table-header-group;
+    }
   }
   .report-letterhead{text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--rule);}
   .report-letterhead .lh-name{
@@ -1789,7 +1839,7 @@
     .stat-box, .actstat-box{border:1px solid #999;border-left:3px solid #333;background:#fff;}
     .month-block{border:1px solid #999;page-break-inside:avoid;}
     table.report-table tbody tr:hover{background:none;}
-    .actcal-print{page-break-inside:avoid;}
+    .actcal-print tr{page-break-inside:avoid;}
     .actcal-print td{height:auto;min-height:70px;}
     .actcal-print td.pad{background:#f2f2f2;}
     @page{ size:A4 portrait; margin:16mm; }
@@ -2021,7 +2071,7 @@
         <div class="brand-row">
           <button type="button" class="brand-mark" id="btn-brand-home" aria-label="Go to New Entry">💰</button>
           <div>
-            <p class="eyebrow">Personal Ledger</p>
+            <p class="eyebrow" id="header-eyebrow">Personal Ledger</p>
             <h1>TDA Accounting</h1>
             <p>Daily spending &amp; income, tracked in USD and LBP</p>
           </div>
@@ -2072,6 +2122,7 @@
         <button class="tab-btn" data-tab="categories"><span class="tab-ic">🏷️</span><span class="tab-lbl" data-i18n="nav_categories">Categories</span></button>
         <button class="tab-btn" data-tab="accounts"><span class="tab-ic">🏦</span><span class="tab-lbl" data-i18n="nav_accounts">Accounts</span></button>
         <button class="tab-btn" data-tab="budgets"><span class="tab-ic">🎯</span><span class="tab-lbl" data-i18n="nav_budgets">Budgets</span></button>
+        <button class="tab-btn" data-tab="bills"><span class="tab-ic">🧾</span><span class="tab-lbl" data-i18n="nav_bills">Bills</span></button>
         <button class="tab-btn" data-tab="tracker"><span class="tab-ic">📅</span><span class="tab-lbl" data-i18n="nav_calendar">Calendar</span></button>
         <button class="tab-btn" data-tab="overview"><span class="tab-ic">📊</span><span class="tab-lbl" data-i18n="nav_overview">Overview</span></button>
         <button class="tab-btn" data-tab="stats"><span class="tab-ic">📈</span><span class="tab-lbl" data-i18n="nav_statistics">Statistics</span></button>
@@ -2125,7 +2176,7 @@
           </div>
           <div class="field">
             <div class="field-label-row">
-              <label>Currency</label>
+              <label><span id="f-currency-label-text">Currency</span></label>
               <label class="keep-chk"><input type="checkbox" id="keep-currency"> keep</label>
             </div>
             <select id="f-currency">
@@ -2163,12 +2214,15 @@
             <select id="f-account"><option value="">No account</option></select>
           </div>
         </div>
-        <div class="field-row" id="f-to-account-row" style="display:none;">
-          <div class="field" id="f-to-account-wrap">
+        <div class="field-row" id="f-to-currency-row" style="display:none;">
+          <div class="field">
             <div class="field-label-row">
-              <label>To account</label>
+              <label>To currency</label>
             </div>
-            <select id="f-to-account"><option value="">Select account</option></select>
+            <select id="f-to-currency">
+              <option value="USD">USD</option>
+              <option value="LBP">LBP</option>
+            </select>
           </div>
           <div class="field" id="f-to-amount-wrap" style="display:none;">
             <div class="field-label-row">
@@ -2179,7 +2233,15 @@
         </div>
         <div class="field-row" id="f-exchange-hint-row" style="display:none;">
           <div class="field" style="flex:1;">
-            <div id="f-exchange-hint" style="font-size:11.5px;color:var(--muted);line-height:1.4;">To log a USD ⇄ LBP exchange, pick a USD account as "From account" and an LBP account as "To account" (or vice versa), then enter what you actually received — this keeps both account balances accurate even if the rate you got differs from the official one.</div>
+            <div id="f-exchange-hint" style="font-size:11.5px;color:var(--muted);line-height:1.4;">Pick the currencies you're exchanging above — that's all this needs. Linking accounts below is optional, only there if you also want an account balance updated.</div>
+          </div>
+        </div>
+        <div class="field-row" id="f-to-account-row" style="display:none;">
+          <div class="field" id="f-to-account-wrap">
+            <div class="field-label-row">
+              <label>To account (optional)</label>
+            </div>
+            <select id="f-to-account"><option value="">No account</option></select>
           </div>
         </div>
         <div class="field-row">
@@ -2486,6 +2548,82 @@
       </div>
     </div>
 
+    <!-- BILLS -->
+    <div class="panel" id="panel-bills">
+      <div class="card">
+        <h2 id="bill-form-title">🧾 New bill</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Track bills — rent, utilities, subscriptions, loans, anything you owe — as paid or unpaid, whether they're due every day, every month, or once a year. Status is tracked per period, so a bill automatically shows as unpaid again the moment its next period starts.</p>
+        <div class="field-row">
+          <div class="field" style="flex:2;min-width:180px;">
+            <label>Bill name</label>
+            <input type="text" id="bill-name" placeholder="e.g. Rent, Electricity, Netflix">
+          </div>
+          <div class="field">
+            <label>Frequency</label>
+            <select id="bill-frequency">
+              <option value="daily">Daily</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" id="bill-due-month-field" style="display:none;">
+            <label>Month</label>
+            <select id="bill-due-month">
+              <option value="">Month</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+          <div class="field" id="bill-due-day-field">
+            <label id="bill-due-day-label">Due day of month</label>
+            <input type="number" inputmode="numeric" id="bill-due-day" min="1" max="31" placeholder="e.g. 5">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Currency</label>
+            <select id="bill-currency">
+              <option value="USD">USD</option>
+              <option value="LBP">LBP</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount</label>
+            <input type="text" inputmode="decimal" autocomplete="off" id="bill-amount" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label>Category (optional)</label>
+            <select id="bill-category"></select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn brass" id="btn-bill-add">➕ Add bill</button>
+          <button class="btn subtle" id="btn-bill-cancel-edit" style="display:none;">✖ Cancel edit</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="field-label-row" style="margin-bottom:6px;flex-wrap:wrap;gap:10px;">
+          <h2 style="margin:0;" data-i18n="h_bills">🧾 Bills</h2>
+          <span id="bill-month-label" style="font-size:12.5px;color:var(--muted);"></span>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-2px;">Mark each one paid as you settle it. Every bill shows the status of its current period — today for daily bills, this month for monthly bills, this year for yearly bills — and resets to unpaid automatically once that period ends.</p>
+        <div id="bill-month-summary" style="margin:10px 0 14px;"></div>
+        <div id="bill-list"></div>
+      </div>
+    </div>
+
     <!-- CALENDAR & ACTIVITY TRACKER -->
     <div class="panel" id="panel-tracker">
       <div class="card">
@@ -2548,8 +2686,16 @@
 
       <div class="card">
         <h2>🎉 Public Holidays</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Fetch a country's public holidays and mark them on your calendar as 🎉 Holiday automatically — existing activities on those days are kept.</p>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Fetch a country's public holidays and mark them on your calendar as 🎉 Holiday automatically — existing activities on those days are kept. Lebanon works out of the box, no signup or key needed.</p>
         <div class="field-row">
+          <div class="field" style="max-width:190px;">
+            <label>Source</label>
+            <select id="holiday-api-source">
+              <option value="auto">Automatic (built-in for Lebanon)</option>
+              <option value="nager">Nager.Date (free, no key)</option>
+              <option value="calendarific">Calendarific (free key required)</option>
+            </select>
+          </div>
           <div class="field" style="max-width:130px;">
             <label>Country</label>
             <select id="holiday-country">
@@ -2571,7 +2717,19 @@
             <label>Year</label>
             <input type="number" id="holiday-year" placeholder="2026">
           </div>
-          <button type="button" class="btn small brass" id="holiday-load-btn" style="margin-bottom:1px;">🌐 Load holidays</button>
+        </div>
+        <div id="holiday-calendarific-key-row" class="field-row" style="display:none;">
+          <div class="field" style="flex:1;">
+            <label>Calendarific API key</label>
+            <div class="pw-field">
+              <input type="password" id="holiday-calendarific-key" autocomplete="off" placeholder="Paste your free API key">
+              <button type="button" class="pw-eye-btn" id="holiday-calendarific-key-toggle" aria-label="Show API key" tabindex="-1">👁️</button>
+            </div>
+          </div>
+        </div>
+        <p id="holiday-calendarific-hint" style="display:none;font-size:11.5px;color:var(--muted);margin:0 0 8px;">Free — sign up at <a href="https://calendarific.com/signup" target="_blank" rel="noopener">calendarific.com/signup</a> to get a key (no credit card, ~1,000 requests/month), then paste it above. It's saved on this device only and covers Lebanon and 230+ other countries.</p>
+        <div class="btn-row">
+          <button type="button" class="btn small brass" id="holiday-load-btn">🌐 Load holidays</button>
         </div>
         <div id="holiday-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
         <div style="display:flex;align-items:center;gap:10px;margin:10px 0 8px;">
@@ -2579,12 +2737,40 @@
           <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">OR</span>
           <div style="flex:1;height:1px;background:var(--rule);"></div>
         </div>
-        <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">Country not covered by the free API above (this includes Lebanon)? Import a calendar file instead — works for any country, entirely offline, no API needed. Get one free from <a href="https://www.google.com/calendar" target="_blank" rel="noopener">Google Calendar</a> ("Other calendars" → browse holiday calendars → ⋮ → export), <a href="https://www.officeholidays.com/" target="_blank" rel="noopener">officeholidays.com</a>, or <a href="https://www.calendarlabs.com/ical-calendar/holidays" target="_blank" rel="noopener">calendarlabs.com</a> — search "[country] holidays ics" and download/subscribe, then import the .ics file here.</p>
+        <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">Country or year not covered above? Import a calendar file instead — works for any country, entirely offline, no API needed. Get one free from <a href="https://www.google.com/calendar" target="_blank" rel="noopener">Google Calendar</a> ("Other calendars" → browse holiday calendars → ⋮ → export), <a href="https://www.officeholidays.com/" target="_blank" rel="noopener">officeholidays.com</a>, or <a href="https://www.calendarlabs.com/ical-calendar/holidays" target="_blank" rel="noopener">calendarlabs.com</a> — search "[country] holidays ics" and download/subscribe, then import the .ics file here.</p>
         <div class="btn-row">
           <input type="file" id="holiday-ics-file" accept=".ics,text/calendar" style="display:none;">
           <button type="button" class="btn small ghost-teal" id="holiday-ics-btn">📅 Import from calendar file (.ics)</button>
         </div>
         <div id="holiday-ics-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 8px;">
+          <div style="flex:1;height:1px;background:var(--rule);"></div>
+          <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">CLEAR</span>
+          <div style="flex:1;height:1px;background:var(--rule);"></div>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">Remove 🎉 Holiday and its name from your calendar — undo a fetch or import gone wrong. Any other activity you've logged that day is kept.</p>
+        <div class="field-row">
+          <div class="field" style="max-width:170px;">
+            <label>Scope</label>
+            <select id="holiday-clear-scope">
+              <option value="all">All holidays</option>
+              <option value="year">A specific year</option>
+              <option value="month">A specific month</option>
+            </select>
+          </div>
+          <div class="field" id="holiday-clear-year-row" style="max-width:100px;display:none;">
+            <label>Year</label>
+            <input type="number" id="holiday-clear-year" placeholder="2026">
+          </div>
+          <div class="field" id="holiday-clear-month-row" style="max-width:150px;display:none;">
+            <label>Month</label>
+            <select id="holiday-clear-month"></select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn small ghost-teal" id="holiday-clear-btn">🗑️ Clear holidays</button>
+        </div>
+        <div id="holiday-clear-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
       </div>
     </div>
 
@@ -2745,7 +2931,31 @@
       </div>
       <div class="card" id="ov-fuel-card">
         <h2 data-i18n="h_fuel_prices">⛽ Fuel Prices (Lebanon)</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Lebanon's Ministry of Energy &amp; Water sets these weekly and there's no free live feed for them — check <a href="https://www.thefuelprice.com/Flb/en" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">thefuelprice.com</a> or <a href="https://en.dgo.gov.lb/prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">the Ministry's price list</a>, then save this week's figures here.</p>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Lebanon's Ministry of Energy &amp; Water sets these weekly and there's no official live feed for them, so this tries a best-effort automatic check against <a href="https://www.thefuelprice.com/Flb/en" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">thefuelprice.com</a>, then <a href="https://www.iptgroup.com.lb/ipt/en/our-stations/fuel-prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">IPT</a>, then <a href="https://www.globalpetrolprices.com/Lebanon/" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">globalpetrolprices.com</a> as backups, and falls back to manual entry if all three are unavailable — you can also check <a href="https://en.dgo.gov.lb/prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">the Ministry's price list</a> yourself and type this week's figures in below.</p>
+        <div class="btn-row" style="margin-top:2px;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn small subtle" id="fuel-live-fetch-btn">🔄 Check live prices</button>
+          <div class="field" style="max-width:200px;margin:0;">
+            <label style="font-size:11px;">Source</label>
+            <select id="fuel-source-pref">
+              <option value="auto">Auto (try all, in order)</option>
+              <option value="tfp">thefuelprice.com only</option>
+              <option value="ipt">IPT only</option>
+              <option value="gpp">globalpetrolprices.com only</option>
+            </select>
+          </div>
+          <div class="field" style="max-width:200px;margin:0;">
+            <label style="font-size:11px;">Fetch via</label>
+            <select id="fuel-proxy-pref">
+              <option value="auto">Auto (try all, in order)</option>
+              <option value="jina">Jina Reader (renders JS)</option>
+              <option value="allorigins">AllOrigins</option>
+              <option value="corsproxy">CORSProxy.io</option>
+              <option value="codetabs">CodeTabs</option>
+              <option value="thingproxy">ThingProxy</option>
+            </select>
+          </div>
+        </div>
+        <div id="fuel-live-status" style="font-size:11.5px;color:var(--muted);min-height:14px;margin-bottom:4px;"></div>
         <div class="conv-row">
           <div class="field">
             <label>95 Octane (LBP / liter)</label>
@@ -2828,6 +3038,11 @@
           <label class="keep-chk"><input type="checkbox" id="rem-toggle-budgets"> Budget limits</label>
         </div>
         <div id="ov-reminders-list"></div>
+      </div>
+      <div class="card" id="ov-bills-card">
+        <h2 data-i18n="h_bills">🧾 Bills</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Daily, monthly, and yearly bills, with whether each has been paid for its current period.</p>
+        <div id="ov-bills-list"></div>
       </div>
       <div class="card" id="ov-budgets-card">
         <h2 data-i18n="h_budgets_month">🎯 Budgets this month</h2>
@@ -3443,14 +3658,14 @@
           <button class="btn small ghost-teal" id="btn-export-excel">⬇️ Everything (Excel .xlsx)</button>
           <button class="btn small brass" id="btn-export-full-backup">⬇️ Full backup (JSON)</button>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;">Transfers are included in the Transactions export — a transfer is just a ledger entry moving money between two of your accounts. The full JSON backup is the one to keep for restoring your account later; it's the only export that includes attached receipts.</p>
+        <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;">Transfers are included in the Transactions export — a transfer is just a ledger entry moving money between two of your accounts. The full JSON backup is the one to keep for restoring your account later — it's the only export that covers absolutely everything: transactions, categories, accounts, budgets, recurring rules, bills, the calendar/activity tracker, your profile, and your app settings, receipts included.</p>
 
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);margin:18px 0 8px;">Restore</div>
         <div class="btn-row">
           <label class="btn small subtle" for="backup-import-input" style="cursor:pointer;">📥 Choose backup file (JSON)</label>
           <input type="file" id="backup-import-input" accept="application/json,.json" style="display:none;">
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;">Only full JSON backups exported from this app can be restored. You'll see a preview of what will be added before anything is imported, and it's always safe to import the same backup more than once — matching items are simply skipped.</p>
+        <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;">Only full JSON backups exported from this app can be restored. You'll see a preview of everything that will be added — including any blank profile fields or app settings the backup can fill in — before anything is imported, and it's always safe to import the same backup more than once; matching items are simply skipped.</p>
       </div>
     </div>
 
@@ -3495,7 +3710,7 @@
       <div class="footer-divider"></div>
 
       <div class="footer-inner">
-        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v3.0</span></div>
+        <div class="copyright">© <span id="footer-year"></span> TDA. All rights reserved. <span class="footer-version">v2.2</span></div>
         <div class="footer-links">
           <button type="button" id="btn-footer-about">ℹ️ About Us</button>
           <button type="button" id="btn-footer-rules">📜 Rules &amp; Terms</button>
@@ -3504,11 +3719,11 @@
         </div>
         <button type="button" class="bell-fab" id="btn-notify-optin" aria-label="Get email notifications from us" aria-pressed="false" title="Get occasional email updates from us">🔕</button>
         <div class="footer-social">
-          <a href="https://www.instagram.com/tda.tech" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-          <a href="https://x.com/TDA_6" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
-          <a href="https://www.facebook.com/share/1HkmZnhAks/" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
-          <a href="https://wa.me/81158126" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
-          <a href="mailto:tdaspprt@gmail.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+          <a href="https://instagram.com" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+          <a href="https://x.com" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+          <a href="https://facebook.com" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+          <a href="https://wa.me" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
+          <a href="mailto:you@example.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
         </div>
       </div>
     </div>
@@ -3561,11 +3776,11 @@
     <div class="about-cta">
       <p>Have feedback, a feature idea, or just want to say hi? We'd genuinely love to hear from you.</p>
       <div class="footer-social about-social">
-        <a href="https://www.instagram.com/tda.tech" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-        <a href="https://x.com/TDA_6" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
-        <a href="https://www.facebook.com/share/1HkmZnhAks/" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
-        <a href="https://wa.me/81158126" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
-        <a href="mailto:tdaspprt@gmail.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="https://x.com" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" title="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+        <a href="https://facebook.com" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+        <a href="https://wa.me" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>
+        <a href="mailto:you@example.com" class="social-btn" aria-label="Email" title="Email us"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
       </div>
     </div>
   </div>
@@ -3700,6 +3915,49 @@
   </div>
 </div>
 
+<!-- HOLIDAY API PREVIEW MODAL -->
+<div class="modal-overlay" id="modal-holiday-preview">
+  <div class="modal-box modal-box-wide">
+    <button class="modal-close" id="modal-holiday-preview-close" type="button" aria-label="Close">&times;</button>
+    <h2>🌐 Holidays found online</h2>
+    <p class="modal-sub" id="holiday-preview-sub"></p>
+    <div class="btn-row" style="margin:0 0 8px;">
+      <button class="btn small ghost-teal" id="holiday-preview-selectall" type="button">☑️ Select all</button>
+      <button class="btn small ghost-teal" id="holiday-preview-selectnone" type="button">☐ Select none</button>
+    </div>
+    <div id="holiday-preview-list" class="icsprev-list"></div>
+    <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;">Uncheck a holiday to reject it, edit its date or name, or remove it entirely with 🗑️. Nothing is added to your calendar until you apply below.</p>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn brass" id="holiday-preview-confirm" style="flex:1;">✅ Apply selected</button>
+      <button class="btn subtle" id="holiday-preview-cancel" type="button">❌ Reject all</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ONBOARDING MODAL (required for every new profile: username + photo) -->
+<div class="modal-overlay" id="modal-onboarding">
+  <div class="modal-box modal-box-wide">
+    <h2>👋 Welcome! Set up your profile</h2>
+    <p class="modal-sub">Pick a username and add a profile photo to get started — this only takes a moment, and it's required once before you can continue.</p>
+    <div class="avatar-row">
+      <div class="avatar-circle" id="onboarding-avatar-circle">?</div>
+      <div class="avatar-actions">
+        <label class="btn small subtle" for="onboarding-avatar-input" style="cursor:pointer;text-align:center;">📷 Choose photo</label>
+        <input type="file" id="onboarding-avatar-input" accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif,.avif,.svg">
+      </div>
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="onboarding-username" placeholder="Pick a username" maxlength="30">
+    </div>
+    <div id="onboarding-error" style="font-size:12px;color:var(--brick);min-height:16px;margin-top:8px;"></div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn brass" id="onboarding-continue" style="flex:1;" disabled>✅ Continue</button>
+    </div>
+  </div>
+</div>
+
 <!-- QUICK ADD MODAL -->
 <div class="modal-overlay" id="modal-quickadd">
   <div class="modal-box">
@@ -3826,6 +4084,27 @@
   let editingRecurringId = null;
   let expandedRecurringId = null;
   const FREQ_LABEL = { daily:'Daily', weekly:'Weekly', monthly:'Monthly', yearly:'Yearly' };
+
+  // Bills: a lighter-weight cousin of recurring rules — just a name, amount,
+  // a frequency (daily/monthly/yearly), and an optional due day (+ due month
+  // for yearly bills) — tracked as paid/unpaid per period. Unlike recurring
+  // rules it never generates ledger entries on its own; it only ever asks
+  // "did I pay this yet, for its current period?". paidPeriods is keyed by
+  // a period string that depends on frequency — 'YYYY-MM-DD' for daily,
+  // 'YYYY-MM' for monthly, 'YYYY' for yearly — so a period simply has no key
+  // until it's marked paid: no reset logic is needed for a bill to show
+  // "unpaid" again once a new day/month/year starts. createdAt lets past
+  // reports show only the bills that actually existed at that point in
+  // time, instead of retroactively listing a bill added today as "unpaid"
+  // in last year's report. Older bills predate frequency (they were all
+  // effectively monthly) and stored paid status in paidMonths — loadBills
+  // normalizes both on read so the rest of the app only deals with
+  // frequency + paidPeriods.
+  let bills = [];
+  let editingBillId = null;
+  const BILLS_KEY = 'bills';
+  const BILL_FREQ_LABEL = { daily:'Daily', monthly:'Monthly', yearly:'Yearly' };
+  const BILL_FREQ_ORDER = { daily:0, monthly:1, yearly:2 };
 
   // Reminders: computed fresh on every render from `recurring` + `budgets`
   // (never stored themselves, so they can never drift out of sync). Two
@@ -3989,6 +4268,60 @@
   const fmtUSD = (n) => '$' + (n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtLBP = (n) => (n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' LBP';
 
+  // ---------- shared helper for all live-data API calls ----------
+  // Every "live" fetch in this file (exchange rate, gold spot, holidays)
+  // goes through this so they all get the same robustness for free:
+  //  - a hard timeout, so a hung/slow API can't leave a button stuck on
+  //    "Fetching…" forever (fetch() has no timeout of its own)
+  //  - one automatic retry on network-level failures (not on 4xx/5xx —
+  //    retrying a bad request/rate-limit immediately rarely helps and can
+  //    make rate-limiting worse), since flaky mobile connections often
+  //    succeed on a second attempt moments later
+  //  - a clear, specific error instead of letting callers guess from a
+  //    generic "Failed to fetch"
+  async function fetchJsonRobust(url, {timeoutMs = 10000, retries = 1} = {}){
+    let lastErr = null;
+    for(let attempt = 0; attempt <= retries; attempt++){
+      const controller = new AbortController();
+      const timer = setTimeout(()=> controller.abort(), timeoutMs);
+      try{
+        const res = await fetch(url, {signal: controller.signal});
+        clearTimeout(timer);
+        if(!res.ok){
+          const err = new Error(`API returned an error (status ${res.status})`);
+          err.status = res.status;
+          err.isHttpError = true;
+          throw err; // don't retry — a bad status is unlikely to fix itself instantly
+        }
+        const raw = await res.text();
+        if(!raw || !raw.trim()){
+          throw Object.assign(new Error('The API returned an empty response'), {isEmptyBody:true});
+        }
+        try{
+          return JSON.parse(raw);
+        }catch(parseErr){
+          throw Object.assign(new Error('The API returned an unreadable (non-JSON) response'), {isParseError:true});
+        }
+      }catch(e){
+        clearTimeout(timer);
+        if(e && e.isHttpError){ throw e; } // no retry on a real HTTP error status
+        if(e && (e.isEmptyBody || e.isParseError)){
+          lastErr = e;
+          if(attempt < retries){ continue; }
+          throw lastErr;
+        }
+        lastErr = Object.assign(new Error(
+          location.protocol === 'file:'
+            ? "Can't reach this API from a file opened directly on disk (file://) — some browsers block that. Serve this page over http/https and try again."
+            : (e && e.name === 'AbortError') ? 'The request timed out — the API may be slow or unreachable.' :
+              (e && e.message) || 'Network error'
+        ), {isNetwork:true});
+        if(attempt < retries){ continue; } // one more try on network/timeout failures
+        throw lastErr;
+      }
+    }
+  }
+
   // ---------- exchange rate handling ----------
   // Every transaction that involves a USD/LBP conversion carries its OWN
   // exchange rate, captured at the moment it was recorded (manually typed,
@@ -4032,13 +4365,14 @@
       nav_menu:'Menu', nav_new_entry:'New Entry', nav_entries:'Entries', nav_recurring:'Recurring',
       nav_categories:'Categories', nav_accounts:'Accounts', nav_budgets:'Budgets', nav_calendar:'Calendar',
       nav_overview:'Overview', nav_statistics:'Statistics', nav_print_report:'Print Report',
-      nav_account_group:'Account', nav_profile:'Profile',
+      nav_account_group:'Account', nav_profile:'Profile', nav_bills:'Bills',
       settings_title:'⚙️ App settings', settings_language_title:'Language',
       settings_language_sub:'Choose the language the app is displayed in.',
       settings_quickadd_title:'Quick Add button', settings_quickadd_sub:'Show the floating ⚡ Quick Add button on every screen.',
       settings_darkmode_title:'Dark mode', settings_darkmode_sub:'Switch the app to a dark color theme.',
       settings_saved_device:'These are saved on this device/browser.',
       h_recurring:'🔁 Your recurring transactions', h_categories:'🏷️ Manage categories', h_accounts:'🏦 Manage accounts',
+      h_bills:'🧾 Bills',
       h_overall_budget:'🎯 Overall monthly budget', h_category_budgets:'🏷️ Category budgets',
       h_calendar_tracker:'📅 Calendar & Activity Tracker', h_default_rate:'💵 Default Exchange Rate',
       h_converter:'💱 Currency Converter', h_fuel_prices:'⛽ Fuel Prices (Lebanon)',
@@ -4054,13 +4388,14 @@
       nav_menu:'القائمة', nav_new_entry:'إدخال جديد', nav_entries:'المعاملات', nav_recurring:'المتكررة',
       nav_categories:'الفئات', nav_accounts:'الحسابات', nav_budgets:'الميزانيات', nav_calendar:'التقويم',
       nav_overview:'نظرة عامة', nav_statistics:'الإحصائيات', nav_print_report:'طباعة تقرير',
-      nav_account_group:'الحساب', nav_profile:'الملف الشخصي',
+      nav_account_group:'الحساب', nav_profile:'الملف الشخصي', nav_bills:'الفواتير',
       settings_title:'⚙️ إعدادات التطبيق', settings_language_title:'اللغة',
       settings_language_sub:'اختر اللغة التي يظهر بها التطبيق.',
       settings_quickadd_title:'زر الإضافة السريعة', settings_quickadd_sub:'إظهار زر ⚡ الإضافة السريعة في كل شاشة.',
       settings_darkmode_title:'الوضع الداكن', settings_darkmode_sub:'التبديل إلى المظهر الداكن للتطبيق.',
       settings_saved_device:'يتم حفظ هذه الإعدادات على هذا الجهاز/المتصفح.',
       h_recurring:'🔁 معاملاتك المتكررة', h_categories:'🏷️ إدارة الفئات', h_accounts:'🏦 إدارة الحسابات',
+      h_bills:'🧾 الفواتير',
       h_overall_budget:'🎯 الميزانية الشهرية الإجمالية', h_category_budgets:'🏷️ ميزانيات الفئات',
       h_calendar_tracker:'📅 التقويم ومتابعة النشاط', h_default_rate:'💵 سعر الصرف الافتراضي',
       h_converter:'💱 محوّل العملات', h_fuel_prices:'⛽ أسعار الوقود (لبنان)',
@@ -4076,13 +4411,14 @@
       nav_menu:'Menu', nav_new_entry:'Nouvelle entrée', nav_entries:'Transactions', nav_recurring:'Récurrentes',
       nav_categories:'Catégories', nav_accounts:'Comptes', nav_budgets:'Budgets', nav_calendar:'Calendrier',
       nav_overview:'Aperçu', nav_statistics:'Statistiques', nav_print_report:'Imprimer un rapport',
-      nav_account_group:'Compte', nav_profile:'Profil',
+      nav_account_group:'Compte', nav_profile:'Profil', nav_bills:'Factures',
       settings_title:'⚙️ Paramètres de l\u2019application', settings_language_title:'Langue',
       settings_language_sub:'Choisissez la langue d\u2019affichage de l\u2019application.',
       settings_quickadd_title:'Bouton Ajout rapide', settings_quickadd_sub:'Afficher le bouton flottant ⚡ Ajout rapide sur chaque écran.',
       settings_darkmode_title:'Mode sombre', settings_darkmode_sub:'Basculer l\u2019application vers un thème sombre.',
       settings_saved_device:'Ces réglages sont enregistrés sur cet appareil/navigateur.',
       h_recurring:'🔁 Vos transactions récurrentes', h_categories:'🏷️ Gérer les catégories', h_accounts:'🏦 Gérer les comptes',
+      h_bills:'🧾 Factures',
       h_overall_budget:'🎯 Budget mensuel global', h_category_budgets:'🏷️ Budgets par catégorie',
       h_calendar_tracker:'📅 Calendrier et suivi d\u2019activité', h_default_rate:'💵 Taux de change par défaut',
       h_converter:'💱 Convertisseur de devises', h_fuel_prices:'⛽ Prix du carburant (Liban)',
@@ -4175,11 +4511,10 @@
       statusEl.style.color = 'var(--muted)';
       statusEl.textContent = 'Fetching live rate…';
       try{
-        const res = await fetch('https://open.er-api.com/v6/latest/USD');
-        if(!res.ok) throw new Error('Network error');
-        const data = await res.json();
+        const data = await fetchJsonRobust('https://open.er-api.com/v6/latest/USD');
+        if(data.result && data.result !== 'success') throw new Error('The exchange-rate API reported an error');
         const rate = data && data.rates && Number(data.rates.LBP);
-        if(!rate || rate <= 0) throw new Error('Rate unavailable');
+        if(!rate || rate <= 0) throw new Error('Rate unavailable for LBP');
         currentExchangeRate = rate;
         await saveExchangeRateSetting();
         renderDefaultRateCard();
@@ -4191,7 +4526,7 @@
         toast('Default exchange rate updated');
       }catch(e){
         statusEl.style.color = 'var(--brick)';
-        statusEl.textContent = '⚠️ Could not fetch a live rate — check your connection, or enter one manually.';
+        statusEl.textContent = '⚠️ ' + ((e && e.message) || 'Could not fetch a live rate') + ' — check your connection, or enter one manually.';
       }finally{
         btn.disabled = false;
       }
@@ -4275,11 +4610,10 @@
     statusEl.style.color = 'var(--muted)';
     statusEl.textContent = 'Fetching live rate…';
     try{
-      const res = await fetch('https://open.er-api.com/v6/latest/USD');
-      if(!res.ok) throw new Error('Network error');
-      const data = await res.json();
+      const data = await fetchJsonRobust('https://open.er-api.com/v6/latest/USD');
+      if(data.result && data.result !== 'success') throw new Error('The exchange-rate API reported an error');
       const rate = data && data.rates && Number(data.rates.LBP);
-      if(!rate || rate <= 0) throw new Error('Rate unavailable');
+      if(!rate || rate <= 0) throw new Error('Rate unavailable for LBP');
       convManualRate = rate;
       renderConverter();
       const stamp = data.time_last_update_utc ? ' (' + data.time_last_update_utc + ')' : '';
@@ -4296,7 +4630,7 @@
       });
     }catch(e){
       statusEl.style.color = 'var(--brick)';
-      statusEl.textContent = '⚠️ Could not fetch a live rate — check your connection, or enter one manually.';
+      statusEl.textContent = '⚠️ ' + ((e && e.message) || 'Could not fetch a live rate') + ' — check your connection, or enter one manually.';
     }finally{
       btn.disabled = false;
     }
@@ -4309,6 +4643,10 @@
   // stored setting; that only happens if the person uses the converter's
   // "save as default rate" link.
   let ovLiveRateTimer = null;
+  // Kept around so a failed refresh can fall back to the last good value
+  // instead of blanking the KPI out — a transient hiccup shouldn't erase
+  // a number that was correct a few minutes ago.
+  let lastLiveRateLBP = null;
   async function fetchOverviewLiveRate(){
     const valEl = $('ov-kpi-liverate');
     const subEl = $('ov-kpi-liverate-sub');
@@ -4316,17 +4654,22 @@
     if(!valEl || !subEl) return;
     if(btn) btn.classList.add('spinning');
     try{
-      const res = await fetch('https://open.er-api.com/v6/latest/USD');
-      if(!res.ok) throw new Error('Network error');
-      const data = await res.json();
+      const data = await fetchJsonRobust('https://open.er-api.com/v6/latest/USD');
+      if(data.result && data.result !== 'success') throw new Error('The exchange-rate API reported an error');
       const rate = data && data.rates && Number(data.rates.LBP);
-      if(!rate || rate <= 0) throw new Error('Rate unavailable');
+      if(!rate || rate <= 0) throw new Error('Rate unavailable for LBP');
+      lastLiveRateLBP = rate;
       valEl.textContent = '1 USD = ' + Math.round(rate).toLocaleString('en-US') + ' LBP';
       const now = new Date();
       subEl.textContent = 'Updated ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
       subEl.style.color = 'var(--muted)';
     }catch(e){
-      subEl.textContent = '⚠️ Couldn\'t fetch — check your connection';
+      if(lastLiveRateLBP){
+        valEl.textContent = '1 USD = ' + Math.round(lastLiveRateLBP).toLocaleString('en-US') + ' LBP';
+        subEl.textContent = '⚠️ Using last known rate — ' + ((e && e.message) || "couldn't refresh");
+      } else {
+        subEl.textContent = '⚠️ ' + ((e && e.message) || "Couldn't fetch — check your connection");
+      }
       subEl.style.color = 'var(--brick)';
     }finally{
       if(btn) btn.classList.remove('spinning');
@@ -4387,11 +4730,9 @@
     if(btn) btn.classList.add('spinning');
     if(btn2) btn2.classList.add('spinning');
     try{
-      const res = await fetch('https://xaus.com/api/v1/spot?currency=USD&unit=oz');
-      if(!res.ok) throw new Error('Network error');
-      const data = await res.json();
+      const data = await fetchJsonRobust('https://xaus.com/api/v1/spot?currency=USD&unit=oz');
       const price = data && Number(data.spot_usd_oz);
-      if(!price || price <= 0) throw new Error('Price unavailable');
+      if(!price || price <= 0) throw new Error('Gold price unavailable');
       lastGoldPriceUSD = price;
       valEl.textContent = fmtUSD(price) + ' / oz';
       const now = new Date();
@@ -4408,9 +4749,18 @@
       renderGoldCard(price);
       renderGoldFuelCalc();
     }catch(e){
-      subEl.textContent = '⚠️ Couldn\'t fetch — check your connection';
+      // Fall back to the last successfully fetched price (if any) rather
+      // than wiping the KPI/card — a stale-but-real number is more useful
+      // than a dash, as long as it's clearly labeled as not fresh.
+      if(lastGoldPriceUSD){
+        valEl.textContent = fmtUSD(lastGoldPriceUSD) + ' / oz';
+        subEl.textContent = '⚠️ Using last known price — ' + ((e && e.message) || "couldn't refresh");
+        renderGoldCard(lastGoldPriceUSD);
+      } else {
+        subEl.textContent = '⚠️ ' + ((e && e.message) || "Couldn't fetch — check your connection");
+        renderGoldCard(null);
+      }
       subEl.style.color = 'var(--brick)';
-      renderGoldCard(null);
       renderGoldFuelCalc();
     }finally{
       if(btn) btn.classList.remove('spinning');
@@ -4429,13 +4779,76 @@
   }
 
   // ---------- fuel prices (Lebanon) — Overview KPI + card ----------
-  // Unlike the exchange rate and gold KPIs above, there is no free,
-  // no-key, CORS-open live feed for Lebanese fuel prices (the Ministry of
-  // Energy & Water publishes a weekly list, not an API) — so this is a
-  // manually-entered reference value the person keeps up to date
-  // themselves, persisted the same way as every other setting via `store`.
-  let fuelPrices = { octane95: null, octane98: null, diesel: null, gas: null, asOf: null };
+  // There is no free, no-key, CORS-open *API* for Lebanese fuel prices (the
+  // Ministry of Energy & Water publishes a weekly list, not an API) — so
+  // "live" here means a best-effort automatic check against public price
+  // pages through a CORS relay, parsed defensively by scanning for
+  // recognizable labels rather than relying on exact markup. Three
+  // independent sources are tried in order (thefuelprice.com, then IPT —
+  // a real Lebanese fuel distributor — then globalpetrolprices.com) since
+  // any one of them can go down, change its layout, or get blocked by the
+  // relay at any time — none of that is under this app's control — so it
+  // always falls back to the same manual entry that used to be the only
+  // option, and never blocks on the network.
+  let fuelPrices = { octane95: null, octane98: null, diesel: null, gas: null, asOf: null, source: null, lastAutoFetchAttempt: null };
   const FUEL_KEY = 'fuelPricesSetting';
+  // Which source(s) the person wants the "Check live prices" button (and
+  // the silent daily background check) to use — 'auto' tries all three in
+  // order below; any other value pins it to just that one id. Persisted
+  // separately from the prices themselves so switching sources doesn't
+  // touch the last-saved figures.
+  const FUEL_SOURCE_PREF_KEY = 'fuelSourcePref';
+  let fuelSourcePref = 'auto';
+  // id lets the source-picker select a single one; tried in this order
+  // under 'auto'. globalpetrolprices.com doesn't split 95/98 octane (just
+  // "Gasoline") and its LPG figure is priced per liter rather than per the
+  // 10kg cylinder this app tracks elsewhere, so its parser only fills in
+  // octane95 + diesel — that's also why it's kept last under 'auto'.
+  // IPT's page is much heavier (a full corporate site, not a lean price
+  // page) so it gets a longer per-fetch timeout — the default 8s was
+  // sometimes too tight for a CORS relay to fetch and return it in time.
+  const FUEL_SOURCES = [
+    { id: 'tfp', url: 'https://www.thefuelprice.com/Flb/en', parse: parseFuelPricesHtmlTFP, label: 'thefuelprice.com' },
+    { id: 'ipt', url: 'https://www.iptgroup.com.lb/ipt/en/our-stations/fuel-prices', parse: parseFuelPricesHtmlIPT, label: 'IPT', timeoutMs: 15000 },
+    { id: 'gpp', url: 'https://www.globalpetrolprices.com/Lebanon/', parse: parseFuelPricesHtmlGPP, label: 'globalpetrolprices.com' }
+  ];
+  // Public, free, no-key CORS relays with no affiliation to this app —
+  // any of them can disappear, rate-limit, or get blocked by a given
+  // target site's firewall without notice, so several are tried in turn
+  // rather than relying on just one or two. IPT's page in particular
+  // renders its price list through an ASP.NET/AJAX widget rather than
+  // plain server-rendered HTML, so a relay that only forwards the raw
+  // response (allorigins/corsproxy/codetabs/thingproxy) can come back
+  // without the numbers even when the fetch itself "succeeds" — that's
+  // the main reason IPT looked broken. Jina Reader (r.jina.ai) actually
+  // renders the page first and returns the visible text, so it's kept
+  // as a last-resort fallback that can see content the plain relays
+  // can't; it's ordered after the others since it returns text/markdown
+  // rather than real HTML tables, so the TFP/GPP parsers (which need a
+  // real <table>) can't use its output.
+  const FUEL_PROXIES = [
+    { id: 'allorigins', label: 'AllOrigins', build: url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url) },
+    { id: 'corsproxy', label: 'CORSProxy.io', build: url => 'https://corsproxy.io/?url=' + encodeURIComponent(url) },
+    { id: 'codetabs', label: 'CodeTabs', build: url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url) },
+    { id: 'thingproxy', label: 'ThingProxy', build: url => 'https://thingproxy.freeboard.io/fetch/' + url },
+    { id: 'jina', label: 'Jina Reader (renders JS)', build: url => 'https://r.jina.ai/' + url }
+  ];
+  // Which relay(s) to use — 'auto' tries all five in the order above;
+  // any other value pins it to just that one, same pattern as the
+  // per-source preference below. Persisted separately.
+  const FUEL_PROXY_PREF_KEY = 'fuelProxyPref';
+  let fuelProxyPref = 'auto';
+  async function loadFuelProxyPref(){
+    try{
+      const res = await store.get(FUEL_PROXY_PREF_KEY);
+      const val = res && res.value;
+      fuelProxyPref = (val === 'auto' || FUEL_PROXIES.some(p => p.id === val)) ? val : 'auto';
+    }catch(e){ /* keep default 'auto' */ }
+  }
+  async function saveFuelProxyPref(val){
+    fuelProxyPref = val;
+    try{ await store.set(FUEL_PROXY_PREF_KEY, val); }catch(e){ /* best-effort only */ }
+  }
   async function loadFuelPricesSetting(){
     try{
       const res = await store.get(FUEL_KEY);
@@ -4446,13 +4859,214 @@
           octane98: Number(parsed.octane98) > 0 ? Number(parsed.octane98) : null,
           diesel: Number(parsed.diesel) > 0 ? Number(parsed.diesel) : null,
           gas: Number(parsed.gas) > 0 ? Number(parsed.gas) : null,
-          asOf: parsed.asOf || null
+          asOf: parsed.asOf || null,
+          source: parsed.source === 'auto' ? 'auto' : (parsed.source === 'manual' ? 'manual' : null),
+          lastAutoFetchAttempt: parsed.lastAutoFetchAttempt || null
         };
       }
     }catch(e){ /* keep defaults already set */ }
   }
   async function saveFuelPricesSetting(){
     try{ await store.set(FUEL_KEY, JSON.stringify(fuelPrices)); }catch(e){ /* best-effort only */ }
+  }
+  async function loadFuelSourcePref(){
+    try{
+      const res = await store.get(FUEL_SOURCE_PREF_KEY);
+      const val = res && res.value;
+      fuelSourcePref = (val === 'auto' || FUEL_SOURCES.some(s => s.id === val)) ? val : 'auto';
+    }catch(e){ /* keep default 'auto' */ }
+  }
+  async function saveFuelSourcePref(val){
+    fuelSourcePref = val;
+    try{ await store.set(FUEL_SOURCE_PREF_KEY, val); }catch(e){ /* best-effort only */ }
+  }
+  // Scans every table row in the fetched page for a recognizable label
+  // ("Gasoline 95", "Diesel", "L.P.G", ...) and pulls the first number out
+  // of that row, rather than depending on specific CSS classes or column
+  // positions — the same row-by-label approach survives minor redesigns of
+  // the source page that a fixed selector wouldn't.
+  function parseFuelPricesHtmlTFP(html){
+    try{
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const rows = Array.from(doc.querySelectorAll('table tr'));
+      if(!rows.length) return null;
+      const numFromText = (txt)=>{
+        const m = txt.replace(/\u00A0/g, ' ').match(/[\d][\d,]*(?:\.\d+)?/);
+        return m ? parseFloat(m[0].replace(/,/g, '')) : null;
+      };
+      const result = {};
+      rows.forEach(row=>{
+        const text = row.textContent.replace(/\s+/g, ' ').trim();
+        if(!text) return;
+        const lower = text.toLowerCase();
+        // Lebanon quotes gasoline/diesel per 20L gallon on this source —
+        // divide down to a per-liter figure, which is the unit this app
+        // stores and displays everywhere else. LPG is priced per cylinder
+        // already, matching this app's per-bottle unit, so no conversion.
+        const perLiter = /gallon/.test(lower) ? 20 : 1;
+        if(/gasoline\s*95|octane\s*95|95\s*octane/.test(lower) && result.octane95 == null){
+          const n = numFromText(text); if(n) result.octane95 = n / perLiter;
+        } else if(/gasoline\s*98|octane\s*98|98\s*octane/.test(lower) && result.octane98 == null){
+          const n = numFromText(text); if(n) result.octane98 = n / perLiter;
+        } else if(/diesel/.test(lower) && result.diesel == null){
+          const n = numFromText(text); if(n) result.diesel = n / perLiter;
+        } else if(/l\.?p\.?g|cooking gas/.test(lower) && result.gas == null){
+          const n = numFromText(text); if(n) result.gas = n;
+        }
+      });
+      const bodyText = (doc.body ? doc.body.textContent : html).replace(/\s+/g, ' ');
+      const dateMatch = bodyText.match(/Updated\s+([A-Za-z]+,\s*[A-Za-z]+\s+\d{1,2},\s*\d{4})/);
+      let asOfIso = null;
+      if(dateMatch){
+        const d = new Date(dateMatch[1]);
+        if(!isNaN(d.getTime())) asOfIso = d.toISOString().slice(0, 10);
+      }
+      if(result.octane95 == null && result.octane98 == null && result.diesel == null && result.gas == null) return null;
+      return { octane95: result.octane95 || null, octane98: result.octane98 || null, diesel: result.diesel || null, gas: result.gas || null, asOfIso };
+    }catch(e){ return null; }
+  }
+  // Fallback source. Table rows look like:
+  // "Gasoline prices | 09.02.2026 | 69550 | 0.706" (label, date, LBP, USD).
+  // Only one gasoline grade is listed (treated as 95 octane) and LPG here
+  // is priced per liter, not per the 10kg cylinder this app uses elsewhere
+  // — so gas/octane98 are deliberately left null rather than guessed at.
+  function parseFuelPricesHtmlGPP(html){
+    try{
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const rows = Array.from(doc.querySelectorAll('table tr'));
+      if(!rows.length) return null;
+      const numFromText = (txt)=>{
+        const m = txt.replace(/\u00A0/g, ' ').match(/[\d][\d,]*(?:\.\d+)?/);
+        return m ? parseFloat(m[0].replace(/,/g, '')) : null;
+      };
+      const result = {};
+      let dateStr = null;
+      rows.forEach(row=>{
+        const cells = Array.from(row.querySelectorAll('td,th')).map(c => c.textContent.replace(/\s+/g, ' ').trim());
+        if(cells.length < 3) return;
+        const label = cells[0].toLowerCase();
+        if(/gasoline/.test(label) && result.octane95 == null){
+          if(cells[1] && !dateStr) dateStr = cells[1];
+          const n = numFromText(cells[2]); if(n) result.octane95 = n;
+        } else if(/diesel/.test(label) && result.diesel == null){
+          const n = numFromText(cells[2]); if(n) result.diesel = n;
+        }
+      });
+      let asOfIso = null;
+      if(dateStr){
+        const m = dateStr.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+        if(m) asOfIso = m[3] + '-' + m[1].padStart(2,'0') + '-' + m[2].padStart(2,'0');
+      }
+      if(result.octane95 == null && result.diesel == null) return null;
+      return { octane95: result.octane95 || null, octane98: null, diesel: result.diesel || null, gas: null, asOfIso };
+    }catch(e){ return null; }
+  }
+  // IPT (a real Lebanese fuel distributor) publishes weekly prices as a
+  // short "UNL 95 / UNL 98 / Diesel / Gas (LPG)" list rendered straight
+  // into the page (not behind the ASP.NET postback widgets around it), so
+  // this scans the plain text for those labels instead of depending on
+  // the page's table/DOM structure, which is heavy and could shift.
+  // Gasoline/diesel are quoted per 20L gallon like thefuelprice.com — this
+  // divides down to per-liter. LPG is already per 10kg cylinder, this
+  // app's unit, so no conversion.
+  function parseFuelPricesHtmlIPT(html){
+    try{
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const bodyText = (doc.body ? doc.body.textContent : html).replace(/\s+/g, ' ');
+      const numAfter = (re)=>{
+        const m = bodyText.match(re);
+        if(!m) return null;
+        const n = parseFloat(m[1].replace(/,/g, ''));
+        return (isFinite(n) && n > 0) ? n : null;
+      };
+      // The trailing "L.L." (Lebanese Lira) unit is matched loosely and
+      // optionally — IPT has dropped or reworded it before, and a plain-
+      // text render (e.g. via a JS-rendering reader proxy) can lose the
+      // markup that normally surrounds it, so requiring it exactly would
+      // throw away an otherwise-good number.
+      const raw95 = numAfter(/UNL\s*95[^\d]{0,20}([\d,]+(?:\.\d+)?)(?:\s*L\.?\s*L\.?)?/i);
+      const raw98 = numAfter(/UNL\s*98[^\d]{0,20}([\d,]+(?:\.\d+)?)(?:\s*L\.?\s*L\.?)?/i);
+      const rawDiesel = numAfter(/Diesel[^\d]{0,20}([\d,]+(?:\.\d+)?)(?:\s*L\.?\s*L\.?)?/i);
+      const rawGas = numAfter(/Gas\s*\(\s*LPG\s*\)[^\d]{0,20}([\d,]+(?:\.\d+)?)(?:\s*L\.?\s*L\.?)?/i);
+      const octane95 = raw95 ? raw95 / 20 : null;
+      const octane98 = raw98 ? raw98 / 20 : null;
+      const diesel = rawDiesel ? rawDiesel / 20 : null;
+      const gas = rawGas || null;
+      let asOfIso = null;
+      // Header reads e.g. "Weekly Fuel Prices 01 / 09 / 2026" in DD/MM/YYYY.
+      const dateMatch = bodyText.match(/Weekly Fuel Prices\**\s*(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})/i);
+      if(dateMatch){
+        asOfIso = dateMatch[3] + '-' + dateMatch[2].padStart(2,'0') + '-' + dateMatch[1].padStart(2,'0');
+      }
+      if(octane95 == null && octane98 == null && diesel == null && gas == null) return null;
+      return { octane95, octane98, diesel, gas, asOfIso };
+    }catch(e){ return null; }
+  }
+  // Tries each proxy in turn with a short timeout so a hung or blocked relay
+  // never leaves the button (or the silent background check) stuck.
+  // timeoutMs lets a heavier source (e.g. IPT's full corporate site) get
+  // more time per proxy attempt than the 8s default.
+  async function fetchFuelPricesHtml(sourceUrl, timeoutMs){
+    const proxiesToTry = fuelProxyPref === 'auto' ? FUEL_PROXIES : FUEL_PROXIES.filter(p => p.id === fuelProxyPref);
+    for(const proxy of proxiesToTry){
+      try{
+        const controller = new AbortController();
+        const timer = setTimeout(()=> controller.abort(), timeoutMs || 8000);
+        const res = await fetch(proxy.build(sourceUrl), { signal: controller.signal });
+        clearTimeout(timer);
+        if(res.ok){
+          const html = await res.text();
+          if(html && html.length > 200) return html;
+        }
+      }catch(e){ /* try next proxy */ }
+    }
+    return null;
+  }
+  // manual=true means the person pressed the button and wants visible
+  // feedback either way; manual=false is the silent once-a-day background
+  // attempt made at startup, which never shows an error — a failed silent
+  // attempt just leaves the manual form exactly as it already was.
+  async function attemptLiveFuelFetch(manual){
+    const statusEl = $('fuel-live-status');
+    if(!manual && fuelPrices.lastAutoFetchAttempt === todayISO()) return false;
+    fuelPrices.lastAutoFetchAttempt = todayISO();
+    // 'auto' walks the full list in order; a pinned choice tries only that
+    // one source (no fallback to the others) since the person picked it
+    // deliberately.
+    const sourcesToTry = fuelSourcePref === 'auto' ? FUEL_SOURCES : FUEL_SOURCES.filter(s => s.id === fuelSourcePref);
+    let parsed = null, usedLabel = null;
+    for(const source of sourcesToTry){
+      if(manual && statusEl){ statusEl.style.color = 'var(--muted)'; statusEl.textContent = '🔄 Checking ' + source.label + '…'; }
+      const html = await fetchFuelPricesHtml(source.url, source.timeoutMs);
+      const result = html ? source.parse(html) : null;
+      if(result){ parsed = result; usedLabel = source.label; break; }
+    }
+    if(!parsed){
+      await saveFuelPricesSetting();
+      if(manual && statusEl){ statusEl.style.color = 'var(--brick)'; statusEl.textContent = '⚠️ Live check unavailable right now — enter this week\'s prices manually below.'; }
+      return false;
+    }
+    fuelPrices = {
+      octane95: parsed.octane95 || fuelPrices.octane95,
+      octane98: parsed.octane98 || fuelPrices.octane98,
+      diesel: parsed.diesel || fuelPrices.diesel,
+      gas: parsed.gas || fuelPrices.gas,
+      asOf: parsed.asOfIso || todayISO(),
+      source: 'auto',
+      lastAutoFetchAttempt: fuelPrices.lastAutoFetchAttempt
+    };
+    await saveFuelPricesSetting();
+    renderFuelKpis();
+    if($('fuel-95-lbp')){
+      if(fuelPrices.octane95) $('fuel-95-lbp').value = formatAmountValue(String(fuelPrices.octane95));
+      if(fuelPrices.octane98) $('fuel-98-lbp').value = formatAmountValue(String(fuelPrices.octane98));
+      if(fuelPrices.diesel) $('fuel-diesel-lbp').value = formatAmountValue(String(fuelPrices.diesel));
+      if(fuelPrices.gas) $('fuel-gas-lbp').value = formatAmountValue(String(fuelPrices.gas));
+      $('fuel-asof').value = fuelPrices.asOf;
+    }
+    if(statusEl){ statusEl.style.color = 'var(--green-ok)'; statusEl.textContent = '✅ Updated live from ' + usedLabel; }
+    if(manual) toast('Fuel prices updated live');
+    return true;
   }
   function renderFuelKpis(){
     const v95 = $('ov-kpi-fuel95'), s95 = $('ov-kpi-fuel95-sub');
@@ -4462,9 +5076,10 @@
     const asOfLabel = fuelPrices.asOf
       ? 'as of ' + new Date(fuelPrices.asOf + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
       : '';
+    const sourceTag = fuelPrices.source === 'auto' ? ' · 🔄 live' : (fuelPrices.source === 'manual' ? ' · typed' : '');
     if(fuelPrices.octane95){
       v95.textContent = Math.round(fuelPrices.octane95).toLocaleString('en-US') + ' LBP/L';
-      s95.textContent = '≈ ' + fmtUSD(fuelPrices.octane95 / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '');
+      s95.textContent = '≈ ' + fmtUSD(fuelPrices.octane95 / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '') + sourceTag;
     } else {
       v95.textContent = '—';
       s95.textContent = 'Set your price ↓';
@@ -4472,7 +5087,7 @@
     if(v98 && s98){
       if(fuelPrices.octane98){
         v98.textContent = Math.round(fuelPrices.octane98).toLocaleString('en-US') + ' LBP/L';
-        s98.textContent = '≈ ' + fmtUSD(fuelPrices.octane98 / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '');
+        s98.textContent = '≈ ' + fmtUSD(fuelPrices.octane98 / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '') + sourceTag;
       } else {
         v98.textContent = '—';
         s98.textContent = 'Set your price ↓';
@@ -4480,7 +5095,7 @@
     }
     if(fuelPrices.diesel){
       vD.textContent = Math.round(fuelPrices.diesel).toLocaleString('en-US') + ' LBP/L';
-      sD.textContent = '≈ ' + fmtUSD(fuelPrices.diesel / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '');
+      sD.textContent = '≈ ' + fmtUSD(fuelPrices.diesel / currentExchangeRate) + '/L' + (asOfLabel ? ' · ' + asOfLabel : '') + sourceTag;
     } else {
       vD.textContent = '—';
       sD.textContent = 'Set your price ↓';
@@ -4491,7 +5106,7 @@
       // shown and used that way everywhere, including the calculator card.
       if(fuelPrices.gas){
         vG.textContent = Math.round(fuelPrices.gas).toLocaleString('en-US') + ' LBP/bottle';
-        sG.textContent = '≈ ' + fmtUSD(fuelPrices.gas / currentExchangeRate) + '/bottle' + (asOfLabel ? ' · ' + asOfLabel : '');
+        sG.textContent = '≈ ' + fmtUSD(fuelPrices.gas / currentExchangeRate) + '/bottle' + (asOfLabel ? ' · ' + asOfLabel : '') + sourceTag;
       } else {
         vG.textContent = '—';
         sG.textContent = 'Set your price ↓';
@@ -4511,6 +5126,28 @@
     if(fuelPrices.gas) $('fuel-gas-lbp').value = formatAmountValue(String(fuelPrices.gas));
     $('fuel-asof').value = fuelPrices.asOf || todayISO();
 
+    const sourceSelect = $('fuel-source-pref');
+    if(sourceSelect){
+      sourceSelect.value = fuelSourcePref;
+      // Re-check right away with the newly chosen default rather than
+      // waiting for tomorrow's silent background check — otherwise
+      // picking a new default wouldn't visibly do anything until the
+      // next day (or until the person happened to hit "Check live
+      // prices" themselves).
+      sourceSelect.addEventListener('change', async ()=>{
+        await saveFuelSourcePref(sourceSelect.value);
+        await attemptLiveFuelFetch(true);
+      });
+    }
+    const proxySelect = $('fuel-proxy-pref');
+    if(proxySelect){
+      proxySelect.value = fuelProxyPref;
+      proxySelect.addEventListener('change', async ()=>{
+        await saveFuelProxyPref(proxySelect.value);
+        await attemptLiveFuelFetch(true);
+      });
+    }
+
     const jumpToCard = ()=>{
       $('ov-fuel-card').scrollIntoView({behavior:'smooth', block:'center'});
       $('fuel-95-lbp').focus();
@@ -4519,6 +5156,18 @@
     const btn98 = $('ov-fuel98-edit'); if(btn98) btn98.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
     const btnD = $('ov-fueldiesel-edit'); if(btnD) btnD.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
     const btnG = $('ov-gas-edit'); if(btnG) btnG.addEventListener('click', (e)=>{ e.stopPropagation(); jumpToCard(); });
+
+    const liveFetchBtn = $('fuel-live-fetch-btn');
+    if(liveFetchBtn){
+      liveFetchBtn.addEventListener('click', async ()=>{
+        liveFetchBtn.disabled = true;
+        const original = liveFetchBtn.textContent;
+        liveFetchBtn.textContent = '🔄 Checking…';
+        await attemptLiveFuelFetch(true);
+        liveFetchBtn.disabled = false;
+        liveFetchBtn.textContent = original;
+      });
+    }
 
     $('fuel-save-btn').addEventListener('click', async ()=>{
       const n95 = rawAmountNumber($('fuel-95-lbp').value);
@@ -4534,7 +5183,9 @@
         octane98: (n98 && n98 > 0) ? n98 : null,
         diesel: (nD && nD > 0) ? nD : null,
         gas: (nG && nG > 0) ? nG : null,
-        asOf: $('fuel-asof').value || todayISO()
+        asOf: $('fuel-asof').value || todayISO(),
+        source: 'manual',
+        lastAutoFetchAttempt: fuelPrices.lastAutoFetchAttempt
       };
       await saveFuelPricesSetting();
       renderFuelKpis();
@@ -4543,6 +5194,11 @@
       statusEl.textContent = '✅ Saved';
       toast('Fuel prices saved');
     });
+
+    // One quiet, best-effort background check per day — never shown as an
+    // error if it fails, since the manual form above is already right
+    // there and fully usable either way.
+    attemptLiveFuelFetch(false);
   }
 
   // ---------- gold & fuel calculator (Overview card) ----------
@@ -4693,6 +5349,7 @@
   attachAmountFormatter('list-amount-max');
   attachAmountFormatter('acct-new-balance');
   attachAmountFormatter('rec-amount');
+  attachAmountFormatter('bill-amount');
   attachAmountFormatter('qa-amount');
   attachAmountFormatter('f-to-amount');
   attachAmountFormatter('default-rate-input');
@@ -4811,9 +5468,14 @@
   // ---------- full JSON backup (export + restore) ----------
   // This is the one export meant to be re-imported: it's a faithful,
   // complete snapshot (including receipts) rather than a flattened,
-  // spreadsheet-friendly view like the CSV/Excel exports above.
+  // spreadsheet-friendly view like the CSV/Excel exports above. It covers
+  // every piece of data the app stores for you — not just the ledger —
+  // so a restore on a new device (or after clearing this one) can bring
+  // everything back: transactions, categories, accounts, budgets,
+  // recurring rules, bills, the calendar/activity tracker, your profile,
+  // and your app settings.
   const BACKUP_SCHEMA = 'tda-accounting-backup';
-  const BACKUP_VERSION = 1;
+  const BACKUP_VERSION = 2;
   function buildFullBackup(){
     return {
       schema: BACKUP_SCHEMA,
@@ -4825,7 +5487,22 @@
         categories: { expense: EXPENSE_CATS.slice(), income: INCOME_CATS.slice() },
         accounts: accounts,
         budgets: budgets,
-        recurring: recurring
+        recurring: recurring,
+        bills: bills,
+        activityTypes: activityTypes,
+        activityRecords: activityRecords,
+        profile: {
+          username: myProfile.username || '',
+          avatar: myProfile.avatar || '',
+          jobTitle: myProfile.jobTitle || '',
+          jobTitleHistory: myProfile.jobTitleHistory || []
+        },
+        settings: {
+          exchangeRate: currentExchangeRate,
+          fuelPrices: fuelPrices,
+          language: currentLang,
+          reminderPrefs: reminderPrefs
+        }
       }
     };
   }
@@ -5000,6 +5677,25 @@
       if(year !== undefined && d.getFullYear() !== year) continue;
       if(month !== undefined && d.getMonth() !== month) continue;
       n++;
+    }
+    return n;
+  }
+  // Same restriction (year, year+month) as countActivityDays, but for
+  // 'holiday' specifically counts individual holidays rather than days —
+  // a day with two holidays stacked in its note (joined with " & ", see
+  // mergeHolidayNote) counts as 2, not 1. Falls back to countActivityDays
+  // for every other type, where "one day = one instance" already holds.
+  function countActivityInstances(typeId, {year, month} = {}){
+    if(typeId !== 'holiday') return countActivityDays(typeId, {year, month});
+    let n = 0;
+    for(const dateStr in activityRecords){
+      const rec = activityRecords[dateStr];
+      if(!rec || !Array.isArray(rec.activities) || !rec.activities.includes('holiday')) continue;
+      const d = new Date(dateStr + 'T00:00:00');
+      if(year !== undefined && d.getFullYear() !== year) continue;
+      if(month !== undefined && d.getMonth() !== month) continue;
+      const names = (rec.note || '').split(/\s*&\s*/).filter(Boolean);
+      n += names.length > 0 ? names.length : 1;
     }
     return n;
   }
@@ -5181,6 +5877,356 @@
       return false;
     }
   }
+
+  // ---------- bills ----------
+  async function loadBills(){
+    try{
+      const res = await store.get(BILLS_KEY);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        bills = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.list) ? parsed.list : []);
+        // Back-compat: bills created before frequency existed were all
+        // effectively monthly, and stored paid status in paidMonths.
+        bills.forEach(b=>{
+          if(!b.frequency) b.frequency = 'monthly';
+          if(!b.paidPeriods) b.paidPeriods = b.paidMonths || {};
+        });
+      }
+    }catch(e){ /* start empty, same as recurring/accounts on a fresh account */ }
+  }
+  async function saveBills(successMsg){
+    busySaving();
+    try{
+      const res = await store.set(BILLS_KEY, JSON.stringify(bills));
+      if(!res){ toast('Could not save', true); return false; }
+      if(successMsg) toast(successMsg); else { $('save-indicator').textContent='All changes saved'; $('save-dot').classList.remove('busy'); }
+      return true;
+    }catch(e){
+      toast('Could not save', true);
+      return false;
+    }
+  }
+  function currentMonthKey(){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+  function monthKeyFor(y, mZeroIndexed){ return `${y}-${String(mZeroIndexed+1).padStart(2,'0')}`; }
+  // The period key a bill is currently tracked under — 'YYYY-MM-DD' for a
+  // daily bill, 'YYYY-MM' for monthly, 'YYYY' for yearly — so each bill's
+  // paid/unpaid status automatically flips back to unpaid the moment its
+  // own period rolls over, with no reset logic needed anywhere.
+  function billPeriodKey(b, date){
+    date = date || new Date();
+    const y = date.getFullYear();
+    const mm = String(date.getMonth()+1).padStart(2,'0');
+    const dd = String(date.getDate()).padStart(2,'0');
+    if(b.frequency === 'daily') return `${y}-${mm}-${dd}`;
+    if(b.frequency === 'yearly') return String(y);
+    return `${y}-${mm}`;
+  }
+  function billPeriodLabel(b){
+    if(b.frequency === 'daily') return 'today';
+    if(b.frequency === 'yearly') return 'this year';
+    return 'this month';
+  }
+  // Human-readable due description, frequency included, used both in the
+  // live Bills tab and in printed reports.
+  function billDueLabel(b){
+    if(b.frequency === 'daily') return 'Daily · due every day';
+    if(b.frequency === 'yearly'){
+      return (b.dueMonth && b.dueDay) ? `Yearly · due ${MONTH_NAMES[b.dueMonth-1]} ${b.dueDay}` : 'Yearly · no due date set';
+    }
+    return b.dueDay ? `Monthly · due day ${b.dueDay}` : 'Monthly · no due day set';
+  }
+  // The actual calendar date (YYYY-MM-DD) this bill's *current* period is
+  // due on, used to drive reminders. Clamps the configured due day to
+  // however many days the relevant month actually has (e.g. a "due day 31"
+  // bill is due on the 30th in a 30-day month).
+  function billDueDateForPeriod(b, now){
+    now = now || new Date();
+    const y = now.getFullYear();
+    if(b.frequency === 'daily') return todayISO();
+    if(b.frequency === 'yearly'){
+      if(!b.dueMonth || !b.dueDay) return null;
+      const dim = new Date(y, b.dueMonth, 0).getDate();
+      return `${y}-${String(b.dueMonth).padStart(2,'0')}-${String(Math.min(b.dueDay, dim)).padStart(2,'0')}`;
+    }
+    if(!b.dueDay) return null;
+    const m = now.getMonth()+1;
+    const dim = new Date(y, m, 0).getDate();
+    return `${y}-${String(m).padStart(2,'0')}-${String(Math.min(b.dueDay, dim)).padStart(2,'0')}`;
+  }
+  // Bills that exist as of a given date, ordered daily → monthly → yearly
+  // then by due day, so the list reads soonest/most-frequent first.
+  function billsActiveAsOf(dateStr){
+    return bills
+      .filter(b => !b.createdAt || b.createdAt <= dateStr)
+      .sort((a,b)=>{
+        const fa = BILL_FREQ_ORDER[a.frequency || 'monthly'], fb = BILL_FREQ_ORDER[b.frequency || 'monthly'];
+        if(fa !== fb) return fa - fb;
+        return (a.dueDay || 32) - (b.dueDay || 32);
+      });
+  }
+  // How many days of the given report month a daily bill has been marked
+  // paid, out of how many days of that month have actually elapsed (all of
+  // it for a past month, none of it for a future month, so-far for the
+  // current month). Daily bills don't have a single paid/unpaid state for
+  // a whole month, so reports show this instead.
+  function dailyBillReportStats(b, y, mZeroIndexed){
+    const daysInMonth = new Date(y, mZeroIndexed+1, 0).getDate();
+    const now = new Date();
+    const isFutureMonth = (y > now.getFullYear()) || (y === now.getFullYear() && mZeroIndexed > now.getMonth());
+    const isCurrentMonth = (y === now.getFullYear() && mZeroIndexed === now.getMonth());
+    const totalDays = isFutureMonth ? 0 : (isCurrentMonth ? now.getDate() : daysInMonth);
+    let paidDays = 0;
+    for(let d=1; d<=totalDays; d++){
+      const key = `${y}-${String(mZeroIndexed+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if(b.paidPeriods && b.paidPeriods[key]) paidDays++;
+    }
+    return {paidDays, totalDays};
+  }
+  function populateBillCategories(){
+    const sel = $('bill-category');
+    if(!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">No category</option>' +
+      EXPENSE_CATS.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    if(EXPENSE_CATS.includes(prev)) sel.value = prev;
+  }
+  // Shared by the live Bills tab (editable, with action buttons) and the
+  // printable report (a plain status table) — one row shape, two renderings,
+  // so paid/unpaid can never disagree between what you see day-to-day and
+  // what shows up on a report. periodKey is whichever period (day/month/
+  // year) is being asked about — the caller decides that based on context
+  // (today's period for the live tab, the reported month/year for reports).
+  function billStatusRow(b, periodKey, editable){
+    const paid = !!(b.paidPeriods && b.paidPeriods[periodKey]);
+    const amtHtml = b.currency === 'USD' ? fmtUSD(b.amount) : fmtLBP(b.amount);
+    const dueHtml = billDueLabel(b);
+    if(!editable){
+      return `
+        <tr>
+          <td>${escapeHtml(b.name)}</td>
+          <td>${escapeHtml(b.category || '—')}</td>
+          <td>${dueHtml}</td>
+          <td style="text-align:right;">${amtHtml}</td>
+          <td style="text-align:center;">${paid ? '✅ Paid' : '⌛ Unpaid'}</td>
+        </tr>
+      `;
+    }
+    return `
+      <div class="ledger-row" data-billid="${b.id}">
+        <div class="lr-date">${dueHtml}</div>
+        <span class="lr-tag ${paid ? 'income' : 'expense'}">${paid ? 'paid' : 'unpaid'} (${billPeriodLabel(b)})</span>
+        <div class="lr-cat">
+          <div class="t">${escapeHtml(b.name)}</div>
+          ${b.category ? `<div class="n">${escapeHtml(b.category)}</div>` : ''}
+        </div>
+        <div class="lr-amt expense">${amtHtml}</div>
+        <div class="lr-actions">
+          <button class="btn small ${paid?'subtle':'brass'} bill-toggle-btn" data-id="${b.id}">${paid ? '↩️ Mark unpaid' : '✅ Mark paid'}</button>
+          <button class="btn icon subtle bill-edit-btn" data-id="${b.id}" title="Edit">✏️</button>
+          <button class="btn icon subtle bill-del-btn" data-id="${b.id}" title="Delete">🗑️</button>
+        </div>
+      </div>
+    `;
+  }
+  // Report-table row for one bill in a given reported month. Daily bills
+  // don't collapse into a single paid/unpaid for a whole month, so they get
+  // an "X/Y days paid" status instead of delegating to billStatusRow.
+  function billReportRow(b, y, mZeroIndexed){
+    if(b.frequency !== 'daily'){
+      const key = b.frequency === 'yearly' ? String(y) : monthKeyFor(y, mZeroIndexed);
+      return billStatusRow(b, key, false);
+    }
+    const amtHtml = b.currency === 'USD' ? fmtUSD(b.amount) : fmtLBP(b.amount);
+    const stats = dailyBillReportStats(b, y, mZeroIndexed);
+    const statusHtml = stats.totalDays === 0 ? '—' : `${stats.paidDays}/${stats.totalDays} days`;
+    return `
+      <tr>
+        <td>${escapeHtml(b.name)}</td>
+        <td>${escapeHtml(b.category || '—')}</td>
+        <td>${billDueLabel(b)}</td>
+        <td style="text-align:right;">${amtHtml}/day</td>
+        <td style="text-align:center;">${statusHtml}</td>
+      </tr>
+    `;
+  }
+  // Marking a bill paid drops a matching expense entry into the ledger —
+  // stamped with billId + billPeriod, the same way a recurring rule stamps
+  // recurringId + occurrenceDate — so paying a bill actually moves the
+  // needle on the balance/reports instead of just flipping a status flag.
+  // Toggling back to unpaid removes that same entry again: unlike a
+  // recurring rule's entries (which are never touched once generated),
+  // this is a direct, immediate undo of the action that just created it.
+  // Guarded against duplicates so double-clicking or re-rendering never
+  // generates two entries for the same bill+period.
+  async function toggleBillPaid(id){
+    const b = bills.find(x=>x.id===id);
+    if(!b) return;
+    const key = billPeriodKey(b);
+    if(!b.paidPeriods) b.paidPeriods = {};
+    const nowPaid = !b.paidPeriods[key];
+    b.paidPeriods[key] = nowPaid;
+
+    if(nowPaid){
+      const already = entries.some(e => e.billId === b.id && e.billPeriod === key);
+      if(!already){
+        entries.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+          date: billDueDateForPeriod(b) || todayISO(),
+          type: 'expense',
+          currency: b.currency,
+          amount: b.amount,
+          category: b.category || 'Other',
+          note: b.name,
+          accountId: null,
+          billId: b.id,
+          billPeriod: key,
+          rate: currentExchangeRate
+        });
+        await saveEntries();
+      }
+    } else {
+      const before = entries.length;
+      entries = entries.filter(e => !(e.billId === b.id && e.billPeriod === key));
+      if(entries.length !== before) await saveEntries();
+    }
+
+    const ok = await saveBills(nowPaid ? '🧾 Bill paid — added to transactions' : 'Marked unpaid — entry removed');
+    if(ok){
+      renderBills();
+      renderOverviewBills();
+      renderReminders();
+      renderList();
+      renderOverview();
+    }
+  }
+  function renderBillSummary(list){
+    const totals = {USD:{paid:0,unpaid:0}, LBP:{paid:0,unpaid:0}};
+    list.forEach(b=>{
+      const cur = b.currency === 'LBP' ? 'LBP' : 'USD';
+      const key = billPeriodKey(b);
+      const bucket = (b.paidPeriods && b.paidPeriods[key]) ? 'paid' : 'unpaid';
+      totals[cur][bucket] += Number(b.amount) || 0;
+    });
+    $('bill-month-summary').innerHTML = `
+      <div class="highlight-grid">
+        <div class="highlight-box"><div class="lbl">Paid (USD)</div><div class="val">${fmtUSD(totals.USD.paid)}</div></div>
+        <div class="highlight-box"><div class="lbl">Unpaid (USD)</div><div class="val">${fmtUSD(totals.USD.unpaid)}</div></div>
+        <div class="highlight-box"><div class="lbl">Paid (LBP)</div><div class="val">${fmtLBP(totals.LBP.paid)}</div></div>
+        <div class="highlight-box"><div class="lbl">Unpaid (LBP)</div><div class="val">${fmtLBP(totals.LBP.unpaid)}</div></div>
+      </div>
+    `;
+  }
+  function renderBills(){
+    const wrap = $('bill-list');
+    if(!wrap) return;
+    const today = todayISO();
+    if($('bill-month-label')) $('bill-month-label').textContent = 'as of ' + new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+    const list = billsActiveAsOf(today);
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="empty">🧾 No bills yet. Add one above — daily, monthly, or yearly: rent, utilities, subscriptions, anything that repeats.</div>';
+      $('bill-month-summary').innerHTML = '';
+      return;
+    }
+    wrap.innerHTML = list.map(b => billStatusRow(b, billPeriodKey(b), true)).join('');
+    wrap.querySelectorAll('.bill-toggle-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> toggleBillPaid(btn.dataset.id));
+    });
+    wrap.querySelectorAll('.bill-edit-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> loadBillIntoForm(btn.dataset.id));
+    });
+    wrap.querySelectorAll('.bill-del-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm('Delete this bill? This only removes the bill itself, not any past transactions.')) return;
+        bills = bills.filter(x=>x.id!==btn.dataset.id);
+        const ok = await saveBills('Bill deleted');
+        if(ok){ renderBills(); renderOverviewBills(); renderReminders(); }
+      });
+    });
+    renderBillSummary(list);
+  }
+  // Shows/hides the due-day and due-month fields to match the selected
+  // frequency — a daily bill has no due day at all, only a yearly bill
+  // needs a month too.
+  function updateBillFormFieldsVisibility(){
+    const freq = $('bill-frequency') ? $('bill-frequency').value : 'monthly';
+    const dueDayField = $('bill-due-day-field');
+    const dueMonthField = $('bill-due-month-field');
+    if(dueDayField) dueDayField.style.display = freq === 'daily' ? 'none' : '';
+    if(dueMonthField) dueMonthField.style.display = freq === 'yearly' ? '' : 'none';
+    const dueDayLabel = $('bill-due-day-label');
+    if(dueDayLabel) dueDayLabel.textContent = freq === 'yearly' ? 'Day of month' : 'Due day of month';
+  }
+  if($('bill-frequency')) $('bill-frequency').addEventListener('change', updateBillFormFieldsVisibility);
+  function resetBillForm(){
+    editingBillId = null;
+    if($('bill-form-title')) $('bill-form-title').textContent = '🧾 New bill';
+    if($('btn-bill-add')) $('btn-bill-add').textContent = '➕ Add bill';
+    if($('btn-bill-cancel-edit')) $('btn-bill-cancel-edit').style.display = 'none';
+    if($('bill-name')) $('bill-name').value = '';
+    if($('bill-frequency')) $('bill-frequency').value = 'monthly';
+    if($('bill-due-day')) $('bill-due-day').value = '';
+    if($('bill-due-month')) $('bill-due-month').value = '';
+    if($('bill-currency')) $('bill-currency').value = 'USD';
+    if($('bill-amount')) $('bill-amount').value = '';
+    populateBillCategories();
+    if($('bill-category')) $('bill-category').value = '';
+    updateBillFormFieldsVisibility();
+  }
+  function loadBillIntoForm(id){
+    const b = bills.find(x=>x.id===id);
+    if(!b) return;
+    editingBillId = id;
+    $('bill-form-title').textContent = '✏️ Edit bill';
+    $('btn-bill-add').textContent = '💾 Update bill';
+    $('btn-bill-cancel-edit').style.display = 'inline-block';
+    $('bill-name').value = b.name;
+    if($('bill-frequency')) $('bill-frequency').value = b.frequency || 'monthly';
+    $('bill-due-day').value = b.dueDay || '';
+    if($('bill-due-month')) $('bill-due-month').value = b.dueMonth || '';
+    $('bill-currency').value = b.currency;
+    $('bill-amount').value = formatAmountValue(String(b.amount));
+    populateBillCategories();
+    $('bill-category').value = b.category || '';
+    updateBillFormFieldsVisibility();
+    document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.tab==='bills'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-bills'));
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  if($('btn-bill-cancel-edit')) $('btn-bill-cancel-edit').addEventListener('click', resetBillForm);
+  if($('btn-bill-add')) $('btn-bill-add').addEventListener('click', async ()=>{
+    const name = $('bill-name').value.trim();
+    if(!name){ toast('Enter a bill name', true); return; }
+    const amount = rawAmountNumber($('bill-amount').value);
+    if(!amount || amount <= 0){ toast('Enter an amount greater than 0', true); return; }
+    const frequency = $('bill-frequency') ? $('bill-frequency').value : 'monthly';
+    let dueDay = parseInt($('bill-due-day').value, 10);
+    if(!dueDay || dueDay < 1 || dueDay > 31) dueDay = null;
+    let dueMonth = $('bill-due-month') ? parseInt($('bill-due-month').value, 10) : null;
+    if(!dueMonth || dueMonth < 1 || dueMonth > 12) dueMonth = null;
+    if(frequency === 'daily'){ dueDay = null; dueMonth = null; }
+    if(frequency === 'monthly'){ dueMonth = null; }
+    if(frequency === 'yearly' && (!dueDay || !dueMonth)){ toast('Set a month and day for a yearly bill', true); return; }
+    const currency = $('bill-currency').value;
+    const category = $('bill-category').value || '';
+
+    if(editingBillId){
+      const b = bills.find(x=>x.id===editingBillId);
+      if(b){ b.name = name; b.frequency = frequency; b.dueDay = dueDay; b.dueMonth = dueMonth; b.currency = currency; b.amount = amount; b.category = category; }
+      const ok = await saveBills('Bill updated');
+      if(ok){ resetBillForm(); renderBills(); renderOverviewBills(); renderReminders(); }
+    } else {
+      bills.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+        name, frequency, dueDay, dueMonth, currency, amount, category,
+        createdAt: todayISO(), paidPeriods: {}
+      });
+      const ok = await saveBills('Bill added');
+      if(ok){ resetBillForm(); renderBills(); renderOverviewBills(); renderReminders(); }
+    }
+  });
 
   // One-time, idempotent migration: if this data has never gone through the
   // accounts migration and there are pre-existing entries with no account
@@ -5452,6 +6498,7 @@
   // full Budgets tab, just rendered without the edit controls.
   function renderDashboardBudgets(){
     renderReminders();
+    renderOverviewBills();
     const wrap = $('ov-budgets');
     if(!wrap) return;
     const spentAll = currentMonthExpenseTotals(null);
@@ -5485,6 +6532,41 @@
     ` : '';
 
     wrap.innerHTML = overallHtml + catBlocks;
+  }
+
+  // Compact, actionable bills summary shown on the Overview dashboard —
+  // every active bill with the paid/unpaid status of its *current* period
+  // (today/this month/this year, depending on its frequency), with a
+  // one-tap toggle right there so a bill can be settled without leaving
+  // the dashboard.
+  function renderOverviewBills(){
+    const wrap = $('ov-bills-list');
+    if(!wrap) return;
+    const list = billsActiveAsOf(todayISO());
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="budget-empty">No bills yet — head to the 🧾 Bills tab to add one.</div>';
+      return;
+    }
+    wrap.innerHTML = list.map(b=>{
+      const key = billPeriodKey(b);
+      const paid = !!(b.paidPeriods && b.paidPeriods[key]);
+      const amtHtml = fmtByCurrency(b.amount, b.currency);
+      return `
+        <div class="budget-item" data-billid="${b.id}">
+          <div class="budget-item-head">
+            <span class="budget-item-name">${escapeHtml(b.name)}</span>
+            <span class="lr-tag ${paid ? 'income' : 'expense'}">${paid ? 'paid' : 'unpaid'} (${billPeriodLabel(b)})</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;">
+            <span>${amtHtml} · ${billDueLabel(b)}</span>
+            <button class="btn small ${paid?'subtle':'brass'} ov-bill-toggle-btn" data-id="${b.id}">${paid ? '↩️ Mark unpaid' : '✅ Mark paid'}</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    wrap.querySelectorAll('.ov-bill-toggle-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> toggleBillPaid(btn.dataset.id));
+    });
   }
 
   // ---------- reminders ----------
@@ -5533,6 +6615,28 @@
         const amt = fmtByCurrency(rule.amount, rule.currency);
         const label = rule.name || rule.category || 'A recurring payment';
         list.push({ id, icon:'🔁', urgent: days <= 1, text:`${label} (${amt}) is due ${when}.` });
+      });
+
+      billsActiveAsOf(today).forEach(bill=>{
+        const key = billPeriodKey(bill);
+        if(bill.paidPeriods && bill.paidPeriods[key]) return; // already settled for this period
+        const dueDate = billDueDateForPeriod(bill);
+        if(!dueDate || dueDate > horizon) return;
+        const overdue = dueDate < today;
+        const id = `bill:${bill.id}:${key}`;
+        if(dismissedReminders.includes(id)) return;
+        const amt = fmtByCurrency(bill.amount, bill.currency);
+        let when;
+        if(overdue){
+          when = 'overdue';
+        } else {
+          const days = daysBetweenISO(today, dueDate);
+          when = days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
+        }
+        const text = overdue
+          ? `${bill.name} (${amt}) is overdue for ${billPeriodLabel(bill)}.`
+          : `${bill.name} (${amt}) is due ${when}.`;
+        list.push({ id, icon:'🧾', urgent: overdue || (dueDate === today), text });
       });
     }
 
@@ -5610,10 +6714,16 @@
     });
   }
 
+  // Tracks whether a profile record has ever been saved for this account —
+  // the signal used to decide whether onboarding (username + photo) is
+  // still owed. Sets to true only when store.get() actually returns a
+  // saved record, so a brand-new account (nothing saved yet) reads false.
+  let hasSavedProfile = false;
   async function loadProfile(){
     try{
       const res = await store.get(PROFILE_KEY);
       if(res && res.value){
+        hasSavedProfile = true;
         const parsed = JSON.parse(res.value);
         myProfile.username = parsed.username || '';
         myProfile.avatar = parsed.avatar || '';
@@ -5814,6 +6924,88 @@
     renderAvatar();
     await saveProfile('Profile photo removed');
   });
+
+  // ---------- onboarding (required for every new profile) ----------
+  // Shown once, right after init(), whenever no profile record has ever
+  // been saved for this account (see hasSavedProfile in loadProfile) —
+  // covers a brand-new signup, a freshly-confirmed email logging in for
+  // the first time, and a first-time "Skip" into local-only mode alike,
+  // since all three land here with nothing saved yet. Deliberately has no
+  // close button and is excluded from the generic backdrop-click-to-close
+  // handler above, so it can't be dismissed without completing it.
+  let onboardingAvatarDataUrl = '';
+  function updateOnboardingContinueState(){
+    const name = $('onboarding-username').value.trim();
+    $('onboarding-continue').disabled = !(name && onboardingAvatarDataUrl);
+  }
+  function showOnboardingModal(){
+    onboardingAvatarDataUrl = '';
+    $('onboarding-username').value = '';
+    $('onboarding-avatar-circle').innerHTML = '?';
+    $('onboarding-error').textContent = '';
+    updateOnboardingContinueState();
+    openModal('modal-onboarding');
+  }
+  $('onboarding-avatar-input').addEventListener('change', (ev)=>{
+    const file = ev.target.files && ev.target.files[0];
+    if(!file) return;
+    const isImageType = file.type.startsWith('image/');
+    const isImageExt = /\.(png|jpe?g|gif|webp|bmp|heic|heif|avif|svg|tiff?)$/i.test(file.name || '');
+    if(!isImageType && !isImageExt){ $('onboarding-error').textContent = 'Choose an image file.'; return; }
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      img.onload = ()=>{
+        const size = 240;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size/img.width, size/img.height);
+        const w = img.width*scale, h = img.height*scale;
+        ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+        onboardingAvatarDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        $('onboarding-avatar-circle').innerHTML = `<img src="${onboardingAvatarDataUrl}" alt="Profile photo">`;
+        $('onboarding-error').textContent = '';
+        updateOnboardingContinueState();
+      };
+      img.onerror = ()=>{
+        $('onboarding-error').textContent = 'Could not read that image — try a different file.';
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=>{
+      $('onboarding-error').textContent = 'Could not read that image — try a different file.';
+    };
+    reader.readAsDataURL(file);
+    ev.target.value = '';
+  });
+  $('onboarding-username').addEventListener('input', updateOnboardingContinueState);
+  $('onboarding-username').addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter' && !$('onboarding-continue').disabled) $('onboarding-continue').click();
+  });
+  $('onboarding-continue').addEventListener('click', async ()=>{
+    const name = $('onboarding-username').value.trim();
+    if(!name){ $('onboarding-error').textContent = 'Pick a username to continue.'; return; }
+    if(!onboardingAvatarDataUrl){ $('onboarding-error').textContent = 'Add a profile photo to continue.'; return; }
+    const btn = $('onboarding-continue');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    myProfile.username = name;
+    myProfile.avatar = onboardingAvatarDataUrl;
+    const ok = await saveProfile();
+    if(ok){
+      hasSavedProfile = true;
+      closeModal('modal-onboarding');
+      renderProfile();
+      toast('Welcome! Your profile is set up.');
+    } else {
+      $('onboarding-error').textContent = "Couldn't save — check your connection and try again.";
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+
   // ---------- receipt attachments (add/edit entry form) ----------
   // Images are downscaled + re-encoded as JPEG (same idea as the avatar
   // above) so a phone photo doesn't blow past the per-key size limits of
@@ -6014,38 +7206,104 @@
     const incomingEntries = Array.isArray(data.entries) ? data.entries : [];
     const incomingAccounts = Array.isArray(data.accounts) ? data.accounts : [];
     const incomingRecurring = Array.isArray(data.recurring) ? data.recurring : [];
+    const incomingBills = Array.isArray(data.bills) ? data.bills : [];
+    const incomingActivityTypes = Array.isArray(data.activityTypes) ? data.activityTypes : [];
+    const incomingActivityRecords = (data.activityRecords && typeof data.activityRecords === 'object') ? data.activityRecords : {};
     const incomingExpenseCats = (data.categories && Array.isArray(data.categories.expense)) ? data.categories.expense : [];
     const incomingIncomeCats = (data.categories && Array.isArray(data.categories.income)) ? data.categories.income : [];
     const incomingBudgetCats = (data.budgets && Array.isArray(data.budgets.categories)) ? data.budgets.categories : [];
     const incomingOverall = data.budgets ? { usd: Number(data.budgets.overallUSD) || 0, lbp: Number(data.budgets.overallLBP) || 0 } : null;
+    const incomingProfile = data.profile || null;
+    const incomingJobHistory = (incomingProfile && Array.isArray(incomingProfile.jobTitleHistory)) ? incomingProfile.jobTitleHistory.filter(h=>h && h.date && h.title) : [];
+    const incomingSettings = data.settings || null;
 
     // Matching by id (every record here already carries one) is what makes
     // a repeat import a no-op instead of a pile of duplicates.
     const existingEntryIds = new Set(entries.map(e => e.id));
     const existingAccountIds = new Set(accounts.map(a => a.id));
     const existingRecurringIds = new Set(recurring.map(r => r.id));
+    const existingBillIds = new Set(bills.map(b => b.id));
+    const existingActivityTypeIds = new Set(activityTypes.map(t => t.id));
+    const existingActivityDates = new Set(Object.keys(activityRecords));
     const existingBudgetCatIds = new Set(budgets.categories.map(b => b.id));
+    // Budget categories were previously only deduped by id, which let a
+    // re-imported (or independently-created) "Food" budget with a
+    // different id show up twice. Names are deduped case-insensitively
+    // too now, matching how expense/income categories already behave.
+    const existingBudgetCatsLower = new Set(budgets.categories.map(b => String(b.category||'').toLowerCase()));
     const existingExpenseCatsLower = new Set(EXPENSE_CATS.map(c => c.toLowerCase()));
     const existingIncomeCatsLower = new Set(INCOME_CATS.map(c => c.toLowerCase()));
+    const existingJobHistoryDates = new Set((myProfile.jobTitleHistory||[]).map(h => h.date));
 
     const newEntries = incomingEntries.filter(e => e && e.id && !existingEntryIds.has(e.id));
     const newAccounts = incomingAccounts.filter(a => a && a.id && !existingAccountIds.has(a.id));
     const newRecurring = incomingRecurring.filter(r => r && r.id && !existingRecurringIds.has(r.id));
-    const newBudgetCats = incomingBudgetCats.filter(b => b && b.id && !existingBudgetCatIds.has(b.id));
+    const newBills = incomingBills.filter(b => b && b.id && !existingBillIds.has(b.id));
+    const newActivityTypes = incomingActivityTypes.filter(t => t && t.id && !existingActivityTypeIds.has(t.id));
+    const newActivityDates = Object.keys(incomingActivityRecords).filter(d => d && !existingActivityDates.has(d) && incomingActivityRecords[d]);
+    const seenBudgetCatNames = new Set();
+    const newBudgetCats = incomingBudgetCats.filter(b => {
+      if(!b || !b.id || existingBudgetCatIds.has(b.id)) return false;
+      const nameLower = String(b.category||'').toLowerCase();
+      if(existingBudgetCatsLower.has(nameLower) || seenBudgetCatNames.has(nameLower)) return false;
+      seenBudgetCatNames.add(nameLower);
+      return true;
+    });
     const newExpenseCats = [...new Set(incomingExpenseCats.filter(Boolean))].filter(c => !existingExpenseCatsLower.has(String(c).toLowerCase()));
     const newIncomeCats = [...new Set(incomingIncomeCats.filter(Boolean))].filter(c => !existingIncomeCatsLower.has(String(c).toLowerCase()));
+    const newJobHistory = incomingJobHistory.filter(h => !existingJobHistoryDates.has(h.date));
     // The overall budget cap is a single value, not a list, so it can't be
     // "merged" — it's only ever filled in when nothing is set yet. An
     // existing cap, even 0 typed deliberately, is left exactly as it is.
     const willSetOverall = !!(incomingOverall && budgets.overallUSD === 0 && budgets.overallLBP === 0 && (incomingOverall.usd > 0 || incomingOverall.lbp > 0));
 
+    // Profile fields and app settings are single values too, so each one
+    // is only ever filled in from the backup when it's still at its
+    // untouched default locally — never overwriting something already set.
+    const profileFill = {};
+    if(incomingProfile){
+      if(!myProfile.username && incomingProfile.username) profileFill.username = incomingProfile.username;
+      if(!myProfile.avatar && incomingProfile.avatar) profileFill.avatar = incomingProfile.avatar;
+      if(!myProfile.jobTitle && incomingProfile.jobTitle) profileFill.jobTitle = incomingProfile.jobTitle;
+    }
+    const settingsFill = {};
+    if(incomingSettings){
+      if(currentExchangeRate === LBP_PER_USD && Number(incomingSettings.exchangeRate) > 0){
+        settingsFill.exchangeRate = Number(incomingSettings.exchangeRate);
+      }
+      if(incomingSettings.fuelPrices){
+        const fp = incomingSettings.fuelPrices;
+        const fill = {};
+        ['octane95','octane98','diesel','gas'].forEach(k=>{
+          if(fuelPrices[k] == null && Number(fp[k]) > 0) fill[k] = Number(fp[k]);
+        });
+        if(Object.keys(fill).length){ settingsFill.fuelPrices = fill; if(fp.asOf) settingsFill.fuelPricesAsOf = fp.asOf; }
+      }
+      if(currentLang === 'en' && incomingSettings.language && incomingSettings.language !== 'en' && TRANSLATIONS[incomingSettings.language]){
+        settingsFill.language = incomingSettings.language;
+      }
+      const remDefault = reminderPrefs.enabled === true && reminderPrefs.bills === true && reminderPrefs.budgets === true;
+      if(remDefault && incomingSettings.reminderPrefs){
+        settingsFill.reminderPrefs = {
+          enabled: incomingSettings.reminderPrefs.enabled !== false,
+          bills: incomingSettings.reminderPrefs.bills !== false,
+          budgets: incomingSettings.reminderPrefs.budgets !== false
+        };
+      }
+    }
+
     pendingImport = {
-      newEntries, newAccounts, newRecurring, newBudgetCats, newExpenseCats, newIncomeCats,
+      newEntries, newAccounts, newRecurring, newBills, newActivityTypes, newActivityDates,
+      incomingActivityRecords, newBudgetCats, newExpenseCats, newIncomeCats, newJobHistory,
       overall: willSetOverall ? incomingOverall : null,
+      profileFill, settingsFill,
       counts: {
         dupEntries: incomingEntries.length - newEntries.length,
         dupAccounts: incomingAccounts.length - newAccounts.length,
         dupRecurring: incomingRecurring.length - newRecurring.length,
+        dupBills: incomingBills.length - newBills.length,
+        dupActivityTypes: incomingActivityTypes.length - newActivityTypes.length,
+        dupActivityDates: Object.keys(incomingActivityRecords).length - newActivityDates.length,
         dupBudgetCats: incomingBudgetCats.length - newBudgetCats.length
       }
     };
@@ -6061,11 +7319,16 @@
       ['Transactions &amp; transfers', p.newEntries.length, p.counts.dupEntries],
       ['Accounts', p.newAccounts.length, p.counts.dupAccounts],
       ['Recurring rules', p.newRecurring.length, p.counts.dupRecurring],
+      ['Bills', p.newBills.length, p.counts.dupBills],
+      ['Activity types', p.newActivityTypes.length, p.counts.dupActivityTypes],
+      ['Calendar tracker days', p.newActivityDates.length, p.counts.dupActivityDates],
       ['Budget categories', p.newBudgetCats.length, p.counts.dupBudgetCats],
       ['Expense categories', p.newExpenseCats.length, 0],
-      ['Income categories', p.newIncomeCats.length, 0]
+      ['Income categories', p.newIncomeCats.length, 0],
+      ['Job title history', p.newJobHistory.length, 0]
     ];
-    const totalNew = rows.reduce((s,r)=> s + r[1], 0) + (p.overall ? 1 : 0);
+    const settingsCount = Object.keys(p.profileFill).length + Object.keys(p.settingsFill).length;
+    const totalNew = rows.reduce((s,r)=> s + r[1], 0) + (p.overall ? 1 : 0) + settingsCount;
     $('import-preview-body').innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="text-align:left;border-bottom:1px solid var(--rule);">
@@ -6078,6 +7341,10 @@
       ${p.overall
         ? `<p style="font-size:12px;color:var(--muted);margin-top:10px;">Your overall budget cap isn't set yet, so it will be filled in from this backup (${fmtUSD(p.overall.usd)} / ${fmtLBP(p.overall.lbp)}).</p>`
         : `<p style="font-size:12px;color:var(--muted);margin-top:10px;">Your overall budget cap won't be touched.</p>`
+      }
+      ${settingsCount > 0
+        ? `<p style="font-size:12px;color:var(--muted);margin-top:6px;">${settingsCount} profile/setting field${settingsCount===1?'':'s'} (only the ones you haven't set yet — username, photo, job title, exchange rate, fuel prices, language, or reminder preferences) will be filled in too.</p>`
+        : ''
       }
       <p style="font-size:12.5px;color:var(--forest-2);font-weight:600;margin-top:10px;">
         ${totalNew === 0 ? 'Nothing new to import — everything in this backup is already in your account.' : `${totalNew} item${totalNew===1?'':'s'} will be added. Nothing already in your account will be changed or removed.`}
@@ -6109,17 +7376,40 @@
     if(p.newEntries.length) entries = entries.concat(p.newEntries);
     if(p.newAccounts.length) accounts = accounts.concat(p.newAccounts);
     if(p.newRecurring.length) recurring = recurring.concat(p.newRecurring);
+    if(p.newBills.length) bills = bills.concat(p.newBills);
+    if(p.newActivityTypes.length) activityTypes = activityTypes.concat(p.newActivityTypes);
+    if(p.newActivityDates.length) p.newActivityDates.forEach(d => { activityRecords[d] = p.incomingActivityRecords[d]; });
     if(p.newExpenseCats.length) EXPENSE_CATS = EXPENSE_CATS.concat(p.newExpenseCats);
     if(p.newIncomeCats.length) INCOME_CATS = INCOME_CATS.concat(p.newIncomeCats);
     if(p.newBudgetCats.length) budgets.categories = budgets.categories.concat(p.newBudgetCats);
     if(p.overall){ budgets.overallUSD = p.overall.usd; budgets.overallLBP = p.overall.lbp; }
+    if(p.newJobHistory.length){ myProfile.jobTitleHistory = myProfile.jobTitleHistory.concat(p.newJobHistory); sortJobTitleHistory(); }
+    let profileChanged = p.newJobHistory.length > 0;
+    if(p.profileFill.username){ myProfile.username = p.profileFill.username; profileChanged = true; }
+    if(p.profileFill.avatar){ myProfile.avatar = p.profileFill.avatar; profileChanged = true; }
+    if(p.profileFill.jobTitle && !myProfile.jobTitle){ myProfile.jobTitle = p.profileFill.jobTitle; profileChanged = true; }
+    if(p.settingsFill.exchangeRate){ currentExchangeRate = p.settingsFill.exchangeRate; }
+    if(p.settingsFill.fuelPrices){
+      Object.assign(fuelPrices, p.settingsFill.fuelPrices);
+      if(p.settingsFill.fuelPricesAsOf) fuelPrices.asOf = p.settingsFill.fuelPricesAsOf;
+    }
+    if(p.settingsFill.language){ currentLang = p.settingsFill.language; }
+    if(p.settingsFill.reminderPrefs){ reminderPrefs = p.settingsFill.reminderPrefs; }
 
     let ok = true;
     if(p.newEntries.length) ok = (await saveEntries('Transactions restored')) && ok;
     if(p.newAccounts.length) ok = (await saveAccounts('Accounts restored')) && ok;
     if(p.newRecurring.length) ok = (await saveRecurring('Recurring rules restored')) && ok;
+    if(p.newBills.length) ok = (await saveBills('Bills restored')) && ok;
+    if(p.newActivityTypes.length) ok = (await saveActivityTypes('Activity types restored')) && ok;
+    if(p.newActivityDates.length) ok = (await saveActivityRecords('Calendar tracker restored')) && ok;
     if(p.newExpenseCats.length || p.newIncomeCats.length) ok = (await saveCategories('Categories restored')) && ok;
     if(p.newBudgetCats.length || p.overall) ok = (await saveBudgets('Budgets restored')) && ok;
+    if(profileChanged) ok = (await saveProfile('Profile restored')) && ok;
+    if(p.settingsFill.exchangeRate){ await saveExchangeRateSetting(); }
+    if(p.settingsFill.fuelPrices){ await saveFuelPricesSetting(); }
+    if(p.settingsFill.language){ await saveLanguageSetting(); }
+    if(p.settingsFill.reminderPrefs){ await saveReminderPrefs(); }
 
     btn.disabled = false;
     btn.textContent = original;
@@ -6136,6 +7426,12 @@
       populateAccountsSelect();
       if($('rec-account')) populateRecAccountSelect();
       renderCalendar();
+      renderTracker();
+      renderBills();
+      renderProfile();
+      renderFuelKpis();
+      if(p.settingsFill.exchangeRate) $('f-rate').value = formatAmountValue(String(currentExchangeRate));
+      if(p.settingsFill.language){ applyTranslations(); if($('setting-language')) $('setting-language').value = currentLang; }
     } else {
       toast('Some parts of the import may not have saved — check your connection and try again', true);
     }
@@ -7328,6 +8624,7 @@
     if(btn.dataset.tab === 'categories') renderCategoryLists();
     if(btn.dataset.tab === 'accounts') renderAccountList();
     if(btn.dataset.tab === 'budgets') renderBudgets();
+    if(btn.dataset.tab === 'bills'){ populateBillCategories(); renderBills(); }
     if(btn.dataset.tab === 'add'){ populateCategories(); populateAccountsSelect($('f-account') ? $('f-account').value : null); }
     if(btn.dataset.tab === 'profile') renderProfile();
     if(btn.dataset.tab === 'admin'){
@@ -7540,6 +8837,10 @@
   function openModal(id){ $(id).classList.add('open'); }
   function closeModal(id){ $(id).classList.remove('open'); }
   document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    // The onboarding modal is mandatory (new profiles must set a username +
+    // photo before continuing) — it deliberately has no close button, and
+    // is excluded here so a stray backdrop click can't dismiss it early.
+    if(ov.id === 'modal-onboarding') return;
     ov.addEventListener('click', (ev)=>{ if(ev.target === ov) closeModal(ov.id); });
   });
 
@@ -7658,7 +8959,7 @@
   function populateToAccountSelect(selectedId){
     const sel = $('f-to-account');
     if(!sel) return;
-    sel.innerHTML = '<option value="">Select account</option>';
+    sel.innerHTML = '<option value="">No account</option>';
     accounts.forEach(a=>{
       const opt = document.createElement('option');
       opt.value = a.id;
@@ -7666,40 +8967,68 @@
       sel.appendChild(opt);
     });
     sel.value = (selectedId && accounts.some(a=>a.id===selectedId)) ? selectedId : '';
+    applyToAccountCurrencyLock();
+  }
+  // Mirrors applyAccountCurrencyLock, but for the "To" side of a transfer.
+  // Choosing a to-account locks the "To currency" select to that account's
+  // currency; leaving it on "No account" frees the currency select back up
+  // so an exchange can be logged by currency alone, with no account at all.
+  function applyToAccountCurrencyLock(){
+    const sel = $('f-to-account');
+    const curSel = $('f-to-currency');
+    if(!sel || !curSel) return;
+    const acct = accounts.find(a=>a.id===sel.value);
+    if(acct){
+      curSel.value = acct.currency;
+      curSel.disabled = true;
+    } else {
+      curSel.disabled = false;
+    }
   }
   // The "received amount" field only appears when the two accounts don't
   // share a currency — same-currency transfers just move one amount.
   // Shows the effective rate implied by what was actually sent vs. received,
   // e.g. "≈ 89,750 LBP per $1" — computed fresh from the two typed amounts,
   // never stored separately, so it can't drift from what's really entered.
+  // The currency on each side of a transfer/exchange comes from the linked
+  // account when one is chosen (locked, see applyAccountCurrencyLock /
+  // applyToAccountCurrencyLock above), and otherwise straight from the
+  // "From currency" / "To currency" selects — accounts are optional, so an
+  // exchange can always be described by currency alone.
+  function effectiveFromCurrency(){
+    const fromAcct = accounts.find(a=>a.id===($('f-account')?$('f-account').value:''));
+    return fromAcct ? fromAcct.currency : ($('f-currency') ? $('f-currency').value : 'USD');
+  }
+  function effectiveToCurrency(){
+    const toAcct = accounts.find(a=>a.id===($('f-to-account')?$('f-to-account').value:''));
+    return toAcct ? toAcct.currency : ($('f-to-currency') ? $('f-to-currency').value : 'LBP');
+  }
   function updateExchangeRateReadout(){
     const hintRow = $('f-exchange-hint-row');
     const hintEl = $('f-exchange-hint');
     if(!hintRow || !hintEl) return;
-    const fromAcct = accounts.find(a=>a.id===($('f-account')?$('f-account').value:''));
-    const toAcct = accounts.find(a=>a.id===($('f-to-account')?$('f-to-account').value:''));
-    const crossCurrency = !!(fromAcct && toAcct && fromAcct.currency !== toAcct.currency);
-    if(!crossCurrency){
-      hintRow.style.display = '';
-      hintEl.textContent = 'To log a USD ⇄ LBP exchange, pick a USD account as "From account" and an LBP account as "To account" (or vice versa), then enter what you actually received — this keeps both account balances accurate even if the rate you got differs from the official one.';
+    const fromCur = effectiveFromCurrency();
+    const toCur = effectiveToCurrency();
+    hintRow.style.display = '';
+    if(fromCur === toCur){
+      hintEl.textContent = 'Pick two different currencies above to record an exchange — or, for a same-currency transfer, pick two different accounts below.';
       return;
     }
     const sent = rawAmountNumber($('f-amount') ? $('f-amount').value : '');
     const received = rawAmountNumber($('f-to-amount') ? $('f-to-amount').value : '');
-    hintRow.style.display = '';
     if(sent > 0 && received > 0){
-      const usdAmt = fromAcct.currency === 'USD' ? sent : received;
-      const lbpAmt = fromAcct.currency === 'USD' ? received : sent;
+      const usdAmt = fromCur === 'USD' ? sent : received;
+      const lbpAmt = fromCur === 'USD' ? received : sent;
       const rate = lbpAmt / usdAmt;
       hintEl.textContent = '≈ ' + Math.round(rate).toLocaleString('en-US') + ' LBP per $1 on this exchange';
     } else {
-      hintEl.textContent = 'Enter the amount you sent and the amount you actually received to see your effective exchange rate.';
+      hintEl.textContent = 'Enter the amount you sent and the amount you actually received to see your effective exchange rate. Linking accounts below is optional.';
     }
   }
   function updateTransferAmountFields(){
-    const fromAcct = accounts.find(a=>a.id===($('f-account')?$('f-account').value:''));
-    const toAcct = accounts.find(a=>a.id===($('f-to-account')?$('f-to-account').value:''));
-    if(fromAcct && toAcct && fromAcct.currency !== toAcct.currency){
+    const fromCur = effectiveFromCurrency();
+    const toCur = effectiveToCurrency();
+    if(fromCur !== toCur){
       $('f-to-amount-wrap').style.display = '';
     } else {
       $('f-to-amount-wrap').style.display = 'none';
@@ -7709,16 +9038,26 @@
   }
   function applyTransferUI(){
     const isTransfer = currentType === 'transfer';
+    $('f-to-currency-row').style.display = isTransfer ? '' : 'none';
     $('f-to-account-row').style.display = isTransfer ? '' : 'none';
     $('f-exchange-hint-row').style.display = isTransfer ? '' : 'none';
-    $('f-account-label-text').textContent = isTransfer ? 'From account' : 'Account (optional)';
+    $('f-account-label-text').textContent = isTransfer ? 'From account (optional)' : 'Account (optional)';
+    if($('f-currency-label-text')) $('f-currency-label-text').textContent = isTransfer ? 'From currency' : 'Currency';
     if(isTransfer){
       populateToAccountSelect($('f-to-account').value);
+      // Default "To currency" to whatever isn't picked as "From currency",
+      // so a fresh transfer always opens as a ready-to-go currency exchange
+      // rather than two identical currencies.
+      if(!$('f-to-account').value && $('f-to-currency').value === $('f-currency').value){
+        $('f-to-currency').value = $('f-currency').value === 'USD' ? 'LBP' : 'USD';
+      }
       updateTransferAmountFields();
     }
   }
   if($('f-account')) $('f-account').addEventListener('change', ()=>{ if(currentType === 'transfer') updateTransferAmountFields(); });
-  if($('f-to-account')) $('f-to-account').addEventListener('change', ()=>{ if(currentType === 'transfer') updateTransferAmountFields(); });
+  if($('f-to-account')) $('f-to-account').addEventListener('change', ()=>{ applyToAccountCurrencyLock(); if(currentType === 'transfer') updateTransferAmountFields(); });
+  if($('f-currency')) $('f-currency').addEventListener('change', ()=>{ if(currentType === 'transfer') updateTransferAmountFields(); });
+  if($('f-to-currency')) $('f-to-currency').addEventListener('change', ()=>{ if(currentType === 'transfer') updateTransferAmountFields(); });
   if($('f-amount')) $('f-amount').addEventListener('input', ()=>{ if(currentType === 'transfer') updateExchangeRateReadout(); });
   if($('f-to-amount')) $('f-to-amount').addEventListener('input', ()=>{ if(currentType === 'transfer') updateExchangeRateReadout(); });
 
@@ -7760,10 +9099,12 @@
     populateAccountsSelect(keep('account') ? lastAccount : null);
     if(!keep('currency') && !$('f-account').value) $('f-currency').value = 'USD';
 
-    // Transfer's "to account" / "received amount" fields have no keep
-    // checkbox of their own — always start a fresh transfer clean.
+    // Transfer's "to account" / "to currency" / "received amount" fields
+    // have no keep checkbox of their own — always start a fresh transfer
+    // clean.
     $('f-to-account').value = '';
     $('f-to-amount').value = '';
+    applyToAccountCurrencyLock();
 
     if(!keep('type')){
       setType('expense'); // also repopulates the category list fresh
@@ -7791,6 +9132,8 @@
     setType(entry.type);
     if(entry.type === 'transfer'){
       populateToAccountSelect(entry.toAccountId || null);
+      if(!entry.toAccountId && entry.toCurrency) $('f-to-currency').value = entry.toCurrency;
+      applyToAccountCurrencyLock();
       updateTransferAmountFields();
       if(entry.toCurrency && entry.toCurrency !== entry.currency && entry.toAmount != null){
         $('f-to-amount').value = formatAmountValue(String(entry.toAmount));
@@ -7917,6 +9260,13 @@
   // carries type:'transfer' so computeStats and computeAccountBalance
   // treat it correctly (see notes near populateToAccountSelect above and
   // computeAccountBalance below).
+  // A transfer/exchange no longer requires accounts at all: currency is the
+  // primary way to describe it (effectiveFromCurrency/effectiveToCurrency
+  // above), and linking it to an account on either side is an optional
+  // second step only needed when you also want that account's balance to
+  // move. So this only ever rejects two cases: the same account picked on
+  // both sides, or neither a real account-to-account move nor an actual
+  // currency change (which would just be a no-op entry).
   async function saveTransfer(){
     const date = $('f-date').value || todayISO();
     const fromId = $('f-account') && $('f-account').value ? $('f-account').value : '';
@@ -7925,12 +9275,16 @@
     const toAcct = accounts.find(a=>a.id===toId);
     const note = $('f-note').value.trim();
 
-    if(!fromAcct || !toAcct){
-      toast('Pick a from account and a to account', true);
+    if(fromId && toId && fromId === toId){
+      toast('Pick two different accounts', true);
       return;
     }
-    if(fromId === toId){
-      toast('Pick two different accounts', true);
+    const currency = fromAcct ? fromAcct.currency : $('f-currency').value;
+    const toCurrency = toAcct ? toAcct.currency : $('f-to-currency').value;
+    const isAccountTransfer = !!(fromId && toId);
+    const isCurrencyExchange = currency !== toCurrency;
+    if(!isAccountTransfer && !isCurrencyExchange){
+      toast('Pick two different currencies to exchange, or two different accounts to transfer between', true);
       return;
     }
     const amount = rawAmountNumber($('f-amount').value);
@@ -7939,7 +9293,7 @@
       return;
     }
     let toAmount = amount;
-    if(fromAcct.currency !== toAcct.currency){
+    if(isCurrencyExchange){
       toAmount = rawAmountNumber($('f-to-amount').value);
       if(!toAmount || toAmount <= 0){
         toast('Enter the received amount in the destination currency', true);
@@ -7947,27 +9301,23 @@
       }
     }
 
+    const payload = {
+      date, type:'transfer',
+      accountId: fromId || null, toAccountId: toId || null,
+      currency, amount,
+      toCurrency, toAmount,
+      category: 'Transfer', note, receipt: currentReceipt
+    };
+
     if(editingId){
       const idx = entries.findIndex(e => e.id === editingId);
-      if(idx !== -1){
-        entries[idx] = {
-          ...entries[idx], date, type:'transfer',
-          accountId: fromId, toAccountId: toId,
-          currency: fromAcct.currency, amount,
-          toCurrency: toAcct.currency, toAmount,
-          category: 'Transfer', note, receipt: currentReceipt
-        };
-      }
+      if(idx !== -1) entries[idx] = {...entries[idx], ...payload};
       const ok = await saveEntries('Transfer updated');
       if(ok) resetForm(true);
     } else {
       entries.push({
         id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
-        date, type:'transfer',
-        accountId: fromId, toAccountId: toId,
-        currency: fromAcct.currency, amount,
-        toCurrency: toAcct.currency, toAmount,
-        category: 'Transfer', note, receipt: currentReceipt
+        ...payload
       });
       const ok = await saveEntries('Transfer saved');
       if(ok) resetForm(false);
@@ -8143,11 +9493,14 @@
     // which account moved to which, and (for cross-currency transfers)
     // both the sent and received amounts, so the ledger stays legible
     // without pretending a transfer is income or an expense.
-    const acctName = (id) => { const a = accounts.find(x=>x.id===id); return a ? a.name : 'Unknown account'; };
+    // Falls back to the currency (e.g. "USD") when a side of the transfer
+    // has no linked account — accounts are optional on a transfer now, so
+    // "Unknown account" would be misleading for one that was never linked.
+    const acctName = (id, fallbackCurrency) => { const a = accounts.find(x=>x.id===id); return a ? a.name : (fallbackCurrency || 'No account'); };
     wrap.innerHTML = list.map(e => {
       const isTransfer = e.type === 'transfer';
       const titleHtml = isTransfer
-        ? `${escapeHtml(acctName(e.accountId))} → ${escapeHtml(acctName(e.toAccountId))}`
+        ? `${escapeHtml(acctName(e.accountId, e.currency))} → ${escapeHtml(acctName(e.toAccountId, e.toCurrency || e.currency))}`
         : escapeHtml(e.category);
       const amtHtml = isTransfer && e.toCurrency && e.toCurrency !== e.currency
         ? `${e.currency === 'USD' ? fmtUSD(e.amount) : fmtLBP(e.amount)} → ${e.toCurrency === 'USD' ? fmtUSD(e.toAmount) : fmtLBP(e.toAmount)}`
@@ -9004,7 +10357,47 @@
     return { name: best, ...byCat[best] };
   }
 
-  function extraInsightsHtml(s, prevS, daysInPeriod, list, curr='USD'){
+  // Which category by transaction COUNT (not amount) shows up most often —
+  // a different signal from "top spending category" above: a category can
+  // dominate the total while rarely occurring (one big annual payment), or
+  // occur constantly while adding up to little (frequent small buys).
+  function topCategoryByFrequency(list){
+    const counts = {};
+    (list||[]).filter(e=>e.type==='expense').forEach(e=>{ counts[e.category] = (counts[e.category]||0) + 1; });
+    const cats = Object.keys(counts);
+    if(!cats.length) return null;
+    let best = cats[0];
+    cats.forEach(c=>{ if(counts[c] > counts[best]) best = c; });
+    return { name: best, count: counts[best] };
+  }
+
+  // The single category whose spend moved the most (up or down) versus the
+  // previous period, in absolute terms — surfaces the category actually
+  // driving a change in the totals, rather than making the person hunt for
+  // it across two category tables.
+  function biggestMoverCategory(byCat, prevByCat, relKey){
+    const cats = new Set([...Object.keys(byCat||{}), ...Object.keys(prevByCat||{})]);
+    let best = null, bestDelta = 0;
+    cats.forEach(c=>{
+      const curVal = byCat && byCat[c] ? (byCat[c][relKey] !== undefined ? byCat[c][relKey] : byCat[c].relUSD) : 0;
+      const prevVal = prevByCat && prevByCat[c] ? (prevByCat[c][relKey] !== undefined ? prevByCat[c][relKey] : prevByCat[c].relUSD) : 0;
+      const delta = curVal - prevVal;
+      if(best === null || Math.abs(delta) > Math.abs(bestDelta)){ best = c; bestDelta = delta; }
+    });
+    return (best !== null && Math.abs(bestDelta) > 0.01) ? { name: best, delta: bestDelta } : null;
+  }
+
+  // Per-day expense totals for the period, used for the "highest spending
+  // day" and "no-spend days" boxes below. Keyed by ISO date string.
+  function perDayExpenseTotals(list, relFn){
+    const perDay = {};
+    (list||[]).filter(e=>e.type==='expense').forEach(e=>{
+      perDay[e.date] = (perDay[e.date] || 0) + relFn(e);
+    });
+    return perDay;
+  }
+
+  function extraInsightsHtml(s, prevS, daysInPeriod, list, curr='USD', opts={}){
     const fmt = curr === 'USD' ? fmtUSD : fmtLBP;
     const relKey = curr === 'USD' ? 'relUSD' : 'relLBP';
     const relFn = curr === 'USD' ? relUSD : relLBP;
@@ -9038,6 +10431,49 @@
     }
     boxes.push(`<div class="stat-box"><div class="lbl">Median expense</div><div class="val">${median === null ? '—' : '≈ '+fmt(median)}</div></div>`);
     boxes.push(`<div class="stat-box"><div class="lbl">Categories used</div><div class="val">${uniqueCats}</div></div>`);
+
+    // ---- new insights ----
+    const freqCat = topCategoryByFrequency(list);
+    if(freqCat){
+      boxes.push(`<div class="stat-box expense"><div class="lbl">Most frequent expense</div><div class="val">${escapeHtml(freqCat.name)}<br><span style="font-size:11.5px;color:var(--muted);font-weight:500;">${freqCat.count} ${freqCat.count===1?'time':'times'}</span></div></div>`);
+    }
+    const mover = biggestMoverCategory(s.expenseByCat, prevS ? prevS.expenseByCat : null, relKey);
+    if(mover){
+      const up = mover.delta > 0;
+      boxes.push(`<div class="stat-box"><div class="lbl">Biggest category change</div><div class="val" style="font-size:14px;">${escapeHtml(mover.name)}<br><span style="font-size:13px;color:${up?'var(--brick)':'var(--green-ok)'};">${up?'▲':'▼'} ${fmt(Math.abs(mover.delta))}</span></div></div>`);
+    }
+    if(daysInPeriod > 1){
+      const perDay = perDayExpenseTotals(list, relFn);
+      const dates = Object.keys(perDay);
+      if(dates.length){
+        let bestDate = dates[0];
+        dates.forEach(d=>{ if(perDay[d] > perDay[bestDate]) bestDate = d; });
+        const bd = new Date(bestDate+'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'});
+        boxes.push(`<div class="stat-box expense"><div class="lbl">Highest spending day</div><div class="val">${bd}<br><span style="font-size:11.5px;color:var(--muted);font-weight:500;">≈ ${fmt(perDay[bestDate])}</span></div></div>`);
+      }
+      // No-spend days only count days that have actually elapsed — a
+      // future-dated or still-in-progress period shouldn't get credited
+      // (or blamed) for days that haven't happened yet.
+      const todayStr = todayISO();
+      const periodStart = opts.periodStart, periodEnd = opts.periodEnd;
+      if(periodStart && periodEnd){
+        const elapsedEnd = periodEnd > todayStr ? todayStr : periodEnd;
+        if(periodStart <= elapsedEnd){
+          const elapsedDays = Math.round((new Date(elapsedEnd+'T00:00:00') - new Date(periodStart+'T00:00:00'))/86400000) + 1;
+          const noSpendDays = elapsedDays - dates.filter(d => d <= elapsedEnd).length;
+          boxes.push(`<div class="stat-box"><div class="lbl">No-spend days</div><div class="val">${noSpendDays} <span style="font-size:11.5px;color:var(--muted);font-weight:500;">of ${elapsedDays}</span></div></div>`);
+        }
+      }
+    }
+    // Same month, one year earlier — a different comparison from "vs
+    // previous period" (which for month scope means last month, not last
+    // year), useful for spotting seasonal patterns a month-over-month
+    // comparison would miss.
+    if(opts.yoyS){
+      const relExpenseYoy = opts.yoyS[curr==='USD'?'expenseRelUSD':'expenseRelLBP'];
+      boxes.push(`<div class="stat-box"><div class="lbl">Spending vs same month last year</div><div class="val" style="font-size:15px;">${pctChangeHtml(relExpense, relExpenseYoy)}</div></div>`);
+    }
+
     return `<div class="stat-grid">${boxes.join('')}</div>`;
   }
 
@@ -9201,7 +10637,7 @@
   });
 
   function renderStats(){
-    let list, prevList, label, daysInPeriod;
+    let list, prevList, label, daysInPeriod, periodStart, periodEnd, yoyS = null;
     if(statsScope === 'day'){
       if(!$('stats-day').value) $('stats-day').value = todayISO();
       const day = $('stats-day').value;
@@ -9211,6 +10647,7 @@
       const prevD = new Date(d); prevD.setDate(prevD.getDate()-1);
       prevList = filterEntries({day: prevD.toISOString().slice(0,10)});
       daysInPeriod = 1;
+      periodStart = periodEnd = day;
     } else if(statsScope === 'month'){
       if(!$('stats-month').value) $('stats-month').value = new Date().toISOString().slice(0,7);
       const [y,m] = $('stats-month').value.split('-').map(Number);
@@ -9219,6 +10656,9 @@
       const prevM = m-1===0 ? 11 : m-2, prevY = m-1===0 ? y-1 : y;
       prevList = filterEntries({year:prevY, month:prevM});
       daysInPeriod = new Date(y, m, 0).getDate();
+      periodStart = `${y}-${String(m).padStart(2,'0')}-01`;
+      periodEnd = `${y}-${String(m).padStart(2,'0')}-${String(daysInPeriod).padStart(2,'0')}`;
+      yoyS = computeStats(filterEntries({year:y-1, month:m-1}));
     } else if(statsScope === 'range'){
       if(!$('stats-range-start').value){
         const d = new Date(); d.setDate(d.getDate()-6);
@@ -9236,6 +10676,7 @@
       const prevEnd = new Date(sD); prevEnd.setDate(prevEnd.getDate()-1);
       const prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate()-(daysInPeriod-1));
       prevList = filterEntries({start: prevStart.toISOString().slice(0,10), end: prevEnd.toISOString().slice(0,10)});
+      periodStart = start; periodEnd = end;
     } else {
       if(!$('stats-year').value) $('stats-year').value = new Date().getFullYear();
       const y = parseInt($('stats-year').value, 10);
@@ -9244,6 +10685,7 @@
       prevList = filterEntries({year:y-1});
       const isLeap = (y%4===0 && y%100!==0) || y%400===0;
       daysInPeriod = isLeap ? 366 : 365;
+      periodStart = `${y}-01-01`; periodEnd = `${y}-12-31`;
     }
     const curr = statsCurrency;
     const s = computeStats(list);
@@ -9251,7 +10693,7 @@
     let html = `<h3 style="font-family:'Fraunces',serif;color:var(--forest);margin:4px 0 14px;">${label} &nbsp;<span style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;">(${s.count} entries)</span></h3>`;
     html += statBoxesHtml(s);
     if(s.count){
-      html += extraInsightsHtml(s, prevS, daysInPeriod, list, curr);
+      html += extraInsightsHtml(s, prevS, daysInPeriod, list, curr, {periodStart, periodEnd, yoyS});
       html += `
         <h4 style="font-family:'Fraunces',serif;color:var(--forest);font-size:14px;margin:16px 0 8px;">🍩 Where it went</h4>
         <div class="donut-row">
@@ -9968,15 +11410,30 @@
       const chips = acts.slice(0,6).map(id=>{
         const t = activityTypeById(id);
         if(!t) return '';
-        return `<span class="actchip" style="background:${t.color}" title="${escapeHtml(t.name)}"><span class="ic">${t.icon}</span></span>`;
+        // For Holiday specifically, the note holds the actual holiday
+        // name(s) — multiple holidays landing on the same day are joined
+        // with " & " (see mergeHolidayNote). Surface the full list in the
+        // tooltip, and if there's more than one, show a small count badge
+        // on the chip itself so it's visible at a glance without hovering.
+        const holidayNames = (id === 'holiday' && rec && rec.note) ? rec.note.split(/\s*&\s*/).filter(Boolean) : [];
+        const title = (id === 'holiday' && rec && rec.note) ? `${t.name}: ${rec.note}` : t.name;
+        const chip = `<span class="actchip" style="background:${t.color}" title="${escapeHtml(title)}"><span class="ic">${t.icon}</span></span>`;
+        if(holidayNames.length > 1){
+          return `<span class="actchip-wrap" title="${escapeHtml(title)}">${chip}<span class="actchip-count">${holidayNames.length}</span></span>`;
+        }
+        return chip;
       }).join('');
       const more = acts.length > 6 ? `<span class="acmore">+${acts.length-6}</span>` : '';
-      const noteOnly = (!acts.length && rec && rec.note) ? `<span class="actchip actchip-note" title="${escapeHtml(rec.note)}"><span class="ic">📝</span></span>` : '';
+      // A note is no longer shown as its own activity-style chip in the
+      // dots row — instead a small 📝 pen badge sits in the cell's top
+      // right corner, separate from the actual activity icons.
+      const noteBadge = (rec && rec.note) ? `<span class="actcal-note-badge" title="${escapeHtml(rec.note)}">📝</span>` : '';
       html += `
         <div class="actcal-cell${isToday ? ' today' : ''}${isSelected ? ' bulk-selected' : ''}" data-date="${dateStr}">
           <span class="bulk-check">✅</span>
+          ${noteBadge}
           <span class="acn">${day}</span>
-          <div class="acdots">${chips}${noteOnly}${more}</div>
+          <div class="acdots">${chips}${more}</div>
         </div>
       `;
     }
@@ -10164,107 +11621,416 @@
   });
 
   // ---------- public holidays auto-load ----------
-  // Fetches a country's public holidays for a year from a free, no-key
-  // API and stamps the built-in 'holiday' activity onto each matching
-  // date. Uses the same merge behavior as the bulk-apply tool — any
-  // activities already logged on that day (work, gym, etc.) are kept.
+  // Fetches a country's public holidays for a year, then hands them to the
+  // review modal below instead of writing straight to the calendar — the
+  // person can edit dates/names, drop rows they don't want, or reject the
+  // whole batch before anything is actually saved. Uses the same merge
+  // behavior as the bulk-apply tool — any activities already logged on
+  // that day (work, gym, etc.) are kept.
+  //
+  // Lebanon (LB) is served from a small built-in dataset below instead of
+  // a live API call: no free no-key holiday API covers Lebanon, and every
+  // one that does (Calendarific, HolidayAPI, AbstractAPI, etc.) requires
+  // signing up for a key, which fails the "just works, no setup" bar for
+  // the one country this feature exists for. The dataset covers 2025-2027
+  // and is refreshed by hand periodically. Every other country still goes
+  // through Nager.Date, which is free, keyless, and CORS-enabled, but
+  // doesn't include Lebanon in its country list.
+  //
+  // Fixed-date holidays (New Year, Christmas, Independence Day, etc.) are
+  // reliable indefinitely. Islamic-calendar holidays (Eid al-Fitr, Eid
+  // al-Adha, Islamic New Year, Ashura, the Prophet's Birthday) shift ~11
+  // days earlier each Gregorian year and are only confirmed close to the
+  // date by moon sighting — the dates below are the best pre-announcement
+  // estimates and are marked "(est.)"; they can be off by a day and are
+  // editable in the review step like anything else.
+  const LEBANON_HOLIDAYS = {
+    2025: [
+      ['01-01','New Year\'s Day'], ['01-06','Armenian Christmas'], ['02-09','St Maron\'s Day'],
+      ['02-14','Rafic Hariri Memorial Day'], ['03-25','Feast of the Annunciation'],
+      ['03-31','Eid al-Fitr (est.)'], ['04-01','Eid al-Fitr Holiday (est.)'],
+      ['04-18','Good Friday'], ['04-20','Easter Sunday'], ['04-21','Easter Monday'],
+      ['04-25','Orthodox Good Friday'], ['04-27','Orthodox Easter'], ['04-28','Orthodox Easter Monday'],
+      ['05-01','Labour Day'], ['05-06','Martyrs\' Day'], ['05-25','Liberation and Resistance Day'],
+      ['06-06','Eid al-Adha (est.)'], ['06-07','Eid al-Adha Holiday (est.)'],
+      ['06-27','Islamic New Year (est.)'], ['07-05','Ashura (est.)'],
+      ['08-15','Feast of the Assumption'], ['09-05','Prophet\'s Birthday (est.)'],
+      ['11-22','Independence Day'], ['12-25','Christmas Day']
+    ],
+    2026: [
+      ['01-01','New Year\'s Day'], ['01-06','Armenian Christmas'], ['02-09','St Maron\'s Day'],
+      ['02-14','Rafic Hariri Memorial Day'], ['03-20','Eid al-Fitr (est.)'], ['03-21','Eid al-Fitr Holiday (est.)'],
+      ['03-25','Feast of the Annunciation'], ['04-03','Good Friday'], ['04-05','Easter Sunday'],
+      ['04-06','Easter Monday'], ['04-10','Orthodox Good Friday'], ['04-12','Orthodox Easter'],
+      ['04-13','Orthodox Easter Monday'], ['05-01','Labour Day'], ['05-06','Martyrs\' Day'],
+      ['05-25','Liberation and Resistance Day'], ['05-27','Eid al-Adha (est.)'], ['05-28','Eid al-Adha Holiday (est.)'],
+      ['06-17','Islamic New Year (est.)'], ['06-26','Ashura (est.)'],
+      ['08-15','Feast of the Assumption'], ['08-25','Prophet\'s Birthday (est.)'],
+      ['11-22','Independence Day'], ['12-25','Christmas Day']
+    ],
+    2027: [
+      ['01-01','New Year\'s Day'], ['01-06','Armenian Christmas'], ['02-09','St Maron\'s Day'],
+      ['02-14','Rafic Hariri Memorial Day'], ['03-09','Eid al-Fitr (est.)'], ['03-10','Eid al-Fitr Holiday (est.)'],
+      ['03-25','Feast of the Annunciation'], ['03-26','Good Friday'], ['03-28','Easter Sunday'],
+      ['03-29','Easter Monday'], ['04-30','Orthodox Good Friday'], ['05-02','Orthodox Easter'],
+      ['05-03','Orthodox Easter Monday'], ['05-01','Labour Day'], ['05-06','Martyrs\' Day'],
+      ['05-16','Eid al-Adha (est.)'], ['05-17','Eid al-Adha Holiday (est.)'], ['05-25','Liberation and Resistance Day'],
+      ['06-06','Islamic New Year (est.)'], ['06-15','Ashura (est.)'],
+      ['08-14','Prophet\'s Birthday (est.)'], ['08-15','Feast of the Assumption'],
+      ['11-22','Independence Day'], ['12-25','Christmas Day']
+    ]
+  };
   if($('holiday-year')) $('holiday-year').value = new Date().getFullYear();
+  // Persisted the same way as every other setting in this app (exchange
+  // rate, language, fuel prices, profile, ...): through `store`, which
+  // saves to the signed-in user's account (Supabase) when logged in, so
+  // it follows them to any device, and falls back to local storage only
+  // when there's no account to attach it to. Raw localStorage would only
+  // ever live on this one browser/device and never travel with the rest
+  // of the user's data.
+  const HOLIDAY_SOURCE_KEY = 'holidayApiSource';
+  const CALENDARIFIC_KEY_KEY = 'calendarificApiKey';
+  function syncHolidaySourceUI(){
+    const isCalendarific = $('holiday-api-source').value === 'calendarific';
+    $('holiday-calendarific-key-row').style.display = isCalendarific ? '' : 'none';
+    $('holiday-calendarific-hint').style.display = isCalendarific ? '' : 'none';
+  }
+  async function loadHolidayApiSettings(){
+    try{
+      const res = await store.get(HOLIDAY_SOURCE_KEY);
+      if(res && res.value && $('holiday-api-source')) $('holiday-api-source').value = res.value;
+    }catch(e){ /* keep default */ }
+    try{
+      const res = await store.get(CALENDARIFIC_KEY_KEY);
+      if(res && res.value && $('holiday-calendarific-key')) $('holiday-calendarific-key').value = res.value;
+    }catch(e){ /* keep blank */ }
+    syncHolidaySourceUI();
+  }
+  if($('holiday-api-source')){
+    $('holiday-api-source').addEventListener('change', ()=>{
+      syncHolidaySourceUI();
+      store.set(HOLIDAY_SOURCE_KEY, $('holiday-api-source').value).catch(()=>{});
+    });
+  }
+  $('holiday-calendarific-key') && $('holiday-calendarific-key').addEventListener('input', ()=>{
+    store.set(CALENDARIFIC_KEY_KEY, $('holiday-calendarific-key').value.trim()).catch(()=>{});
+  });
+  wirePasswordToggle('holiday-calendarific-key-toggle', 'holiday-calendarific-key');
+  // Combines multiple holiday names that land on the same day into one
+  // note, e.g. "Christmas Day & Boxing Day" — instead of only keeping
+  // whichever holiday was applied first. Skips re-adding a name that's
+  // already part of the note (so re-fetching the same country/year
+  // doesn't pile up duplicates).
+  function mergeHolidayNote(existingNote, newName){
+    const name = (newName || '').trim();
+    if(!name) return existingNote || '';
+    if(!existingNote) return name;
+    const parts = existingNote.split(/\s*&\s*/).map(p => p.trim().toLowerCase());
+    if(parts.includes(name.toLowerCase())) return existingNote;
+    return `${existingNote} & ${name}`;
+  }
+  async function fetchHolidaysFromNager(country, year){
+    // Nager.Date's original host (date.nager.at) doesn't send CORS
+    // headers, so a direct browser fetch() to it fails with a generic
+    // network error — which is what was showing up here as "check your
+    // connection and try again" even on a perfectly good connection.
+    // Their newer host, nagerholidays.com, serves the same data and is
+    // explicitly CORS-enabled for browser use, so we call that instead.
+    let holidays;
+    try{
+      holidays = await fetchJsonRobust(`https://nagerholidays.com/api/v4/Holidays/${country}/${year}`);
+    }catch(fetchErr){
+      if(fetchErr && fetchErr.status === 404){
+        throw Object.assign(new Error(`This free API doesn't have holiday data for "${country}". Try the Calendarific source above, or use "Import from calendar file (.ics)" below.`), {isKnown:true});
+      }
+      throw fetchErr;
+    }
+    if(!Array.isArray(holidays) || holidays.length === 0) return [];
+    return holidays
+      .filter(h => h && h.date)
+      .map(h => ({date: h.date, name: h.localName || h.name || h.localizedName || ''}));
+  }
+  async function fetchHolidaysFromCalendarific(country, year){
+    const key = ($('holiday-calendarific-key').value || '').trim();
+    if(!key){
+      throw Object.assign(new Error('Paste a free Calendarific API key above first — sign up at calendarific.com/signup.'), {isKnown:true});
+    }
+    let data;
+    try{
+      data = await fetchJsonRobust(`https://calendarific.com/api/v2/holidays?api_key=${encodeURIComponent(key)}&country=${encodeURIComponent(country)}&year=${year}`);
+    }catch(fetchErr){
+      if(fetchErr && (fetchErr.status === 401 || fetchErr.status === 403)){
+        throw Object.assign(new Error('Calendarific rejected that API key — double-check it was pasted correctly.'), {isKnown:true});
+      }
+      if(fetchErr && fetchErr.status === 429){
+        throw Object.assign(new Error("Calendarific's free-tier request limit was hit for this key — try again later or use a different key."), {isKnown:true});
+      }
+      throw fetchErr;
+    }
+    // Calendarific reports some errors with a 200 status and the detail
+    // inside meta, so check that too rather than only relying on the
+    // HTTP status.
+    if(data && data.meta && data.meta.code && data.meta.code !== 200){
+      throw Object.assign(new Error((data.meta.error_detail) || 'Calendarific reported an error for that request.'), {isKnown:true});
+    }
+    const holidays = data && data.response && Array.isArray(data.response.holidays) ? data.response.holidays : [];
+    return holidays
+      .filter(h => h && h.date && h.date.iso)
+      .map(h => ({date: h.date.iso.slice(0,10), name: h.name || ''}));
+  }
+  function getLebanonHolidays(year){
+    const rows = LEBANON_HOLIDAYS[year];
+    if(!rows){
+      throw Object.assign(new Error(`The built-in Lebanon list only covers ${Object.keys(LEBANON_HOLIDAYS).join(', ')} so far. Try the Calendarific source above for ${year}, or use "Import from calendar file (.ics)" below.`), {isKnown:true});
+    }
+    return rows.map(([md, name]) => ({date: `${year}-${md}`, name}));
+  }
   $('holiday-load-btn') && $('holiday-load-btn').addEventListener('click', async ()=>{
     const country = $('holiday-country').value;
     const year = parseInt($('holiday-year').value, 10) || new Date().getFullYear();
+    const source = $('holiday-api-source').value;
     const statusEl = $('holiday-status');
     const btn = $('holiday-load-btn');
     btn.disabled = true;
     statusEl.style.color = 'var(--muted)';
     statusEl.textContent = 'Fetching holidays…';
     try{
-      let res;
-      try{
-        // Nager.Date's original host (date.nager.at) doesn't send CORS
-        // headers, so a direct browser fetch() to it fails with a generic
-        // network error — which is what was showing up here as "check your
-        // connection and try again" even on a perfectly good connection.
-        // Their newer host, nagerholidays.com, serves the same data and is
-        // explicitly CORS-enabled for browser use, so we call that instead.
-        res = await fetch(`https://nagerholidays.com/api/v4/Holidays/${country}/${year}`);
-      }catch(networkErr){
-        // fetch() itself rejected (never got an HTTP response at all) —
-        // that's a real connectivity/CORS problem, not something the API
-        // returned. Opening this file straight from disk (file:// in the
-        // address bar instead of http/https) is the most common cause:
-        // some browsers block cross-origin fetch() from a file:// page
-        // even though the target API allows CORS. Say so explicitly so
-        // it isn't confused with a bad wifi connection.
-        const err = new Error(
-          location.protocol === 'file:'
-            ? "Can't reach the holiday API from a file opened directly on disk (file://) — some browsers block that. Serve this page over http/https (e.g. host it, or run a local dev server) and try again."
-            : 'Could not reach the holiday API — check your connection and try again.'
-        );
-        err.isNetwork = true;
-        throw err;
-      }
-      if(res.status === 404){
-        statusEl.style.color = 'var(--brick)';
-        statusEl.textContent = `This free API doesn't have holiday data for "${country}" (Lebanon isn't in its country list). Use "Import from calendar file (.ics)" below instead — it works for any country.`;
-        return;
-      }
-      if(!res.ok) throw new Error(`Holiday API returned an error (status ${res.status}). Try again in a moment.`);
-      // Read as text first: if the API (or something sitting in front of
-      // it, like a rate limiter or a browser extension) returns an empty
-      // or non-JSON body while still reporting a 200 OK, res.json() throws
-      // the raw "Unexpected end of JSON input" — not useful to a user.
-      // Parsing the text ourselves lets us give a real explanation instead.
-      const raw = await res.text();
-      if(!raw || !raw.trim()){
-        statusEl.style.color = 'var(--brick)';
-        statusEl.textContent = 'The holiday API returned an empty response — try again in a moment.';
-        return;
-      }
       let holidays;
-      try{
-        holidays = JSON.parse(raw);
-      }catch(parseErr){
-        statusEl.style.color = 'var(--brick)';
-        statusEl.textContent = "The holiday API returned something that wasn't valid data — try again in a moment.";
-        return;
+      if(source === 'calendarific'){
+        holidays = await fetchHolidaysFromCalendarific(country, year);
+      }else if(source === 'nager'){
+        holidays = await fetchHolidaysFromNager(country, year);
+      }else{
+        // Automatic: use the built-in offline list for Lebanon (always
+        // available, no network needed), and Nager.Date for everything
+        // else, since that's the free no-key option that covers the most
+        // other countries.
+        holidays = country === 'LB' ? getLebanonHolidays(year) : await fetchHolidaysFromNager(country, year);
       }
       if(!Array.isArray(holidays) || holidays.length === 0){
         statusEl.style.color = 'var(--brick)';
         statusEl.textContent = 'No holiday data found for that country/year.';
         return;
       }
-      if(!activityTypeById('holiday')){
-        activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
-        await saveActivityTypes();
-      }
-      let added = 0;
-      holidays.forEach(h=>{
-        const dateStr = h.date;
-        if(!dateStr) return;
-        const existing = activityRecords[dateStr];
-        const existingActs = (existing && existing.activities) || [];
-        if(existingActs.includes('holiday')) return;
-        const noteBit = h.localName || h.name || h.localizedName || '';
-        activityRecords[dateStr] = {
-          activities: Array.from(new Set([...existingActs, 'holiday'])),
-          note: (existing && existing.note) ? existing.note : noteBit
-        };
-        added++;
-      });
-      const ok = await saveActivityRecords(`Loaded ${added} holiday${added===1?'':'s'} for ${year}`);
-      if(ok){
-        statusEl.style.color = 'var(--green-ok)';
-        statusEl.textContent = `✅ Marked ${added} holiday${added===1?'':'s'} on your calendar for ${year}.`;
-        renderActivityTypeManager();
-        renderActivityCalendar();
-        renderActivityStats();
-        renderOverviewActivities(actCalState.year, actCalState.month);
-      }
+      pendingApiHolidays = holidays
+        .map(h => ({date: h.date, name: h.name, include:true}))
+        .sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+      pendingApiHolidayYear = year;
+      statusEl.textContent = '';
+      renderHolidayPreview();
+      openModal('modal-holiday-preview');
     }catch(e){
       statusEl.style.color = 'var(--brick)';
-      statusEl.textContent = '⚠️ ' + (e.message || 'Could not fetch holidays — check your connection and try again.');
+      statusEl.textContent = (e && e.isKnown) ? e.message : '⚠️ ' + (e.message || 'Could not fetch holidays — check your connection and try again.');
     }finally{
       btn.disabled = false;
+    }
+  });
+
+  // ---------- public holidays: review/edit/apply/reject modal ----------
+  // Shared by both sources (the API loader above, and left generic enough
+  // to reuse if another holiday source is ever added). Each row can be
+  // individually accepted (checkbox ticked = will be applied), rejected
+  // (unticked = skipped but still visible), edited in place, or removed
+  // outright with 🗑️. Nothing touches activityRecords until "Apply
+  // selected" is clicked.
+  let pendingApiHolidays = null; // array of {date, name, include} under review
+  let pendingApiHolidayYear = null;
+  function renderHolidayPreview(){
+    const listEl = $('holiday-preview-list');
+    const n = pendingApiHolidays ? pendingApiHolidays.length : 0;
+    const nIncluded = pendingApiHolidays ? pendingApiHolidays.filter(h=>h.include).length : 0;
+    if(n === 0){
+      listEl.innerHTML = '<p class="jth-empty">Nothing left to review — every row was removed.</p>';
+    } else {
+      listEl.innerHTML = pendingApiHolidays.map((h, i) => `
+        <div class="icsprev-row${h.include ? '' : ' rejected'}">
+          <input type="checkbox" class="icsprev-check" data-idx="${i}" ${h.include ? 'checked' : ''} title="${h.include ? 'Included — will be applied' : 'Rejected — will be skipped'}">
+          <input type="date" class="icsprev-date" value="${h.date}" data-idx="${i}">
+          <input type="text" class="icsprev-name" value="${escapeHtml(h.name || '')}" placeholder="Holiday name" maxlength="80" data-idx="${i}">
+          <button type="button" class="icsprev-del" data-idx="${i}" title="Remove this holiday">🗑️</button>
+        </div>
+      `).join('');
+    }
+    $('holiday-preview-sub').textContent = n === 0
+      ? `No holidays left to review for ${pendingApiHolidayYear}.`
+      : `${n} holiday${n===1?'':'s'} found for ${pendingApiHolidayYear} — ${nIncluded} selected. Edit any date or name, tick/untick to apply or reject, or remove a row with 🗑️.`;
+    $('holiday-preview-confirm').disabled = nIncluded === 0;
+    $('holiday-preview-confirm').textContent = nIncluded === 0 ? 'Nothing selected' : `✅ Apply ${nIncluded} holiday${nIncluded===1?'':'s'}`;
+  }
+  $('holiday-preview-list') && $('holiday-preview-list').addEventListener('input', (e)=>{
+    if(!pendingApiHolidays) return;
+    const idx = e.target.dataset.idx;
+    if(idx === undefined) return;
+    const i = parseInt(idx, 10);
+    if(!pendingApiHolidays[i]) return;
+    if(e.target.classList.contains('icsprev-date')) pendingApiHolidays[i].date = e.target.value;
+    else if(e.target.classList.contains('icsprev-name')) pendingApiHolidays[i].name = e.target.value;
+  });
+  $('holiday-preview-list') && $('holiday-preview-list').addEventListener('change', (e)=>{
+    if(!pendingApiHolidays || !e.target.classList.contains('icsprev-check')) return;
+    const i = parseInt(e.target.dataset.idx, 10);
+    if(!pendingApiHolidays[i]) return;
+    pendingApiHolidays[i].include = e.target.checked;
+    renderHolidayPreview();
+  });
+  $('holiday-preview-list') && $('holiday-preview-list').addEventListener('click', (e)=>{
+    const delBtn = e.target.closest('.icsprev-del');
+    if(!delBtn || !pendingApiHolidays) return;
+    pendingApiHolidays.splice(parseInt(delBtn.dataset.idx, 10), 1);
+    renderHolidayPreview();
+  });
+  $('holiday-preview-selectall') && $('holiday-preview-selectall').addEventListener('click', ()=>{
+    if(!pendingApiHolidays) return;
+    pendingApiHolidays.forEach(h=> h.include = true);
+    renderHolidayPreview();
+  });
+  $('holiday-preview-selectnone') && $('holiday-preview-selectnone').addEventListener('click', ()=>{
+    if(!pendingApiHolidays) return;
+    pendingApiHolidays.forEach(h=> h.include = false);
+    renderHolidayPreview();
+  });
+  function closeHolidayPreview(){
+    pendingApiHolidays = null;
+    pendingApiHolidayYear = null;
+    closeModal('modal-holiday-preview');
+  }
+  $('modal-holiday-preview-close') && $('modal-holiday-preview-close').addEventListener('click', closeHolidayPreview);
+  $('holiday-preview-cancel') && $('holiday-preview-cancel').addEventListener('click', ()=>{
+    const statusEl = $('holiday-status');
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Rejected — nothing was added to your calendar.';
+    closeHolidayPreview();
+  });
+  $('holiday-preview-confirm') && $('holiday-preview-confirm').addEventListener('click', async ()=>{
+    if(!pendingApiHolidays) return;
+    const toApply = pendingApiHolidays.filter(h => h.include);
+    if(toApply.length === 0) return;
+    const statusEl = $('holiday-status');
+    const btn = $('holiday-preview-confirm');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Applying…';
+    if(!activityTypeById('holiday')){
+      activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
+      await saveActivityTypes();
+    }
+    let added = 0, skippedBadDate = 0, alreadyPresent = 0;
+    toApply.forEach(h=>{
+      const dateStr = h.date;
+      if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ skippedBadDate++; return; }
+      const existing = activityRecords[dateStr];
+      const existingActs = (existing && existing.activities) || [];
+      const existingNote = (existing && existing.note) || '';
+      const newName = (h.name || '').trim();
+      let note;
+      if(existingActs.includes('holiday') && existingNote){
+        // Already a holiday day with a name — stack additional holiday
+        // names onto the same note (e.g. two holidays landing on the same
+        // date) instead of skipping the day outright.
+        note = mergeHolidayNote(existingNote, newName);
+        if(note === existingNote){ alreadyPresent++; return; } // exact duplicate, nothing to add
+      } else {
+        note = existingNote || newName;
+      }
+      activityRecords[dateStr] = {
+        activities: Array.from(new Set([...existingActs, 'holiday'])),
+        note
+      };
+      added++;
+    });
+    const year = pendingApiHolidayYear;
+    const ok = await saveActivityRecords(`Applied ${added} holiday${added===1?'':'s'} for ${year}`);
+    btn.disabled = false;
+    btn.textContent = original;
+    closeHolidayPreview();
+    if(ok){
+      statusEl.style.color = 'var(--green-ok)';
+      const extras = [];
+      if(alreadyPresent) extras.push(`${alreadyPresent} already on your calendar`);
+      if(skippedBadDate) extras.push(`${skippedBadDate} row${skippedBadDate===1?'':'s'} skipped — missing/invalid date`);
+      statusEl.textContent = `✅ Marked ${added} holiday${added===1?'':'s'} on your calendar for ${year}` + (extras.length ? ` (${extras.join(', ')})` : '') + '.';
+      renderActivityTypeManager();
+      renderActivityCalendar();
+      renderActivityStats();
+      renderOverviewActivities(actCalState.year, actCalState.month);
+    } else {
+      statusEl.style.color = 'var(--brick)';
+      statusEl.textContent = '⚠️ Could not save — try again.';
+    }
+  });
+
+  // ---------- public holidays: clear ----------
+  // Removes the built-in 'holiday' activity — and its note (the holiday's
+  // name) — from days (optionally scoped to a year or a single month).
+  // Only the 'holiday' tag and note are touched; any other activity logged
+  // that day is left alone. If nothing else is left on the day (no other
+  // activity, note now empty), the whole record is removed.
+  if($('holiday-clear-month')){
+    $('holiday-clear-month').innerHTML = MONTH_NAMES.map((name,i)=>`<option value="${i}">${name}</option>`).join('');
+  }
+  if($('holiday-clear-year')) $('holiday-clear-year').value = new Date().getFullYear();
+  function syncHolidayClearUI(){
+    const scope = $('holiday-clear-scope').value;
+    $('holiday-clear-year-row').style.display = (scope === 'year' || scope === 'month') ? '' : 'none';
+    $('holiday-clear-month-row').style.display = (scope === 'month') ? '' : 'none';
+  }
+  $('holiday-clear-scope') && $('holiday-clear-scope').addEventListener('change', syncHolidayClearUI);
+  syncHolidayClearUI();
+
+  $('holiday-clear-btn') && $('holiday-clear-btn').addEventListener('click', async ()=>{
+    const scope = $('holiday-clear-scope').value;
+    const statusEl = $('holiday-clear-status');
+    let filterYear, filterMonth;
+    if(scope !== 'all'){
+      filterYear = parseInt($('holiday-clear-year').value, 10);
+      if(!Number.isFinite(filterYear)){
+        statusEl.style.color = 'var(--brick)';
+        statusEl.textContent = 'Enter a year first.';
+        return;
+      }
+    }
+    if(scope === 'month') filterMonth = parseInt($('holiday-clear-month').value, 10);
+
+    const n = countActivityDays('holiday', {year: filterYear, month: filterMonth});
+    if(n === 0){
+      statusEl.style.color = 'var(--muted)';
+      statusEl.textContent = 'No holidays found for that range.';
+      return;
+    }
+    const label = scope === 'all' ? 'all time' : scope === 'year' ? `${filterYear}` : `${MONTH_NAMES[filterMonth]} ${filterYear}`;
+    if(!confirm(`Remove the Holiday tag and holiday name from ${n} day${n===1?'':'s'} (${label})? Other activities on those days are kept.`)) return;
+
+    const btn = $('holiday-clear-btn');
+    btn.disabled = true;
+    let cleared = 0;
+    for(const dateStr in activityRecords){
+      const rec = activityRecords[dateStr];
+      if(!rec || !Array.isArray(rec.activities) || !rec.activities.includes('holiday')) continue;
+      const d = new Date(dateStr + 'T00:00:00');
+      if(filterYear !== undefined && d.getFullYear() !== filterYear) continue;
+      if(filterMonth !== undefined && d.getMonth() !== filterMonth) continue;
+      const remaining = rec.activities.filter(a => a !== 'holiday');
+      if(remaining.length === 0){
+        delete activityRecords[dateStr];
+      } else {
+        rec.activities = remaining;
+        rec.note = '';
+      }
+      cleared++;
+    }
+    const ok = await saveActivityRecords(`Cleared ${cleared} holiday${cleared===1?'':'s'}`);
+    btn.disabled = false;
+    if(ok){
+      statusEl.style.color = 'var(--green-ok)';
+      statusEl.textContent = `✅ Removed the Holiday tag and name from ${cleared} day${cleared===1?'':'s'}.`;
+      renderActivityTypeManager();
+      renderActivityCalendar();
+      renderActivityStats();
+      renderOverviewActivities(actCalState.year, actCalState.month);
+    } else {
+      statusEl.style.color = 'var(--brick)';
+      statusEl.textContent = '⚠️ Could not save — try again.';
     }
   });
 
@@ -10296,8 +12062,9 @@
     let cur = null;
     for(const line of lines){
       const trimmed = line.trim();
-      if(trimmed === 'BEGIN:VEVENT'){ cur = {}; continue; }
-      if(trimmed === 'END:VEVENT'){ if(cur && cur.date) events.push(cur); cur = null; continue; }
+      const trimmedUpper = trimmed.toUpperCase();
+      if(trimmedUpper === 'BEGIN:VEVENT'){ cur = {}; continue; }
+      if(trimmedUpper === 'END:VEVENT'){ if(cur && cur.date) events.push(cur); cur = null; continue; }
       if(!cur) continue;
       const idx = trimmed.indexOf(':');
       if(idx === -1) continue;
@@ -10376,16 +12143,27 @@
       activityTypes.push({id:'holiday', icon:'🎉', name:'Holiday', color:'#9C4438', enabled:true});
       await saveActivityTypes();
     }
-    let added = 0, skippedBadDate = 0;
+    let added = 0, skippedBadDate = 0, alreadyPresent = 0;
     pendingIcsEvents.forEach(ev=>{
       const dateStr = ev.date;
       if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ skippedBadDate++; return; }
       const existing = activityRecords[dateStr];
       const existingActs = (existing && existing.activities) || [];
-      if(existingActs.includes('holiday')) return;
+      const existingNote = (existing && existing.note) || '';
+      const newName = (ev.name || '').trim();
+      // Same as the API-fetch handler: stack additional holiday names onto
+      // the same note instead of skipping the day outright when it's
+      // already marked Holiday.
+      let note;
+      if(existingActs.includes('holiday') && existingNote){
+        note = mergeHolidayNote(existingNote, newName);
+        if(note === existingNote){ alreadyPresent++; return; }
+      } else {
+        note = existingNote || newName;
+      }
       activityRecords[dateStr] = {
         activities: Array.from(new Set([...existingActs, 'holiday'])),
-        note: (existing && existing.note) ? existing.note : (ev.name || '')
+        note
       };
       added++;
     });
@@ -10397,7 +12175,10 @@
     pendingIcsFileName = '';
     if(ok){
       statusEl.style.color = 'var(--green-ok)';
-      statusEl.textContent = `✅ Added ${added} holiday${added===1?'':'s'} on your calendar` + (skippedBadDate ? ` (${skippedBadDate} row${skippedBadDate===1?'':'s'} skipped — missing/invalid date)` : '') + '.';
+      const extras = [];
+      if(alreadyPresent) extras.push(`${alreadyPresent} already on your calendar`);
+      if(skippedBadDate) extras.push(`${skippedBadDate} row${skippedBadDate===1?'':'s'} skipped — missing/invalid date`);
+      statusEl.textContent = `✅ Added ${added} holiday${added===1?'':'s'} on your calendar` + (extras.length ? ` (${extras.join(', ')})` : '') + '.';
       renderActivityTypeManager();
       renderActivityCalendar();
       renderActivityStats();
@@ -10619,7 +12400,7 @@
   // ---------- printable activity calendar (used by the Report tab) ----------
   function activityMonthSummary(y, m){
     const stats = {};
-    activityTypes.forEach(t=>{ stats[t.id] = countActivityDays(t.id, {year:y, month:m}); });
+    activityTypes.forEach(t=>{ stats[t.id] = countActivityInstances(t.id, {year:y, month:m}); });
     return stats;
   }
   // ---- Overview tab: this month's activity snapshot ----
@@ -10632,12 +12413,19 @@
       el.innerHTML = '<div class="empty">No activity types set up — add some in the Calendar tab.</div>';
       return;
     }
-    el.innerHTML = shown.map(t => `
+    el.innerHTML = shown.map(t => {
+      const n = stats[t.id] || 0;
+      // Holiday counts individual holidays (a day with two stacked counts
+      // as 2, see countActivityInstances), so label it accordingly instead
+      // of implying it's a day count like every other activity type.
+      const unit = t.id === 'holiday' ? `holiday${n===1?'':'s'}` : `day${n===1?'':'s'}`;
+      return `
       <div class="stat-box" style="border-left-color:${t.color};">
         <div class="lbl">${t.icon} ${escapeHtml(t.name)}</div>
-        <div class="val">${stats[t.id]||0} day${(stats[t.id]||0)===1?'':'s'}</div>
+        <div class="val">${n} ${unit}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
   function activitySummaryGridHtml(y, m){
     const stats = activityMonthSummary(y, m);
@@ -10669,8 +12457,14 @@
         const t = activityTypeById(id);
         return t ? `<div class="pdchip">${t.icon} ${escapeHtml(t.name)}</div>` : '';
       }).join('');
-      const noteHtml = rec && rec.note ? `<div class="pdchip" style="font-style:italic;color:var(--muted);">📝 ${escapeHtml(rec.note)}</div>` : '';
-      cellArr.push(`<td><div class="pdn">${day}</div><div class="pdacts">${chips}${noteHtml}</div></td>`);
+      // The note (e.g. a holiday's name, or several joined with " & ")
+      // gets a small 📝 badge in the cell's top-right corner — matching
+      // the interactive calendar — instead of being listed as if it were
+      // another activity. The text itself still prints inline below the
+      // activity chips, since a printed page can't show hover tooltips.
+      const noteBadge = rec && rec.note ? `<span class="pd-note-badge" title="${escapeHtml(rec.note)}">📝</span>` : '';
+      const noteHtml = rec && rec.note ? `<div class="pdnote">${escapeHtml(rec.note)}</div>` : '';
+      cellArr.push(`<td><div class="pdn">${day}</div>${noteBadge}<div class="pdacts">${chips}${noteHtml}</div></td>`);
     }
     let bodyRows = '';
     for(let r=0;r<cellArr.length/7;r++){
@@ -10695,14 +12489,14 @@
   }
   function activityYearReportHtml(y){
     const rows = activityTypes.map(t => ({
-      t, months: Array.from({length:12}, (_,m)=> countActivityDays(t.id, {year:y, month:m}))
+      t, months: Array.from({length:12}, (_,m)=> countActivityInstances(t.id, {year:y, month:m}))
     }));
     const yearTotals = activityMonthSummary(y, undefined);
     const table = `
       <table class="report-table">
         <thead><tr><th>Activity</th>${MONTH_NAMES.map(n=>`<th style="text-align:right;">${n.slice(0,3)}</th>`).join('')}<th style="text-align:right;">Year</th></tr></thead>
         <tbody>
-          ${rows.map(r => `<tr><td>${r.t.icon} ${escapeHtml(r.t.name)}</td>${r.months.map(v=>`<td style="text-align:right;">${v||''}</td>`).join('')}<td style="text-align:right;font-weight:700;">${countActivityDays(r.t.id, {year:y})}</td></tr>`).join('')}
+          ${rows.map(r => `<tr><td>${r.t.icon} ${escapeHtml(r.t.name)}</td>${r.months.map(v=>`<td style="text-align:right;">${v||''}</td>`).join('')}<td style="text-align:right;font-weight:700;">${countActivityInstances(r.t.id, {year:y})}</td></tr>`).join('')}
         </tbody>
       </table>
     `;
@@ -10768,6 +12562,120 @@
         ${statBoxesHtml(s)}
         ${categoryTableHtml(s.expenseByCat, 'Expense category')}
         ${categoryTableHtml(s.incomeByCat, 'Income category')}
+        ${billsReportSectionHtml(y, m, false)}
+      </div>
+    `;
+  }
+  // Renders the same paid/unpaid bill list shown live in the Bills tab, but
+  // as of the reported month rather than today — a bill added after that
+  // month is filtered out entirely rather than showing up as retroactively
+  // "unpaid". withIdx adds the numbered section badge used by the
+  // single-month report; monthSection (above) passes false since its
+  // sub-sections aren't numbered.
+  function billsReportSectionHtml(y, mZeroIndexed, withIdx, idxLabel){
+    const monthKey = monthKeyFor(y, mZeroIndexed);
+    const list = bills.filter(b => !b.createdAt || b.createdAt.slice(0,7) <= monthKey);
+    if(list.length === 0) return '';
+    const rows = list.map(b => billReportRow(b, y, mZeroIndexed)).join('');
+    const totals = {USD:{paid:0,unpaid:0}, LBP:{paid:0,unpaid:0}};
+    list.forEach(b=>{
+      const cur = b.currency === 'LBP' ? 'LBP' : 'USD';
+      if(b.frequency === 'daily'){
+        const stats = dailyBillReportStats(b, y, mZeroIndexed);
+        totals[cur].paid += stats.paidDays * (Number(b.amount) || 0);
+        totals[cur].unpaid += (stats.totalDays - stats.paidDays) * (Number(b.amount) || 0);
+        return;
+      }
+      const key = b.frequency === 'yearly' ? String(y) : monthKey;
+      const bucket = (b.paidPeriods && b.paidPeriods[key]) ? 'paid' : 'unpaid';
+      totals[cur][bucket] += Number(b.amount) || 0;
+    });
+    const heading = withIdx ? `<h3><span class="idx">${idxLabel}</span>Bills</h3>` : `<h5 style="font-family:'Fraunces',serif;color:var(--forest);font-size:13px;margin:14px 0 6px;">Bills</h5>`;
+    return `
+      <div class="${withIdx ? 'report-section' : ''}">
+        ${heading}
+        <table class="report-table">
+          <thead><tr><th>Bill</th><th>Category</th><th>Due</th><th style="text-align:right;">Amount</th><th style="text-align:center;">Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px;">Unpaid: ${fmtUSD(totals.USD.unpaid)} · ${fmtLBP(totals.LBP.unpaid)} &nbsp;|&nbsp; Paid: ${fmtUSD(totals.USD.paid)} · ${fmtLBP(totals.LBP.paid)}</p>
+      </div>
+    `;
+  }
+
+  // Year-scope counterpart to billsReportSectionHtml — instead of one
+  // month's paid/unpaid snapshot, this totals each bill's paid vs unpaid
+  // periods across the whole reported year (days for a daily bill, months
+  // for a monthly bill, the single year-period for a yearly bill), so an
+  // annual report shows the full year's bill activity in one table instead
+  // of needing 12 separate month sections.
+  function billsYearSummaryHtml(y, withIdx, idxLabel){
+    const list = bills.filter(b => !b.createdAt || b.createdAt.slice(0,4) <= String(y));
+    if(list.length === 0) return '';
+    const rows = list.map(b=>{
+      const fmt = b.currency === 'USD' ? fmtUSD : fmtLBP;
+      let paidAmt = 0, unpaidAmt = 0, paidCount = 0, totalCount = 0;
+      if(b.frequency === 'yearly'){
+        totalCount = 1;
+        const paid = !!(b.paidPeriods && b.paidPeriods[String(y)]);
+        if(paid){ paidAmt += Number(b.amount) || 0; paidCount = 1; } else unpaidAmt += Number(b.amount) || 0;
+      } else if(b.frequency === 'daily'){
+        for(let m=0;m<12;m++){
+          const stats = dailyBillReportStats(b, y, m);
+          totalCount += stats.totalDays;
+          paidCount += stats.paidDays;
+          paidAmt += stats.paidDays * (Number(b.amount) || 0);
+          unpaidAmt += (stats.totalDays - stats.paidDays) * (Number(b.amount) || 0);
+        }
+      } else {
+        for(let m=0;m<12;m++){
+          const mk = monthKeyFor(y, m);
+          if(b.createdAt && b.createdAt.slice(0,7) > mk) continue;
+          totalCount++;
+          const paid = !!(b.paidPeriods && b.paidPeriods[mk]);
+          if(paid){ paidAmt += Number(b.amount) || 0; paidCount++; } else unpaidAmt += Number(b.amount) || 0;
+        }
+      }
+      return `
+        <tr>
+          <td>${escapeHtml(b.name)}</td>
+          <td>${escapeHtml(b.category || '—')}</td>
+          <td>${BILL_FREQ_LABEL[b.frequency] || 'Monthly'}</td>
+          <td style="text-align:center;">${paidCount}/${totalCount || 0}</td>
+          <td style="text-align:right;">${fmt(paidAmt)}</td>
+          <td style="text-align:right;">${fmt(unpaidAmt)}</td>
+        </tr>
+      `;
+    }).join('');
+    const heading = withIdx ? `<h3><span class="idx">${idxLabel}</span>Bills</h3>` : `<h5 style="font-family:'Fraunces',serif;color:var(--forest);font-size:13px;margin:14px 0 6px;">Bills</h5>`;
+    return `
+      <div class="${withIdx ? 'report-section' : ''}">
+        ${heading}
+        <table class="report-table">
+          <thead><tr><th>Bill</th><th>Category</th><th>Frequency</th><th style="text-align:center;">Paid periods</th><th style="text-align:right;">Paid</th><th style="text-align:right;">Unpaid</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+  // All-time report has no single "period" to score bills against, so
+  // instead of a paid/unpaid tally it shows each bill's current live
+  // status — the same due date + paid/unpaid-for-its-current-period view
+  // as the live Bills tab — as of today.
+  function billsCurrentStatusHtml(withIdx, idxLabel){
+    const today = todayISO();
+    const list = billsActiveAsOf(today);
+    if(list.length === 0) return '';
+    const now = new Date();
+    const rows = list.map(b => billReportRow(b, now.getFullYear(), now.getMonth())).join('');
+    const heading = withIdx ? `<h3><span class="idx">${idxLabel}</span>Bills (current status)</h3>` : `<h5 style="font-family:'Fraunces',serif;color:var(--forest);font-size:13px;margin:14px 0 6px;">Bills (current status)</h5>`;
+    return `
+      <div class="${withIdx ? 'report-section' : ''}">
+        ${heading}
+        <table class="report-table">
+          <thead><tr><th>Bill</th><th>Category</th><th>Due</th><th style="text-align:right;">Amount</th><th style="text-align:center;">Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
       </div>
     `;
   }
@@ -10992,6 +12900,7 @@
               </tbody>
             </table>` : '<p style="font-size:13px;color:var(--muted);">No transactions.</p>'}
           </div>
+          ${billsReportSectionHtml(y, m-1, true, '5')}
           ${reportType === 'combined' ? activityReportHtml(y, m-1, genDate) : ''}
           ${reportFoot(genDate, periodRateLabel(s))}
         </div>
@@ -11032,6 +12941,7 @@
             ${categoryTableHtml(yearStats.expenseByCat, 'Expense category') || '<p style="font-size:13px;color:var(--muted);">No expenses recorded.</p>'}
             ${categoryTableHtml(yearStats.incomeByCat, 'Income category')}
           </div>
+          ${billsYearSummaryHtml(y, true, '4')}
           ${reportType === 'combined' ? activityYearReportHtml(y) : ''}
           ${reportFoot(genDate, periodRateLabel(yearStats))}
         </div>
@@ -11050,6 +12960,7 @@
             ${categoryTableHtml(allStats.expenseByCat, 'Expense category') || '<p style="font-size:13px;color:var(--muted);">No expenses recorded.</p>'}
             ${categoryTableHtml(allStats.incomeByCat, 'Income category')}
           </div>
+          ${billsCurrentStatusHtml(true, '4')}
           ${reportFoot(genDate, periodRateLabel(allStats))}
         </div>
       `;
@@ -11179,13 +13090,16 @@
     btn.disabled = true;
     btn.textContent = 'Preparing PDF…';
     try{
+      const landscape = $('rep-orientation').value === 'landscape';
+      // 210mm/297mm converted at the standard 96dpi CSS reference (96/25.4 px per mm).
+      const captureWidthPx = landscape ? 1123 : 794;
       const opt = {
         margin: 0,
         filename: lastReportName + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: $('rep-orientation').value === 'landscape' ? 'landscape' : 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: 'tr, .month-block, .report-section, .highlight-grid, .actcal-print' }
+        html2canvas: { scale: 2, useCORS: true, windowWidth: captureWidthPx },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' },
+        pagebreak: { mode: ['css'], avoid: 'tr, .month-block, .highlight-grid, .report-section, .report-footer' }
       };
       const blob = await html2pdf().set(opt).from(el).outputPdf('blob');
       const url = URL.createObjectURL(blob);
@@ -11240,7 +13154,7 @@
     $('rec-start').value = todayISO();
     renderReceiptField();
     busySaving();
-    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadReadNotificationIds(), loadInboxNotifications(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting(), loadLanguageSetting()]);
+    await Promise.all([loadEntries(), loadCategories(), loadProfile(), loadAccounts(), loadBudgets(), loadRecurring(), loadBills(), loadExchangeRateSetting(), loadReminderPrefs(), loadDismissedReminders(), loadReadNotificationIds(), loadInboxNotifications(), loadActivityTypes(), loadActivityRecords(), loadFuelPricesSetting(), loadFuelSourcePref(), loadFuelProxyPref(), loadLanguageSetting(), loadHolidayApiSettings()]);
     applyTranslations();
     initLanguageSetting();
     $('f-rate').value = formatAmountValue(String(currentExchangeRate));
@@ -11264,6 +13178,8 @@
     renderOverview();
     renderBudgets();
     renderRecurringList();
+    resetBillForm();
+    renderBills();
     renderProfile();
     renderCalendar();
     renderTracker();
@@ -11276,6 +13192,12 @@
     initAppSettings();
     startSelfBanWatch();
     renderFooterStats();
+    // Required for every new profile — a brand-new signup, a first login
+    // right after confirming email, or a first-time "Skip" into local-only
+    // mode all land here with no profile record saved yet. Shown last, on
+    // top of the fully-rendered app, so there's nothing left uninitialized
+    // underneath it.
+    if(!hasSavedProfile) showOnboardingModal();
   }
 
   // ---------- app settings (device-local: theme + quick add visibility) ----------
@@ -11366,10 +13288,49 @@
   });
 
   // ---------- profile ----------
+  // ---------- header greeting ----------
+  // Picks a time-of-day appropriate phrase at random from a small pool
+  // (so it doesn't say the exact same thing every visit), pairs it with
+  // the user's name, and shows the current clock time in small text
+  // next to it. The phrase itself is only re-rolled when the greeting
+  // is re-rendered (login, profile load, username change) — the clock
+  // portion alone ticks forward on its own timer below.
+  const HEADER_GREETING_POOLS = {
+    morning: ['Good morning', 'Morning', 'Rise and shine', 'Hello, early bird'],
+    afternoon: ['Good afternoon', 'Afternoon', 'Hey there'],
+    evening: ['Good evening', 'Evening', 'Hi there'],
+    night: ['Up late?', 'Still awake?', 'Burning the midnight oil?', 'Night owl mode']
+  };
+  let headerGreetingTimer = null;
+  function pickHeaderGreeting(hour){
+    let pool;
+    if(hour >= 5 && hour < 12) pool = HEADER_GREETING_POOLS.morning;
+    else if(hour >= 12 && hour < 17) pool = HEADER_GREETING_POOLS.afternoon;
+    else if(hour >= 17 && hour < 21) pool = HEADER_GREETING_POOLS.evening;
+    else pool = HEADER_GREETING_POOLS.night;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function renderHeaderGreeting(){
+    const el = $('header-eyebrow');
+    if(!el) return;
+    const now = new Date();
+    const name = (myProfile.username || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : '') || '').trim();
+    const phrase = pickHeaderGreeting(now.getHours());
+    const text = name ? `${phrase}, ${escapeHtml(name)}` : phrase;
+    const time = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+    el.innerHTML = `<span class="hdr-greeting-text">${text}</span><span class="hdr-greeting-time">${time}</span>`;
+    if(headerGreetingTimer) clearInterval(headerGreetingTimer);
+    headerGreetingTimer = setInterval(()=>{
+      const timeEl = el.querySelector('.hdr-greeting-time');
+      if(timeEl) timeEl.textContent = new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+    }, 30000);
+  }
+
   function renderProfile(){
     const info = $('profile-info');
     const actions = $('profile-account-actions');
     $('profile-username').value = myProfile.username || '';
+    renderHeaderGreeting();
     $('profile-jobtitle').value = currentJobTitle();
     $('profile-jobtitle-date').value = new Date().toISOString().slice(0,10);
     renderJobTitleHistory();
