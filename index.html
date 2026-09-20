@@ -1185,8 +1185,8 @@
     -webkit-print-color-adjust:exact;
   }
   .report-doc > *{position:relative;z-index:1;}
-  /* Added to the report inside html2canvas's private clone while the PDF is
-     built (see preparePdfClone in the script). The PDF's page margins now come
+  /* Added to the private copy of the report that layoutPdfReport() lays out into
+     PDF pages (see the script). The PDF's page margins now come
      from the PDF itself, so the sheet's own padding/width/min-height must not
      add a second, uneven set of margins on top. */
   .report-doc.pdf-export{
@@ -1204,6 +1204,24 @@
   .report-doc.pdf-export table.report-table.wide-table td{padding:5px 3px;overflow-wrap:anywhere;}
   .report-doc.pdf-export table.report-table.wide-table th:first-child{width:9%;}
   .pdf-pgbreak{display:block;}
+  /* One A4 sheet of the PDF (see makePdfSheet in the script). The watermark is
+     drawn on the sheet itself so every page carries it edge to edge, and the
+     report inside is left transparent so it shows through. */
+  .pdf-sheet{
+    position:relative; overflow:hidden; background-color:#fff;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='230'%3E%3Ctext x='-10' y='120' font-family='Fraunces, serif' font-weight='700' font-size='34' fill='%231E3D32' fill-opacity='0.055' transform='rotate(-32 115 115)'%3ETDA%3C/text%3E%3C/svg%3E");
+    background-repeat:repeat;
+    print-color-adjust:exact; -webkit-print-color-adjust:exact;
+  }
+  .pdf-sheet-clip{position:absolute; overflow:hidden;}
+  .pdf-sheet .report-doc.pdf-export{background:transparent;}
+  .report-doc.pdf-export::before{display:none;}
+  .pdf-sheet-foot{
+    position:absolute; bottom:6mm; height:7mm; box-sizing:border-box;
+    border-top:0.25mm solid #C9BFA0; padding-top:1.7mm;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    font-family:'Space Mono',monospace; font-size:7.5pt; line-height:1.2; color:#7a7358;
+  }
   #reportOutput{
     padding:6px 0 4px;
     overflow-x:auto;
@@ -1832,12 +1850,18 @@
   .pdf-pager-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
   .pdf-pager-nav{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;flex:1;min-width:0;}
   #pdf-pages-wrap{
-    width:100%; min-height:min(70vh, 420px); max-height:70vh; overflow:auto;
+    width:100%; min-height:180px; overflow:auto;
     background:#525659; border:1px solid var(--rule); border-radius:8px;
-    display:flex; align-items:flex-start; justify-content:center; padding:14px 0;
-    transition:max-height .2s ease, min-height .2s ease;
+    display:block; padding:14px;
   }
-  #pdf-pages-wrap canvas{max-width:100%; height:auto; box-shadow:0 4px 18px rgba(0,0,0,0.35); background:#fff;}
+  /* The preview is the very same image that goes into the PDF, so it is shown
+     whole at the page's own proportions instead of in a small scrolling box. */
+  #pdf-pages-wrap img{
+    display:block; margin:0 auto; width:100%; max-width:820px; height:auto;
+    box-shadow:0 4px 18px rgba(0,0,0,0.35); background:#fff;
+  }
+  .pdf-pending{display:none; color:#d8d8d8; text-align:center; padding:70px 10px; font-size:13px;}
+  .btn.is-busy{opacity:0.65; cursor:progress; pointer-events:none;}
   .pdf-fallback-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
 
   /* PDF preview — maximized / fullscreen mode */
@@ -1852,10 +1876,13 @@
   #pdf-preview-wrap.pdf-zoomed #pdf-pages-wrap{
     flex:1 1 auto; min-height:0; max-height:none;
   }
+  /* Enlarged: show the page at (at least) its real size; on a phone that means
+     the page can be panned sideways instead of shrinking to unreadable text. */
+  #pdf-preview-wrap.pdf-zoomed #pdf-pages-wrap img{width:clamp(760px, 100%, 1100px); max-width:none;}
   @media (max-width:600px){
     .pdf-pager-toolbar{gap:8px;}
     .pdf-page-label{min-width:76px;font-size:12px;padding:6px 12px;}
-    #pdf-pages-wrap{min-height:min(58vh, 360px); max-height:58vh;}
+    #pdf-pages-wrap{padding:10px;}
   }
 
   @media print{
@@ -3345,7 +3372,7 @@
           <div class="rep-head-icon">📄</div>
           <div>
             <h2>PDF Preview</h2>
-            <p class="rep-head-sub">Every page rendered live — use Enlarge for a closer look, then download or print when you're ready.</p>
+            <p class="rep-head-sub">Exactly what the downloaded PDF contains, page numbers included — use Enlarge for a closer look.</p>
           </div>
         </div>
         <div class="pdf-pager-toolbar">
@@ -3356,8 +3383,8 @@
           </div>
           <button class="pdf-zoom-btn" id="btn-pdf-zoom" type="button" aria-label="Enlarge preview" title="Enlarge">⛶</button>
         </div>
-        <div id="pdf-pages-wrap"><canvas id="pdf-page-canvas"></canvas></div>
-        <p class="pdf-fallback-note" id="pdf-fallback-note" style="display:none;">Live preview isn't available in this browser — use Download or Print below to view every page.</p>
+        <div id="pdf-pages-wrap"><img id="pdf-page-img" alt="Report page" style="display:none;"><div id="pdf-page-pending" class="pdf-pending">Rendering page…</div></div>
+        <p class="pdf-fallback-note" id="pdf-fallback-note" style="display:none;">The preview couldn't be built in this browser — use Print below, or try Preview &amp; Download PDF again.</p>
         <div class="rep-actions" style="margin-top:16px;">
           <a class="btn brass" id="btn-download-pdf" href="#" download="accounting-report.pdf">⬇️ Download PDF</a>
           <button class="btn subtle" id="btn-print-from-preview">🖨️ Print this PDF</button>
@@ -4044,8 +4071,8 @@
 
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -13038,137 +13065,83 @@
   $('btn-print').addEventListener('click', ()=>{ window.print(); });
   $('btn-print-from-preview').addEventListener('click', ()=>{ window.print(); });
 
-  // ---------- PDF preview pager (renders every page with pdf.js so it
-  // works even in mobile browsers/in-app webviews that can't show a
-  // PDF inside an <iframe>) ----------
-  if(typeof pdfjsLib !== 'undefined'){
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-  let pdfDoc = null;
+  // ---------- PDF preview + download ----------
+  // The PDF is built from real A4 "sheets". The report is laid out once at the
+  // exact printable width inside a hidden, fixed-width frame (so phone-size
+  // media queries can never change the layout), cut into pages at safe points
+  // (never through a table row, heading or tile), and every page is drawn onto
+  // its own A4 sheet together with a "TDA Accounting · Page X of Y" footer.
+  // The preview shows those very same rendered pages and the download is a PDF
+  // made from them, so preview, download and page numbers always agree.
+  const PDF_MARGINS_MM = [14, 12, 18, 12];   // top, left, bottom, right
+  const PDF_CANVAS_SCALE = 2;
+  const PDF_JPEG_QUALITY = 0.95;
+  const MM_PX = 96 / 25.4;
+  // Content is kept this many px clear of every page edge, and each page window
+  // is that much shorter than the slice it shows. Without the gap, browsers'
+  // pixel snapping can let the top hairline of the *next* page's first element
+  // peek in above the footer.
+  const PDF_EDGE_GAP_PX = 2;
+  const PDF_BTN_LABEL = '⬇️ Preview & Download PDF';
+  const PDF_DL_LABEL = '⬇️ Download PDF';
+
+  let pdfJob = 0;          // bumped to cancel a build that is still running
+  let pdfPages = [];       // rendered page images (data URLs), index = page - 1
+  let pdfTotalPages = 0;
   let pdfPageNum = 1;
-  let pdfRendering = false;
-  let pdfRenderTask = null; // in-flight pdf.js render task, so we can cancel it instead of racing it
+  let pdfBlobUrl = null;
 
-  async function renderPdfPage(num, attempt){
-    attempt = attempt || 0;
-    if(!pdfDoc) return;
-
-    // If a previous render is still in flight (e.g. the user zoomed right
-    // after generating, or a resize fired mid-render), cancel it instead of
-    // letting it fight the new one — otherwise the canvas can get cleared by
-    // one call and never repainted by the other, leaving it permanently blank.
-    if(pdfRenderTask){
-      try{ pdfRenderTask.cancel(); }catch(_e){}
-      pdfRenderTask = null;
-    }
-
-    const wrap = $('pdf-pages-wrap');
-    let wrapWidth = Math.min(wrap.clientWidth - 20, 900);
-    if(!(wrapWidth > 0)){
-      // Layout hasn't settled yet (common right after toggling the fixed-
-      // position zoomed overlay on mobile) — wait a frame and retry a few
-      // times rather than rendering at a bogus size or giving up blank.
-      if(attempt < 5){
-        requestAnimationFrame(()=> renderPdfPage(num, attempt + 1));
-        return true;
-      }
-      wrapWidth = 600;
-    }
-
-    pdfRendering = true;
-    try{
-      const page = await pdfDoc.getPage(num);
-      const baseViewport = page.getViewport({scale:1});
-      const scale = (wrapWidth / baseViewport.width) * (window.devicePixelRatio || 1);
-      const viewport = page.getViewport({scale: Math.max(scale, 0.5)});
-      const canvas = $('pdf-page-canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const task = page.render({canvasContext: ctx, viewport});
-      pdfRenderTask = task;
-      await task.promise;
-      pdfRenderTask = null;
-      pdfPageNum = num;
-      $('pdf-page-label').textContent = `Page ${num} / ${pdfDoc.numPages}`;
-      $('btn-pdf-prev').disabled = num <= 1;
-      $('btn-pdf-next').disabled = num >= pdfDoc.numPages;
-      return true;
-    }catch(err){
-      // A cancelled render (from the guard above) is expected — the call
-      // that superseded it will finish the job, so just bow out quietly.
-      // Any other error means the preview genuinely failed: fall back to
-      // the download/print note instead of leaving a blank canvas behind.
-      if(err && err.name === 'RenderingCancelledException') return true;
-      $('pdf-pages-wrap').style.display = 'none';
-      const toolbar = document.querySelector('.pdf-pager-toolbar');
-      if(toolbar) toolbar.style.display = 'none';
-      $('pdf-fallback-note').style.display = 'block';
-      return false;
-    }finally{
-      pdfRendering = false;
-    }
+  function pdfGeometry(landscape){
+    const pageWmm = landscape ? 297 : 210, pageHmm = landscape ? 210 : 297;
+    const mt = PDF_MARGINS_MM[0], ml = PDF_MARGINS_MM[1], mb = PDF_MARGINS_MM[2], mr = PDF_MARGINS_MM[3];
+    return {
+      landscape, pageWmm, pageHmm, mt, ml, mb, mr,
+      innerWmm: pageWmm - ml - mr,
+      innerHmm: pageHmm - mt - mb,
+      framePxW: Math.ceil(pageWmm * MM_PX),
+      framePxH: Math.ceil(pageHmm * MM_PX) + 8
+    };
   }
-  $('btn-pdf-prev').addEventListener('click', ()=>{ if(!pdfRendering && pdfPageNum > 1) renderPdfPage(pdfPageNum - 1); });
-  $('btn-pdf-next').addEventListener('click', ()=>{ if(!pdfRendering && pdfDoc && pdfPageNum < pdfDoc.numPages) renderPdfPage(pdfPageNum + 1); });
 
-  // ---------- PDF preview enlarge / minimize ----------
-  const pdfZoomBtn = $('btn-pdf-zoom');
-  function setPdfZoom(on){
-    const wrap = $('pdf-preview-wrap');
-    wrap.classList.toggle('pdf-zoomed', on);
-    document.body.classList.toggle('pdf-zoom-lock', on);
-    pdfZoomBtn.textContent = on ? '✕' : '⛶';
-    pdfZoomBtn.setAttribute('aria-label', on ? 'Minimize preview' : 'Enlarge preview');
-    pdfZoomBtn.title = on ? 'Minimize' : 'Enlarge';
-    // Canvas is sized off the wrap's clientWidth. A single rAF isn't always
-    // enough for the fixed-position fullscreen layout to have settled
-    // (especially in mobile in-app webviews), so wait two frames — and
-    // renderPdfPage itself will retry further if the width still isn't
-    // ready — instead of rendering at a stale/zero size.
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{ if(pdfDoc) renderPdfPage(pdfPageNum); });
+  // The frame gets a copy of the app's stylesheets, so the report looks exactly
+  // as it does on the page — but at a fixed A4 width regardless of the device.
+  function createPdfFrame(g){
+    return new Promise((resolve) => {
+      let head = '';
+      document.querySelectorAll('link[rel="stylesheet"], style').forEach(n => { head += n.outerHTML; });
+      const f = document.createElement('iframe');
+      f.setAttribute('aria-hidden', 'true');
+      f.tabIndex = -1;
+      f.style.cssText = 'position:fixed;left:-20000px;top:0;border:0;opacity:0;pointer-events:none;' +
+        'width:' + g.framePxW + 'px;height:' + g.framePxH + 'px;';
+      let done = false;
+      const finish = () => { if(!done){ done = true; resolve(f); } };
+      f.onload = () => {
+        let ok = false;
+        try{ ok = f.contentDocument && f.contentDocument.documentElement.getAttribute('data-pdf-frame') === '1'; }catch(_e){}
+        if(ok) finish();
+      };
+      setTimeout(finish, 8000);
+      f.srcdoc = '<!DOCTYPE html><html data-pdf-frame="1"><head><meta charset="utf-8">' + head +
+        '<style>html,body{margin:0!important;padding:0!important;height:auto!important;min-height:0!important;' +
+        'background:#fff!important;}body::before,body::after{display:none!important;}</style></head><body></body></html>';
+      document.body.appendChild(f);
     });
   }
-  pdfZoomBtn.addEventListener('click', ()=>{
-    setPdfZoom(!$('pdf-preview-wrap').classList.contains('pdf-zoomed'));
-  });
-  document.addEventListener('keydown', (e)=>{
-    if(e.key === 'Escape' && $('pdf-preview-wrap').classList.contains('pdf-zoomed')) setPdfZoom(false);
-  });
-  let pdfResizeTimer = null;
-  window.addEventListener('resize', ()=>{
-    if(!pdfDoc) return;
-    clearTimeout(pdfResizeTimer);
-    pdfResizeTimer = setTimeout(()=>{ renderPdfPage(pdfPageNum); }, 150);
-  });
 
-  // ---------- PDF page layout + page numbers ----------
-  // Page margins of the exported PDF in mm: [top, left, bottom, right]. They
-  // are real jsPDF page margins, so EVERY page gets them (the old export used
-  // margin 0 and relied on the sheet's own padding, which only ever applied to
-  // the very first and very last page). The bottom margin leaves room for the
-  // "Page X of Y" footer that stampPdfPageNumbers() draws afterwards.
-  const PDF_MARGINS_MM = [14, 12, 18, 12];
-  const PDF_CANVAS_SCALE = 2;
-
-  // Runs inside html2canvas's private clone of the page — the exact DOM that
-  // is rasterised into the PDF. Page breaks are worked out here, in that same
-  // layout, instead of in the live page (whose layout differs on phones and
-  // in dark mode), which is what used to leave rows and headings sliced in
-  // half at page edges.
-  function preparePdfClone(cloneDoc, ratio){
-    const container = cloneDoc.querySelector('.html2pdf__container');
-    const rep = container && container.querySelector('.report-doc');
-    if(!rep) return;
-    rep.classList.add('pdf-export');
-    // html2pdf slices the captured canvas into pages of floor(canvasWidth *
-    // ratio) pixels; mirror that arithmetic so our breaks land on its cuts.
-    const canvasW = Math.floor(Math.ceil(container.getBoundingClientRect().width) * PDF_CANVAS_SCALE);
-    const pageH = Math.floor(canvasW * ratio) / PDF_CANVAS_SCALE;
-    if(!(pageH > 200)) return;
-    paginateReportClone(container, pageH);
+  async function pdfFontsReady(doc){
+    try{
+      if(!doc.fonts) return;
+      const wanted = ["400 12px 'Work Sans'", "500 12px 'Work Sans'", "600 12px 'Work Sans'", "700 12px 'Work Sans'",
+                      "400 12px 'Space Mono'", "700 12px 'Space Mono'",
+                      "400 12px 'Fraunces'", "600 12px 'Fraunces'", "700 12px 'Fraunces'"];
+      const all = Promise.all(wanted.map(f => doc.fonts.load(f).catch(() => {}))).then(() => doc.fonts.ready);
+      await Promise.race([all, new Promise(r => setTimeout(r, 5000))]);
+    }catch(_e){}
   }
+
+  // rAF is paused in a background tab, so never wait on it for more than a moment.
+  const nextFrame = () => new Promise(r => { requestAnimationFrame(() => r()); setTimeout(r, 120); });
 
   // Inserts spacer blocks so that nothing gets cut by a page boundary:
   //  • table rows, stat/highlight tile grids and month blocks are kept whole
@@ -13182,7 +13155,7 @@
       return { top: r.top - t, bottom: r.bottom - t, h: r.height };
     };
     const crosses = (top, bottom) =>
-      Math.floor((top + 0.5) / pageH) !== Math.floor((bottom - 0.05) / pageH);
+      Math.floor((top + 0.5) / pageH) !== Math.floor((bottom + PDF_EDGE_GAP_PX - 0.05) / pageH);
     const nextPageTop = (y) => (Math.floor((y + 0.5) / pageH) + 1) * pageH;
 
     // Push `el` (plus a repeated table header when it's a mid-table row) to
@@ -13236,6 +13209,11 @@
         return box(t.tBodies[0].rows[0]).bottom;
       }
       const nb = box(n);
+      // A tile grid / month block that fits on one page is moved as a whole, so
+      // its heading has to go with all of it (not just its first 30%), or the
+      // heading gets left alone at the foot of the previous page.
+      const movesWhole = n.matches && n.matches('.month-block, .stat-grid, .highlight-grid, .actcal-summary-grid');
+      if(movesWhole && nb.h <= pageH - PDF_EDGE_GAP_PX - 1) return nb.bottom;
       return Math.min(nb.bottom, nb.top + pageH * 0.3);
     }
 
@@ -13276,100 +13254,230 @@
         if(crosses(box(el).top, firstAfterBottom(el))) breakBefore(el);
       } else {
         const b = box(el);
-        const limit = el.classList.contains('report-section') ? pageH * 0.5 : pageH;
-        if(b.h <= limit && crosses(b.top, b.bottom)) breakBefore(el);
+        const limit = el.classList.contains('report-section') ? pageH * 0.5 : pageH - PDF_EDGE_GAP_PX - 1;
+        if(b.h <= limit && crosses(b.top, b.bottom)){
+          breakBefore(el);
+        } else if(b.h > limit && el.classList.contains('month-block')){
+          // Too tall for one page, so it has to flow — but never start it (box
+          // outline, heading and all) at the foot of a page with its first
+          // content on the next one.
+          const hd = el.querySelector('h4');
+          if(hd && crosses(b.top, firstAfterBottom(hd))) breakBefore(el);
+        }
       }
     });
   }
 
-  // "TDA Accounting" on the left and "Page X of Y" on the right of a thin rule
-  // in the bottom margin of every page. Runs on the finished jsPDF document, so
-  // the total page count is known and it shows up in both the download and
-  // the in-app preview (which renders that same PDF).
-  function stampPdfPageNumbers(pdf){
-    const total = pdf.internal.getNumberOfPages();
-    const ps = pdf.internal.pageSize;
-    const pw = ps.getWidth ? ps.getWidth() : ps.width;
-    const ph = ps.getHeight ? ps.getHeight() : ps.height;
-    const mLeft = PDF_MARGINS_MM[1], mRight = PDF_MARGINS_MM[3];
-    for(let i = 1; i <= total; i++){
-      pdf.setPage(i);
-      pdf.setDrawColor(201, 191, 160);
-      pdf.setLineWidth(0.2);
-      pdf.line(mLeft, ph - 13, pw - mRight, ph - 13);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8.5);
-      pdf.setTextColor(122, 115, 88);
-      pdf.text('TDA Accounting', mLeft, ph - 8.5);
-      pdf.text('Page ' + i + ' of ' + total, pw - mRight, ph - 8.5, { align: 'right' });
-    }
+  // Lays the whole report out once at printable width, works out where every
+  // page ends (paginateReportClone inserts spacers so nothing straddles a page
+  // edge) and returns what is needed to draw each page later.
+  async function layoutPdfReport(frame, sourceEl, g){
+    const doc = frame.contentDocument;
+    const stage = doc.createElement('div');
+    stage.style.cssText = 'position:relative;width:' + g.innerWmm + 'mm;background:#fff;';
+    const rep = sourceEl.cloneNode(true);
+    rep.classList.add('pdf-export');
+    stage.appendChild(rep);
+    doc.body.appendChild(stage);
+    void stage.offsetHeight;
+    await pdfFontsReady(doc);
+
+    // Tall enough that the frame never shows a scrollbar (which would narrow it).
+    frame.style.height = Math.ceil(stage.scrollHeight + 300) + 'px';
+
+    const probe = doc.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;left:0;top:0;width:1mm;height:' + g.innerHmm + 'mm;';
+    doc.body.appendChild(probe);
+    const pageH = probe.getBoundingClientRect().height;
+    probe.remove();
+
+    paginateReportClone(stage, pageH);
+
+    const total = rep.getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
+    const pages = Math.max(1, Math.ceil((total - 2) / pageH));
+    stage.remove();               // `rep` stays intact inside the detached stage
+    return { doc, rep, pageH, pages, g };
   }
+
+  // One finished A4 sheet: the slice of the report that belongs on page k,
+  // inside the page margins, with the page-number footer underneath.
+  function makePdfSheet(ctx, k){
+    const doc = ctx.doc, g = ctx.g;
+    const sheet = doc.createElement('div');
+    sheet.className = 'pdf-sheet';
+    sheet.style.width = g.pageWmm + 'mm';
+    sheet.style.height = g.pageHmm + 'mm';
+
+    const clip = doc.createElement('div');
+    clip.className = 'pdf-sheet-clip';
+    clip.style.cssText = 'left:' + g.ml + 'mm;top:' + g.mt + 'mm;width:' + g.innerWmm + 'mm;' +
+      'height:calc(' + g.innerHmm + 'mm - ' + PDF_EDGE_GAP_PX + 'px);';
+    const body = ctx.rep.cloneNode(true);
+    body.style.marginTop = (-k * ctx.pageH) + 'px';
+    clip.appendChild(body);
+    sheet.appendChild(clip);
+
+    const foot = doc.createElement('div');
+    foot.className = 'pdf-sheet-foot';
+    foot.style.left = g.ml + 'mm';
+    foot.style.right = g.mr + 'mm';
+    const l = doc.createElement('span'); l.textContent = 'TDA Accounting';
+    const r = doc.createElement('span'); r.textContent = 'Page ' + (k + 1) + ' of ' + ctx.pages;
+    foot.appendChild(l); foot.appendChild(r);
+    sheet.appendChild(foot);
+    return sheet;
+  }
+
+  // ---------- preview pager ----------
+  function showPdfPage(n){
+    pdfPageNum = Math.min(Math.max(1, n), Math.max(1, pdfTotalPages));
+    const img = $('pdf-page-img'), pending = $('pdf-page-pending');
+    const src = pdfPages[pdfPageNum - 1];
+    if(src){
+      if(img.getAttribute('src') !== src) img.src = src;
+      img.alt = 'Report page ' + pdfPageNum + ' of ' + pdfTotalPages;
+      img.style.display = 'block';
+      pending.style.display = 'none';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      pending.style.display = 'block';
+    }
+    $('pdf-page-label').textContent = 'Page ' + pdfPageNum + ' / ' + pdfTotalPages;
+    $('btn-pdf-prev').disabled = pdfPageNum <= 1;
+    $('btn-pdf-next').disabled = pdfPageNum >= pdfTotalPages;
+  }
+  $('btn-pdf-prev').addEventListener('click', ()=>{ showPdfPage(pdfPageNum - 1); });
+  $('btn-pdf-next').addEventListener('click', ()=>{ showPdfPage(pdfPageNum + 1); });
+
+  // ---------- preview enlarge / minimize ----------
+  const pdfZoomBtn = $('btn-pdf-zoom');
+  function setPdfZoom(on){
+    $('pdf-preview-wrap').classList.toggle('pdf-zoomed', on);
+    document.body.classList.toggle('pdf-zoom-lock', on);
+    pdfZoomBtn.textContent = on ? '✕' : '⛶';
+    pdfZoomBtn.setAttribute('aria-label', on ? 'Minimize preview' : 'Enlarge preview');
+    pdfZoomBtn.title = on ? 'Minimize' : 'Enlarge';
+    $('pdf-pages-wrap').scrollTop = 0;
+  }
+  pdfZoomBtn.addEventListener('click', ()=>{
+    setPdfZoom(!$('pdf-preview-wrap').classList.contains('pdf-zoomed'));
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && $('pdf-preview-wrap').classList.contains('pdf-zoomed')) setPdfZoom(false);
+  });
+
+  // ---------- download button state ----------
+  function setPdfDownloadBusy(label){
+    const dl = $('btn-download-pdf');
+    dl.removeAttribute('href');
+    dl.classList.add('is-busy');
+    dl.setAttribute('aria-disabled', 'true');
+    dl.textContent = label;
+  }
+  function setPdfDownloadReady(url, name){
+    const dl = $('btn-download-pdf');
+    dl.href = url;
+    dl.download = name;
+    dl.classList.remove('is-busy');
+    dl.removeAttribute('aria-disabled');
+    dl.textContent = PDF_DL_LABEL;
+  }
+
+  // Starting a new report (or a new build) cancels one that is still running.
+  $('btn-generate').addEventListener('click', ()=>{
+    pdfJob++;
+    const b = $('btn-pdf');
+    b.disabled = false;
+    b.textContent = PDF_BTN_LABEL;
+  });
 
   $('btn-pdf').addEventListener('click', async ()=>{
     const el = document.querySelector('#reportOutput .report-doc');
     if(!el){ toast('Generate a report first', true); return; }
-    if(typeof html2pdf === 'undefined'){ toast('PDF engine failed to load — check your connection', true); return; }
+    if(typeof window.html2canvas !== 'function' || !(window.jspdf && window.jspdf.jsPDF)){
+      toast('PDF engine failed to load — check your connection', true);
+      return;
+    }
     const btn = $('btn-pdf');
-    const originalLabel = btn.textContent;
+    const job = ++pdfJob;
+    const alive = () => job === pdfJob;
     btn.disabled = true;
     btn.textContent = 'Preparing PDF…';
-    try{
-      const landscape = $('rep-orientation').value === 'landscape';
-      // 210mm/297mm converted at the standard 96dpi CSS reference (96/25.4 px per mm).
-      const captureWidthPx = landscape ? 1123 : 794;
-      const pageWmm = landscape ? 297 : 210, pageHmm = landscape ? 210 : 297;
-      const innerRatio = (pageHmm - PDF_MARGINS_MM[0] - PDF_MARGINS_MM[2]) / (pageWmm - PDF_MARGINS_MM[1] - PDF_MARGINS_MM[3]);
-      const opt = {
-        margin: PDF_MARGINS_MM,
-        filename: lastReportName + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: PDF_CANVAS_SCALE, useCORS: true, windowWidth: captureWidthPx, backgroundColor: '#ffffff',
-          onclone: (cloneDoc) => { preparePdfClone(cloneDoc, innerRatio); }
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' },
-        // Page breaks are computed in preparePdfClone (in the same layout that
-        // gets rasterised), so html2pdf's own break detection is switched off.
-        pagebreak: { mode: ['legacy'] }
-      };
-      const blob = await html2pdf().set(opt).from(el).toPdf().get('pdf').then(stampPdfPageNumbers).outputPdf('blob');
-      const url = URL.createObjectURL(blob);
-      const dl = $('btn-download-pdf');
-      dl.href = url;
-      dl.download = lastReportName + '.pdf';
 
+    const g = pdfGeometry($('rep-orientation').value === 'landscape');
+    let frame = null;
+    try{
+      frame = await createPdfFrame(g);
+      const ctx = await layoutPdfReport(frame, el, g);
+      if(!alive()) return;
+
+      // Fresh preview state; the pages fill in one by one as they are drawn.
+      if(pdfBlobUrl){ URL.revokeObjectURL(pdfBlobUrl); pdfBlobUrl = null; }
+      pdfPages = [];
+      pdfTotalPages = ctx.pages;
       $('pdf-preview-wrap').style.display = 'block';
-      if(typeof pdfjsLib !== 'undefined'){
-        try{
-          const arrayBuffer = await blob.arrayBuffer();
-          pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-          $('pdf-pages-wrap').style.display = 'flex';
-          document.querySelector('.pdf-pager-toolbar').style.display = 'flex';
-          $('pdf-fallback-note').style.display = 'none';
-          const rendered = await renderPdfPage(1);
-          if(rendered){
-            toast('PDF ready — ' + pdfDoc.numPages + (pdfDoc.numPages===1 ? ' page' : ' pages'));
-          } else {
-            toast('PDF ready — use Download to view it');
-          }
-        }catch(pdfErr){
+      $('pdf-pages-wrap').style.display = 'block';
+      document.querySelector('.pdf-pager-toolbar').style.display = 'flex';
+      $('pdf-fallback-note').style.display = 'none';
+      showPdfPage(1);
+      setPdfDownloadBusy('⏳ Preparing PDF… 0/' + ctx.pages);
+
+      const orient = g.landscape ? 'landscape' : 'portrait';
+      const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: orient, compress: true });
+      try{ pdf.setProperties({ title: lastReportName, creator: 'TDA Accounting' }); }catch(_e){}
+
+      for(let k = 0; k < ctx.pages; k++){
+        const sheet = makePdfSheet(ctx, k);
+        ctx.doc.body.appendChild(sheet);
+        frame.style.height = g.framePxH + 'px';
+        void sheet.offsetHeight;
+        await nextFrame();
+        const imgs = Array.from(sheet.querySelectorAll('img'));
+        await Promise.all(imgs.map(i => (i.decode ? i.decode().catch(()=>{}) : Promise.resolve())));
+        const canvas = await window.html2canvas(sheet, {
+          scale: PDF_CANVAS_SCALE, useCORS: true, backgroundColor: '#ffffff', logging: false,
+          windowWidth: g.framePxW, windowHeight: g.framePxH, scrollX: 0, scrollY: 0
+        });
+        sheet.remove();
+        if(!alive()) return;
+        const dataUrl = canvas.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
+        canvas.width = canvas.height = 0;
+
+        if(k > 0) pdf.addPage('a4', orient);
+        pdf.addImage(dataUrl, 'JPEG', 0, 0, g.pageWmm, g.pageHmm, undefined, 'FAST');
+        pdfPages[k] = dataUrl;
+        if(pdfPageNum === k + 1) showPdfPage(k + 1);
+        setPdfDownloadBusy('⏳ Preparing PDF… ' + (k + 1) + '/' + ctx.pages);
+        if(k === 0){
+          btn.disabled = false;
+          btn.textContent = PDF_BTN_LABEL;
+          $('pdf-preview-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+        }
+      }
+
+      const blob = pdf.output('blob');
+      pdfBlobUrl = URL.createObjectURL(blob);
+      setPdfDownloadReady(pdfBlobUrl, lastReportName + '.pdf');
+      toast('PDF ready — ' + ctx.pages + (ctx.pages === 1 ? ' page' : ' pages'));
+    }catch(err){
+      console.error('PDF build failed', err);
+      if(alive()){
+        if(!pdfPages.length){
           $('pdf-pages-wrap').style.display = 'none';
           document.querySelector('.pdf-pager-toolbar').style.display = 'none';
           $('pdf-fallback-note').style.display = 'block';
-          toast('PDF ready — use Download to view it');
         }
-      } else {
-        $('pdf-pages-wrap').style.display = 'none';
-        document.querySelector('.pdf-pager-toolbar').style.display = 'none';
-        $('pdf-fallback-note').style.display = 'block';
-        toast('PDF ready — use Download to view it');
+        setPdfDownloadBusy('⬇️ Download unavailable');
+        toast('Could not build the PDF', true);
       }
-      $('pdf-preview-wrap').scrollIntoView({behavior:'smooth', block:'start'});
-    }catch(e){
-      toast('Could not build the PDF', true);
+    }finally{
+      if(frame && frame.parentNode) frame.parentNode.removeChild(frame);
+      if(alive()){
+        btn.disabled = false;
+        btn.textContent = PDF_BTN_LABEL;
+      }
     }
-    btn.disabled = false;
-    btn.textContent = originalLabel;
   });
 
   // ---------- init ----------
