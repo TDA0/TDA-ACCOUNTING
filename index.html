@@ -12900,6 +12900,18 @@
 
   let lastReportName = 'accounting-report';
 
+  // Download filename convention:
+  //   single month -> "<month#>-<monabbr><yy>-<type>"  e.g. "7-jun26-combined"
+  //   full year    -> "<year>-<type>"                  e.g. "2026-combined"
+  function reportBaseName(y, m, type){ // m: 1-12, or falsy for a full-year name
+    if(m){
+      const yy = String(y).slice(-2);
+      const mon = MONTH_NAMES[m-1].slice(0,3).toLowerCase();
+      return `${m}-${mon}${yy}-${type}`;
+    }
+    return `${y}-${type}`;
+  }
+
   // A table this short (header + rows + total) is kept on one page; longer
   // ones flow across pages with the header row repeated. Used by the CSS
   // class below (native print) and by paginateReportClone (PDF export).
@@ -12916,7 +12928,7 @@
       const val = $('rep-month').value;
       if(!val){ alertInline('Pick a month first.'); return null; }
       const [y,m] = val.split('-').map(Number);
-      lastReportName = `tracker-${y}-${String(m).padStart(2,'0')}`;
+      lastReportName = reportBaseName(y, m, reportType);
       return `
         <div class="report-doc">
           ${reportHead('Calendar &amp; Activity Report', `${MONTH_NAMES[m-1]} ${y}`, 0, genDate, lastDayOfMonthStr(y,m))}
@@ -12927,7 +12939,7 @@
     } else if(scope === 'year'){
       const y = parseInt($('rep-year').value, 10);
       if(!y){ alertInline('Enter a year first.'); return null; }
-      lastReportName = `tracker-${y}-annual`;
+      lastReportName = reportBaseName(y, null, reportType);
       return `
         <div class="report-doc">
           ${reportHead('Annual Calendar &amp; Activity Report', `Year ${y}`, 0, genDate, lastDayOfYearStr(y))}
@@ -12968,7 +12980,7 @@
         if(e.currency==='USD') acc.USD += e.amount; else acc.LBP += e.amount;
         return acc;
       }, {USD:0, LBP:0});
-      lastReportName = `accounting-${y}-${String(m).padStart(2,'0')}`;
+      lastReportName = reportBaseName(y, m, reportType);
       html = `
         <div class="report-doc">
           ${reportHead('Monthly Financial Report', `${MONTH_NAMES[m-1]} ${y}`, s.count, genDate, lastDayOfMonthStr(y,m), periodRateLabel(s))}
@@ -13019,7 +13031,7 @@
       const yearStats = computeStats(filterEntries({year:y}));
       const rows = [];
       for(let m=0;m<12;m++) rows.push({label: MONTH_NAMES[m].slice(0,3), s: computeStats(filterEntries({year:y, month:m}))});
-      lastReportName = `accounting-${y}-annual`;
+      lastReportName = reportBaseName(y, null, reportType);
       html = `
         <div class="report-doc">
           ${reportHead('Annual Financial Report', `Year ${y}`, yearStats.count, genDate, lastDayOfYearStr(y), periodRateLabel(yearStats))}
