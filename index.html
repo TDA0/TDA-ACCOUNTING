@@ -1145,6 +1145,15 @@
   /* ===== Report / print ===== */
   #reportOutput{display:none;}
   .report-doc{
+    /* The report is a sheet of paper, so it always uses the light palette,
+       even when the app itself is in dark mode. Without this, the preview,
+       the printout and the downloaded PDF all came out dark with unreadable
+       light-on-white text. Re-declaring the tokens here re-points every
+       var() used by the report's children. */
+    --ink:#1F2A24; --paper:#F3EED9; --paper-2:#EAE3C9; --forest:#1E3D32; --forest-2:#28503F;
+    --brass:#A9803F; --brass-dim:#C9A96A; --teal:#2F6478; --rule:#C9BFA0; --brick:#9C4438;
+    --green-ok:#3E6B4F; --white:#FFFDF7; --muted:#7a7358;
+    color:var(--ink);
     background:var(--white);
     padding:18mm 16mm 16mm;
     border:1px solid var(--rule);
@@ -1175,10 +1184,26 @@
     print-color-adjust:exact;
     -webkit-print-color-adjust:exact;
   }
-  html.theme-dark .report-doc::before{
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='230'%3E%3Ctext x='-10' y='120' font-family='Fraunces, serif' font-weight='700' font-size='34' fill='%23000000' fill-opacity='0.1' transform='rotate(-32 115 115)'%3ETDA%3C/text%3E%3C/svg%3E");
-  }
   .report-doc > *{position:relative;z-index:1;}
+  /* Added to the report inside html2canvas's private clone while the PDF is
+     built (see preparePdfClone in the script). The PDF's page margins now come
+     from the PDF itself, so the sheet's own padding/width/min-height must not
+     add a second, uneven set of margins on top. */
+  .report-doc.pdf-export{
+    width:100%; max-width:none; min-height:0; margin:0; padding:0;
+    border:none; border-radius:0; box-shadow:none; background:#fff;
+  }
+  .report-doc.pdf-export .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .report-doc.pdf-export .stat-grid + .stat-grid{grid-template-columns:repeat(3,1fr);}
+  .report-doc.pdf-export .report-letterhead{padding-top:0;}
+  /* Tables with 8+ columns (statistics by month / year) are wider than an A4
+     page at normal size; on paper they shrink and share the width equally
+     instead of running off the right edge. */
+  .report-doc.pdf-export table.report-table.wide-table{table-layout:fixed;width:100%;font-size:9px;}
+  .report-doc.pdf-export table.report-table.wide-table th{font-size:7.5px;padding:5px 3px;overflow-wrap:anywhere;}
+  .report-doc.pdf-export table.report-table.wide-table td{padding:5px 3px;overflow-wrap:anywhere;}
+  .report-doc.pdf-export table.report-table.wide-table th:first-child{width:9%;}
+  .pdf-pgbreak{display:block;}
   #reportOutput{
     padding:6px 0 4px;
     overflow-x:auto;
@@ -1199,23 +1224,26 @@
     .month-block{padding:12px 12px;}
     .highlight-box{padding:8px 10px;}
   }
-  /* Move a whole section to the next page rather than splitting it —
-     a table row, one month block, one grid of stat tiles, and a whole
-     .report-section are all treated as "don't split me" units. This is
-     best-effort: if a single section genuinely runs taller than one full
-     page (e.g. a very long bill list or an activity-heavy month), the
-     renderer can't honor "avoid" on something bigger than the page itself,
-     so it falls back to breaking at the next safe point — the row-level
-     avoid rule below — instead of pushing to endless blank pages. Keep
-     this list matched to the pagebreak.avoid selector in the PDF export
-     script further down. */
-  table.report-table tr, .actcal-print tr, .month-block, .highlight-grid, .report-section, .report-footer{
+  /* Pagination rules shared by native print. A table row, one month block,
+     and one grid of stat/highlight tiles are "don't split me" units. A whole
+     .report-section is deliberately NOT one any more: a long section (e.g. an
+     "All transactions" table) used to be pushed to a fresh page as a block,
+     leaving the bottom of the previous page empty; now it flows onto the next
+     page row by row, and the table header repeats. The PDF export applies the
+     same idea in JS (see paginateReportClone). */
+  table.report-table tr, .actcal-print tr, .month-block, .highlight-grid, .stat-grid, .actcal-summary-grid, .report-footer{
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+  /* Short tables (see tagShortReportTables) also stay in one piece; only long
+     ones are allowed to run across pages. */
+  table.report-table.keep-together{
     page-break-inside:avoid;
     break-inside:avoid;
   }
   /* Keep a section/month heading glued to the content that follows it,
      instead of letting it end up alone at the bottom of a page. */
-  .report-section h3, .month-block h4{
+  .report-section h3, .month-block h4, .month-block h5{
     page-break-after:avoid;
     break-after:avoid;
   }
@@ -1831,19 +1859,39 @@
   }
 
   @media print{
-    body{background:#fff;}
+    html.theme-dark{color-scheme:light;}
+    html, html.theme-dark, body, html.theme-dark body{background:#fff !important;}
     header.top, nav.tabs, .site-header-sticky, .no-print, main > .card, #toast, .site-footer, .fab-quickadd{display:none !important;}
     #reportOutput{display:block !important;padding:0;overflow:visible;}
     .app{max-width:none;padding:0;}
     main{padding:0;}
-    .report-doc{border:none;box-shadow:none;padding:0;width:auto;max-width:none;min-height:0;margin:0;}
+    .report-doc{border:none;box-shadow:none;padding:0;width:auto;max-width:none;min-height:0;margin:0;background:#fff;}
+    .report-doc .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .report-doc .stat-grid + .stat-grid{grid-template-columns:repeat(3,1fr);}
+    .report-doc table.report-table.wide-table{table-layout:fixed;width:100%;font-size:9px;}
+    .report-doc table.report-table.wide-table th{font-size:7.5px;padding:5px 3px;overflow-wrap:anywhere;}
+    .report-doc table.report-table.wide-table td{padding:5px 3px;overflow-wrap:anywhere;}
+    .report-doc table.report-table.wide-table th:first-child{width:9%;}
     .stat-box, .actstat-box{border:1px solid #999;border-left:3px solid #333;background:#fff;}
     .month-block{border:1px solid #999;page-break-inside:avoid;}
     table.report-table tbody tr:hover{background:none;}
     .actcal-print tr{page-break-inside:avoid;}
     .actcal-print td{height:auto;min-height:70px;}
     .actcal-print td.pad{background:#f2f2f2;}
-    @page{ size:A4 portrait; margin:16mm; }
+    @page{ size:A4 portrait; margin:16mm 14mm 20mm; }
+  }
+  /* "Page X of Y" in the bottom margin of every printed page. Uses CSS
+     margin boxes, which Chrome, Edge and other Chromium browsers support
+     (Safari/Firefox ignore them — the PDF download always has page numbers).
+     Kept as its own @page rule so the orientation swap below, which rewrites
+     only size + margins, never drops it. */
+  @page{
+    @bottom-center{
+      content:"Page " counter(page) " of " counter(pages);
+      font-family:'Space Mono',monospace;
+      font-size:8.5pt;
+      color:#7a7358;
+    }
   }
   /* Swapped in dynamically (see #print-orientation-style) when the user
      picks Landscape on the Report page, just before window.print() runs;
@@ -12529,8 +12577,8 @@
   $('rep-orientation').addEventListener('change', ()=>{
     const landscape = $('rep-orientation').value === 'landscape';
     $('print-orientation-style').textContent = landscape
-      ? '@page{ size:A4 landscape; margin:14mm; }'
-      : '@page{ size:A4 portrait; margin:16mm; }';
+      ? '@page{ size:A4 landscape; margin:14mm 14mm 18mm; }'
+      : '@page{ size:A4 portrait; margin:16mm 14mm 20mm; }';
   });
 
   $('rep-scope').addEventListener('change', ()=>{
@@ -12825,6 +12873,17 @@
 
   let lastReportName = 'accounting-report';
 
+  // A table this short (header + rows + total) is kept on one page; longer
+  // ones flow across pages with the header row repeated. Used by the CSS
+  // class below (native print) and by paginateReportClone (PDF export).
+  const SHORT_TABLE_ROWS = 16;
+  function tagShortReportTables(){
+    document.querySelectorAll('#reportOutput table.report-table').forEach(t=>{
+      t.classList.toggle('keep-together', t.rows.length <= SHORT_TABLE_ROWS);
+      t.classList.toggle('wide-table', !!(t.tHead && t.tHead.rows[0] && t.tHead.rows[0].cells.length >= 8));
+    });
+  }
+
   function generateActivityOnlyReport(scope, genDate){
     if(scope === 'month'){
       const val = $('rep-month').value;
@@ -12864,6 +12923,7 @@
       html = generateActivityOnlyReport(scope, genDate);
       if(!html) return;
       $('reportOutput').innerHTML = html;
+      tagShortReportTables();
       $('reportOutput').style.display = 'block';
       $('btn-print').style.display = 'inline-block';
       $('btn-pdf').style.display = 'inline-block';
@@ -12968,6 +13028,7 @@
     }
 
     $('reportOutput').innerHTML = html;
+      tagShortReportTables();
     $('reportOutput').style.display = 'block';
     $('btn-print').style.display = 'inline-block';
     $('btn-pdf').style.display = 'inline-block';
@@ -13082,6 +13143,168 @@
     pdfResizeTimer = setTimeout(()=>{ renderPdfPage(pdfPageNum); }, 150);
   });
 
+  // ---------- PDF page layout + page numbers ----------
+  // Page margins of the exported PDF in mm: [top, left, bottom, right]. They
+  // are real jsPDF page margins, so EVERY page gets them (the old export used
+  // margin 0 and relied on the sheet's own padding, which only ever applied to
+  // the very first and very last page). The bottom margin leaves room for the
+  // "Page X of Y" footer that stampPdfPageNumbers() draws afterwards.
+  const PDF_MARGINS_MM = [14, 12, 18, 12];
+  const PDF_CANVAS_SCALE = 2;
+
+  // Runs inside html2canvas's private clone of the page — the exact DOM that
+  // is rasterised into the PDF. Page breaks are worked out here, in that same
+  // layout, instead of in the live page (whose layout differs on phones and
+  // in dark mode), which is what used to leave rows and headings sliced in
+  // half at page edges.
+  function preparePdfClone(cloneDoc, ratio){
+    const container = cloneDoc.querySelector('.html2pdf__container');
+    const rep = container && container.querySelector('.report-doc');
+    if(!rep) return;
+    rep.classList.add('pdf-export');
+    // html2pdf slices the captured canvas into pages of floor(canvasWidth *
+    // ratio) pixels; mirror that arithmetic so our breaks land on its cuts.
+    const canvasW = Math.floor(Math.ceil(container.getBoundingClientRect().width) * PDF_CANVAS_SCALE);
+    const pageH = Math.floor(canvasW * ratio) / PDF_CANVAS_SCALE;
+    if(!(pageH > 200)) return;
+    paginateReportClone(container, pageH);
+  }
+
+  // Inserts spacer blocks so that nothing gets cut by a page boundary:
+  //  • table rows, stat/highlight tile grids and month blocks are kept whole
+  //  • a small section (up to half a page) is kept whole; a longer one flows
+  //    across pages row by row, and its table header repeats on each page
+  //  • a heading always travels with the first row / block after it
+  function paginateReportClone(container, pageH){
+    const doc = container.ownerDocument;
+    const box = (el) => {
+      const r = el.getBoundingClientRect(), t = container.getBoundingClientRect().top;
+      return { top: r.top - t, bottom: r.bottom - t, h: r.height };
+    };
+    const crosses = (top, bottom) =>
+      Math.floor((top + 0.5) / pageH) !== Math.floor((bottom - 0.05) / pageH);
+    const nextPageTop = (y) => (Math.floor((y + 0.5) / pageH) + 1) * pageH;
+
+    // Push `el` (plus a repeated table header when it's a mid-table row) to
+    // the top of the next page.
+    function breakBefore(el){
+      const target = nextPageTop(box(el).top);
+      let spacer, sizer;
+      if(el.tagName === 'TR'){
+        const cols = Array.from(el.children).reduce((n, c) => n + (c.colSpan || 1), 0) || 1;
+        spacer = doc.createElement('tr');
+        sizer = doc.createElement('td');
+        sizer.colSpan = cols;
+        sizer.style.cssText = 'padding:0;border:0;height:0;';
+        spacer.appendChild(sizer);
+      } else {
+        spacer = sizer = doc.createElement('div');
+        sizer.style.cssText = 'height:0;margin:0;padding:0;border:0;';
+      }
+      spacer.className = 'pdf-pgbreak';
+      el.parentNode.insertBefore(spacer, el);
+      if(el.tagName === 'TR' && el.parentNode.tagName === 'TBODY'){
+        const table = el.closest('table');
+        if(table && table.tHead){
+          Array.from(table.tHead.rows).forEach(hr => {
+            const c = hr.cloneNode(true);
+            c.classList.add('pdf-rephead');
+            el.parentNode.insertBefore(c, el);
+          });
+        }
+      }
+      // Margins can shift things a little; nudge the spacer until whatever
+      // follows it starts exactly on the page edge.
+      let h = Math.max(0, target - box(spacer.nextElementSibling).top);
+      for(let i = 0; i < 4; i++){
+        sizer.style.height = h + 'px';
+        const d = target - box(spacer.nextElementSibling).top;
+        if(Math.abs(d) < 0.3) break;
+        h = Math.max(0, h + d);
+      }
+    }
+
+    // Bottom edge of the first block after a heading (first row when that
+    // block is a table), capped so a huge block can't drag its heading along.
+    function firstAfterBottom(h){
+      const n = h.nextElementSibling;
+      if(!n) return box(h).bottom;
+      const t = n.tagName === 'TABLE' ? n : (n.querySelector ? n.querySelector('table') : null);
+      if(t && t.tBodies[0] && t.tBodies[0].rows[0] && box(t).top - box(n).top < 40){
+        // a short table travels with its heading in full; a long one only by its first row
+        if(t.rows.length <= SHORT_TABLE_ROWS && box(t).h <= pageH * 0.6) return box(t).bottom;
+        return box(t.tBodies[0].rows[0]).bottom;
+      }
+      const nb = box(n);
+      return Math.min(nb.bottom, nb.top + pageH * 0.3);
+    }
+
+    const list = container.querySelectorAll(
+      '.report-section, .month-block, .stat-grid, .highlight-grid, .actcal-summary-grid, .report-footer,' +
+      ' h3, h4, h5, table.report-table, table.actcal-print, tbody > tr'
+    );
+    Array.prototype.forEach.call(list, (el) => {
+      if(!el.isConnected || el.classList.contains('pdf-pgbreak') || el.classList.contains('pdf-rephead')) return;
+      const tag = el.tagName;
+      if(el.classList.contains('report-footer')){
+        // Never let the closing footer strand itself alone on a new page: try
+        // a tighter gap first, and if it still doesn't fit, drop it (the same
+        // rate/date info is in the header and the page footer names the app).
+        let fb = box(el);
+        if(crosses(fb.top, fb.bottom)){
+          el.style.marginTop = '4px';
+          fb = box(el);
+          if(crosses(fb.top, fb.bottom)) el.style.display = 'none';
+        }
+        return;
+      }
+      if(tag === 'TR'){
+        // The first body row travels with its table header (table rule below).
+        if(el === el.parentNode.rows[0]) return;
+        const b = box(el);
+        if(crosses(b.top, b.bottom)) breakBefore(el);
+      } else if(tag === 'TABLE'){
+        const first = el.tBodies[0] && el.tBodies[0].rows[0];
+        if(!first) return;
+        const tb = box(el);
+        if(el.rows.length <= SHORT_TABLE_ROWS && tb.h <= pageH * 0.6){
+          if(crosses(tb.top, tb.bottom)) breakBefore(el);
+        } else if(crosses(tb.top, box(first).bottom)){
+          breakBefore(el);
+        }
+      } else if(tag === 'H3' || tag === 'H4' || tag === 'H5'){
+        if(crosses(box(el).top, firstAfterBottom(el))) breakBefore(el);
+      } else {
+        const b = box(el);
+        const limit = el.classList.contains('report-section') ? pageH * 0.5 : pageH;
+        if(b.h <= limit && crosses(b.top, b.bottom)) breakBefore(el);
+      }
+    });
+  }
+
+  // "TDA Accounting" on the left and "Page X of Y" on the right of a thin rule
+  // in the bottom margin of every page. Runs on the finished jsPDF document, so
+  // the total page count is known and it shows up in both the download and
+  // the in-app preview (which renders that same PDF).
+  function stampPdfPageNumbers(pdf){
+    const total = pdf.internal.getNumberOfPages();
+    const ps = pdf.internal.pageSize;
+    const pw = ps.getWidth ? ps.getWidth() : ps.width;
+    const ph = ps.getHeight ? ps.getHeight() : ps.height;
+    const mLeft = PDF_MARGINS_MM[1], mRight = PDF_MARGINS_MM[3];
+    for(let i = 1; i <= total; i++){
+      pdf.setPage(i);
+      pdf.setDrawColor(201, 191, 160);
+      pdf.setLineWidth(0.2);
+      pdf.line(mLeft, ph - 13, pw - mRight, ph - 13);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(122, 115, 88);
+      pdf.text('TDA Accounting', mLeft, ph - 8.5);
+      pdf.text('Page ' + i + ' of ' + total, pw - mRight, ph - 8.5, { align: 'right' });
+    }
+  }
+
   $('btn-pdf').addEventListener('click', async ()=>{
     const el = document.querySelector('#reportOutput .report-doc');
     if(!el){ toast('Generate a report first', true); return; }
@@ -13094,15 +13317,22 @@
       const landscape = $('rep-orientation').value === 'landscape';
       // 210mm/297mm converted at the standard 96dpi CSS reference (96/25.4 px per mm).
       const captureWidthPx = landscape ? 1123 : 794;
+      const pageWmm = landscape ? 297 : 210, pageHmm = landscape ? 210 : 297;
+      const innerRatio = (pageHmm - PDF_MARGINS_MM[0] - PDF_MARGINS_MM[2]) / (pageWmm - PDF_MARGINS_MM[1] - PDF_MARGINS_MM[3]);
       const opt = {
-        margin: 0,
+        margin: PDF_MARGINS_MM,
         filename: lastReportName + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: captureWidthPx },
+        html2canvas: {
+          scale: PDF_CANVAS_SCALE, useCORS: true, windowWidth: captureWidthPx, backgroundColor: '#ffffff',
+          onclone: (cloneDoc) => { preparePdfClone(cloneDoc, innerRatio); }
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' },
-        pagebreak: { mode: ['css'], avoid: 'tr, .month-block, .highlight-grid, .report-section, .report-footer' }
+        // Page breaks are computed in preparePdfClone (in the same layout that
+        // gets rasterised), so html2pdf's own break detection is switched off.
+        pagebreak: { mode: ['legacy'] }
       };
-      const blob = await html2pdf().set(opt).from(el).outputPdf('blob');
+      const blob = await html2pdf().set(opt).from(el).toPdf().get('pdf').then(stampPdfPageNumbers).outputPdf('blob');
       const url = URL.createObjectURL(blob);
       const dl = $('btn-download-pdf');
       dl.href = url;
