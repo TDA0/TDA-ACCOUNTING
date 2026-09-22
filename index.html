@@ -84,10 +84,12 @@
   /* Quick Add floating button visibility, toggled by the settings switch */
   html.qa-fab-hidden .fab-quickadd{display:none !important;}
   *{box-sizing:border-box;}
-  html{height:100%;}
+  html{height:100%;overflow-x:hidden;}
   body{
     margin:0;
     min-height:100%;
+    max-width:100vw;
+    overflow-x:hidden;
     background:
       radial-gradient(circle at 12% 0%, rgba(30,61,50,0.06) 0%, transparent 45%),
       radial-gradient(circle at 100% 18%, rgba(169,128,63,0.07) 0%, transparent 40%),
@@ -105,7 +107,7 @@
   ::-webkit-scrollbar-thumb{background:var(--rule);border-radius:8px;border:2px solid var(--paper-2);}
   ::-webkit-scrollbar-thumb:hover{background:var(--brass-dim);}
   .app{
-    max-width:960px;margin:0 auto;padding:0;
+    max-width:100%;margin:0 auto;padding:0;
     min-height:100vh; min-height:100dvh;
     display:flex; flex-direction:column;
   }
@@ -137,11 +139,18 @@
   }
   /* Compact header on scroll — shrunk once the page scrolls past a small
      threshold, back to full size once scrolled back near the top. Only
-     the padding + a few inner elements animate so it stays cheap. */
+     the padding + a few inner elements animate so it stays cheap. A
+     slightly deeper shadow + faint blur on the sticky shell reinforces
+     that the header has "lifted" above the scrolling content. */
   .site-header-sticky.shrink header.top{
     padding-top:clamp(7px,1.1vw,10px);
     padding-bottom:clamp(7px,1vw,9px);
     padding-left:clamp(10px,2.4vw,20px);
+    box-shadow:0 6px 22px rgba(0,0,0,0.24);
+  }
+  .site-header-sticky.shrink{
+    -webkit-backdrop-filter:saturate(1.4) blur(6px);
+    backdrop-filter:saturate(1.4) blur(6px);
   }
   header.top::before{
     content:"";
@@ -165,7 +174,7 @@
     background:linear-gradient(90deg, var(--brass-dim) 0%, var(--brass) 45%, var(--brass-dim) 100%);
   }
 
-  header.top .head-row{display:flex;justify-content:space-between;align-items:center;position:relative;gap:16px;flex-wrap:wrap;transition:gap var(--hdr-dur) var(--hdr-ease);}
+  header.top .head-row{display:flex;justify-content:space-between;align-items:center;position:relative;gap:16px;flex-wrap:wrap;transition:gap var(--hdr-dur) var(--hdr-ease);max-width:1400px;margin:0 auto;}
   .site-header-sticky.shrink header.top .head-row{gap:10px;flex-wrap:nowrap;}
   @media (max-width:480px){
     header.top .head-row{flex-direction:column;align-items:flex-start;gap:10px;}
@@ -182,14 +191,15 @@
     width:clamp(36px,7vw,46px);height:clamp(36px,7vw,46px);border-radius:12px;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;font-size:clamp(17px,3.6vw,22px);
     background:linear-gradient(150deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 100%);
-    border:1px solid rgba(255,255,255,0.16);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 10px -4px rgba(0,0,0,0.4);
-    transition:width var(--hdr-dur) var(--hdr-ease), height var(--hdr-dur) var(--hdr-ease), font-size var(--hdr-dur) var(--hdr-ease), border-radius var(--hdr-dur) var(--hdr-ease), background .15s ease, transform .15s ease;
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 10px -4px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,255,255,0.05);
+    transition:width var(--hdr-dur) var(--hdr-ease), height var(--hdr-dur) var(--hdr-ease), font-size var(--hdr-dur) var(--hdr-ease), border-radius var(--hdr-dur) var(--hdr-ease), background .15s ease, transform .15s ease, box-shadow .15s ease;
     cursor:pointer;padding:0;line-height:1;-webkit-tap-highlight-color:transparent;
   }
   header.top .brand-mark:hover{
     background:linear-gradient(150deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 100%);
     transform:translateY(-1px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 14px -4px rgba(0,0,0,0.45), 0 0 0 5px rgba(255,255,255,0.07);
   }
   header.top .brand-mark:active{transform:translateY(0) scale(0.95);}
   .site-header-sticky.shrink header.top .brand-mark{
@@ -242,10 +252,11 @@
      surface with subtle dividers, instead of loose floating controls. */
   header.top .head-toolbar{
     display:flex;align-items:center;gap:2px;flex-wrap:wrap;
-    background:rgba(0,0,0,0.16);
-    border:1px solid rgba(255,255,255,0.09);
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.1);
     border-radius:14px;
     padding:5px;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.15);
     transition:padding var(--hdr-dur) var(--hdr-ease), gap var(--hdr-dur) var(--hdr-ease);
   }
   .site-header-sticky.shrink header.top .head-toolbar{padding:1px;gap:0;}
@@ -266,6 +277,12 @@
   header.top .dot{width:6px;height:6px;border-radius:50%;background:var(--brass-dim);}
   header.top .dot.busy{background:#e0c66b;animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+  /* Subtle divider between the save-status group and the bell/menu icons
+     so the toolbar reads as two clusters instead of one long row. Desktop
+     only — mobile's toolbar is tight enough without it. */
+  @media (min-width:901px){
+    header.top .save-state{border-right:1px solid rgba(255,255,255,0.12);margin-right:2px;}
+  }
 
   nav.tabs{
     display:flex;
@@ -332,7 +349,7 @@
     .nav-profile-slot img{width:24px;height:24px;}
   }
 
-  main{padding:clamp(14px,3.5vw,36px) clamp(14px,4vw,56px) 0;}
+  main{padding:clamp(14px,3.5vw,36px) clamp(14px,4vw,56px) 0;max-width:1400px;margin:0 auto;width:100%;}
   .panel{display:none;}
   .panel.active{display:block; animation:fadeSlideUp .38s cubic-bezier(.22,.61,.36,1);}
   /* The Quick Add (+) button is fixed to the bottom-right corner, so any
@@ -554,8 +571,8 @@
   }
 
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(10px,1.4vw,14px);margin-bottom:18px;}
-  .stat-box{background:var(--white);border:1px solid var(--rule);border-left:5px solid var(--forest);padding:clamp(13px,1.6vw,17px) clamp(14px,1.8vw,18px);border-radius:10px;box-shadow:0 1px 2px rgba(31,42,36,0.03);transition:box-shadow .2s ease, transform .2s ease, border-left-width .2s ease;}
-  .stat-box:hover{box-shadow:0 12px 26px -12px rgba(31,42,36,0.38); transform:translateY(-3px); border-left-width:8px;}
+  .stat-box{background:var(--white);border:1px solid var(--rule);border-left:4px solid var(--forest);padding:clamp(13px,1.6vw,17px) clamp(14px,1.8vw,18px);border-radius:14px;box-shadow:0 1px 2px rgba(31,42,36,0.03);transition:box-shadow .2s ease, transform .2s ease, border-left-width .2s ease;}
+  .stat-box:hover{box-shadow:0 10px 22px -12px rgba(31,42,36,0.3); transform:translateY(-2px); border-left-width:6px;}
   .stat-box.expense{border-left-color:var(--brick);}
   .stat-box.income{border-left-color:var(--green-ok);}
   .stat-box.salary{border-left-color:var(--teal);}
@@ -563,6 +580,7 @@
   .stat-box .val{font-family:'Space Mono',monospace;font-size:clamp(17px,2vw,20px);font-weight:700;line-height:1.5;overflow-wrap:anywhere;word-break:break-word;}
   .stat-box.live{border-left-color:var(--teal);}
   .stat-box .sub{font-size:11px;color:var(--muted);margin-top:4px;font-family:'Space Mono',monospace;}
+  .stat-grid .hero-card{grid-column:1/-1;margin-bottom:0;}
   .live-refresh-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 0 0 6px;line-height:1;vertical-align:middle;display:inline-block;}
   .live-refresh-btn:hover{color:var(--forest);}
   .live-refresh-btn.spinning{animation:ov-live-spin .8s linear infinite;}
@@ -580,8 +598,17 @@
   .empty{text-align:center;padding:30px 10px;color:var(--muted);font-size:14px;}
 
   .filter-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--brick);color:var(--white);font-size:10.5px;font-weight:700;font-family:'Space Mono',monospace;margin-left:6px;}
-  #list-filters-panel{border-top:1px dashed var(--rule);margin-top:2px;padding-top:14px;}
-  #list-summary{font-size:12px;color:var(--muted);margin:2px 0 10px;font-family:'Space Mono',monospace;}
+  #list-filters-panel{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:16px;
+    margin-top:2px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  #list-summary{ }
 
   select.scope-input, input.scope-input{min-width:150px;}
 
@@ -718,26 +745,117 @@
   /* Overview dashboard */
   .dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
   @media (max-width:720px){ .dash-grid{grid-template-columns:1fr;} }
-  .quick-actions{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
-  .quick-actions .btn{flex:1 1 200px;text-align:center;}
+  @media (min-width:1200px){ .dash-grid{gap:22px;} }
+  .quick-actions{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .quick-actions .btn{flex:1 1 200px;text-align:center;font-weight:700;letter-spacing:0.2px;box-shadow:0 6px 16px -8px rgba(31,42,36,0.3);}
+  @media (max-width:340px){ .stat-grid{grid-template-columns:1fr;} .hero-card .hval{font-size:clamp(28px,9vw,34px);} }
+  @media (max-width:380px){
+    .stat-grid, .live-grid{gap:8px;}
+    .stat-box{padding:12px 13px;}
+    .hero-card{padding:20px 20px 22px;}
+    .ov-net-banner{padding:12px 14px;gap:10px;}
+  }
+
+  /* Overview: page header */
+  .ov-page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--rule);position:relative;}
+  .ov-page-header::after{content:"";position:absolute;left:0;bottom:-1px;width:64px;height:2px;background:linear-gradient(90deg,var(--brass) 0%,var(--forest) 100%);border-radius:2px;}
+  .ov-page-header h1{font-family:'Fraunces',serif;font-weight:700;color:var(--forest);margin:0;font-size:clamp(23px,2.8vw,32px);letter-spacing:0.1px;display:flex;align-items:center;gap:10px;}
+  .ov-page-header .ov-page-sub{margin:5px 0 0;font-size:clamp(12.5px,1.2vw,13.5px);color:var(--muted);}
+  .ov-page-header .ov-page-date{font-family:'Space Mono',monospace;font-size:clamp(11px,1.1vw,12.5px);color:var(--muted);background:var(--paper-2);border:1px solid var(--rule);border-radius:20px;padding:6px 14px;white-space:nowrap;}
+  @media (max-width:480px){ .ov-page-header{margin-bottom:16px;padding-bottom:12px;} .ov-page-header .ov-page-date{display:none;} }
+
+  /* Overview: section dividers group the long list of cards into clear,
+     scannable sections instead of one undifferentiated wall of cards. A
+     hairline extends after the label so each section reads as a clean
+     break in the page rather than just another heading. */
+  .ov-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:34px 0 14px;padding-top:2px;}
+  .ov-section-head:first-of-type{margin-top:4px;}
+  .ov-section-label{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(14.5px,1.6vw,17px);color:var(--forest);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .ov-section-label::before{content:"";width:4px;height:16px;border-radius:2px;background:linear-gradient(180deg,var(--brass) 0%,var(--forest) 100%);display:inline-block;flex-shrink:0;}
+  .ov-section-head::after{content:"";flex:1;min-width:24px;height:1px;background:linear-gradient(90deg,var(--rule) 0%,transparent 100%);align-self:center;order:2;}
+  .ov-section-sub{font-size:11.5px;color:var(--muted);order:3;flex-shrink:0;}
+  @media (max-width:480px){ .ov-section-head::after{display:none;} }
+
+  /* Overview: live-rate tiles are secondary/reference info, so they get a
+     tighter grid and a slightly quieter card style than the primary KPIs. */
+  .live-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:clamp(8px,1.1vw,12px);margin-bottom:0;}
+  .live-grid .stat-box{padding:clamp(11px,1.3vw,14px) clamp(12px,1.5vw,15px);background:var(--paper-2);box-shadow:none;}
+  .live-grid .stat-box:hover{box-shadow:0 10px 22px -12px rgba(31,42,36,0.3);}
+  .live-grid .stat-box .val{font-size:clamp(15px,1.6vw,17px);}
+  html.theme-dark .live-grid .stat-box{background:rgba(255,255,255,0.03);}
+
+  /* Overview: collapsible secondary tool cards (gold, fuel, calculator)
+     use native <details>/<summary> so they can start closed and cut down
+     on how much is visible at once — same .card look, just foldable. */
+  details.ov-collapsible{padding:0;}
+  details.ov-collapsible summary{
+    list-style:none;cursor:pointer;margin:0;
+    display:flex;align-items:center;gap:8px;
+    padding:clamp(20px,2.4vw,28px) clamp(20px,2.4vw,28px) clamp(20px,2.4vw,28px);
+    font-family:'Fraunces',serif;font-size:clamp(17.5px,2vw,20.5px);font-weight:600;color:var(--forest);
+  }
+  details.ov-collapsible summary::-webkit-details-marker{display:none;}
+  details.ov-collapsible summary::after{content:"▾";margin-left:auto;font-size:14px;color:var(--muted);transition:transform .2s ease;flex-shrink:0;}
+  details.ov-collapsible[open] summary::after{transform:rotate(180deg);}
+  details.ov-collapsible summary{transition:background-color .18s ease;border-radius:14px 14px 0 0;}
+  details.ov-collapsible summary:hover{color:var(--forest-2);background:rgba(169,128,63,0.05);}
+  details.ov-collapsible .live-refresh-btn{margin-left:0;}
+  .ov-collapsible-body{padding:0 clamp(20px,2.4vw,28px) clamp(22px,2.6vw,30px);}
+  details.ov-collapsible:not([open]){padding-bottom:0;}
+
+  /* Overview: tighter, calmer rhythm to cut down on visual clutter —
+     more breathing room between sections, slightly quieter card edges. */
+  #panel-overview .card, #panel-overview details.ov-collapsible{margin-bottom:14px;border-radius:16px;box-shadow:0 1px 2px rgba(31,42,36,0.03), 0 6px 16px -14px rgba(31,42,36,0.12);}
+  #panel-overview .card:hover, #panel-overview details.ov-collapsible:hover{box-shadow:0 2px 6px -2px rgba(31,42,36,0.04), 0 12px 24px -16px rgba(31,42,36,0.18);}
+  .ov-section-head{margin:36px 0 14px;}
+  .ov-section-head:first-of-type{margin-top:4px;}
+
+  /* Overview: compact "this month net" banner — same info as the old
+     duplicate hero-card, but a slim single row so it doesn't compete
+     visually with the main balance hero at the top of the page. */
+  .ov-net-banner{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper);border-radius:14px;
+    padding:clamp(14px,1.8vw,18px) clamp(18px,2.2vw,24px);
+    margin-bottom:16px;box-shadow:0 6px 18px -14px rgba(30,61,50,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+    position:relative;overflow:hidden;
+  }
+  .ov-net-banner::after{content:"";position:absolute;right:-30px;top:-60%;width:140px;height:220%;background:radial-gradient(circle, rgba(201,169,106,0.14) 0%, transparent 70%);pointer-events:none;}
+  .ov-net-icon{font-size:clamp(20px,2.2vw,26px);flex-shrink:0;opacity:0.9;}
+  .ov-net-text{flex:1;min-width:0;}
+  .ov-net-lbl{font-size:clamp(11px,1.2vw,12.5px);text-transform:uppercase;letter-spacing:0.6px;opacity:0.75;font-family:'Space Mono',monospace;}
+  .ov-net-sub{font-family:'Space Mono',monospace;font-size:clamp(11.5px,1.2vw,13px);opacity:0.8;margin-top:2px;}
+  .ov-net-val{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(22px,2.6vw,28px);white-space:nowrap;}
+  @media (max-width:420px){
+    .ov-net-banner{flex-wrap:wrap;}
+    .ov-net-val{width:100%;text-align:right;}
+  }
+
+  /* Overview: give chart bars a quiet backing panel so they read as one
+     cohesive "chart" element instead of floating shapes in white space. */
+  .bars-panel{background:var(--paper-2);border-radius:12px;padding:14px 12px 8px;border:1px solid rgba(31,42,36,0.05);}
+  html.theme-dark .bars-panel{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.05);}
+  .bars-panel .bars{margin:0;}
   .vs-bar-wrap{margin-bottom:4px;}
   .vs-bar-wrap .vs-track{background:var(--paper-2);height:14px;border-radius:7px;overflow:hidden;display:flex;}
   .vs-bar-wrap .vs-fill{height:100%;transition:width .5s cubic-bezier(.22,.61,.36,1);}
   .vs-bar-wrap .vs-fill.inc{background:linear-gradient(90deg, var(--green-ok) 0%, #2c4f3a 100%);}
   .vs-bar-wrap .vs-fill.exp{background:linear-gradient(90deg, var(--brick) 0%, #6f2f26 100%);}
-  .hero-card{background:linear-gradient(135deg, var(--forest) 0%, var(--forest-2) 100%);color:var(--paper);border-radius:16px;padding:clamp(22px,3vw,32px) clamp(24px,3.2vw,36px);margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 12px 30px -12px rgba(30,61,50,0.5);transition:transform .25s ease, box-shadow .25s ease;}
-  .hero-card:hover{transform:translateY(-3px);box-shadow:0 20px 42px -14px rgba(30,61,50,0.6);}
-  .hero-card::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border:1px solid rgba(255,255,255,0.12);border-radius:50%;}
-  .hero-card::before{content:"";position:absolute;left:-30px;bottom:-46px;width:120px;height:120px;border:1px solid rgba(255,255,255,0.08);border-radius:50%;}
+  .hero-card{background:linear-gradient(135deg, var(--forest) 0%, var(--forest-2) 100%);color:var(--paper);border-radius:18px;padding:clamp(22px,3vw,32px) clamp(24px,3.2vw,36px);margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 14px 30px -16px rgba(30,61,50,0.5), inset 0 1px 0 rgba(255,255,255,0.08);transition:transform .25s ease, box-shadow .25s ease;}
+  .hero-card:hover{transform:translateY(-2px);box-shadow:0 18px 38px -16px rgba(30,61,50,0.58), inset 0 1px 0 rgba(255,255,255,0.08);}
+  .hero-card::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:radial-gradient(circle, rgba(201,169,106,0.16) 0%, transparent 70%);border-radius:50%;}
+  .hero-card::before{content:"";position:absolute;left:-30px;bottom:-46px;width:140px;height:140px;border:1px solid rgba(255,255,255,0.08);border-radius:50%;}
   .hero-card .hero-icon{position:absolute;right:clamp(16px,2.4vw,26px);top:clamp(14px,2vw,22px);font-size:clamp(28px,3.2vw,38px);opacity:0.28;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));pointer-events:none;}
   .hero-card .hlbl{font-size:clamp(11px,1.3vw,12.5px);text-transform:uppercase;letter-spacing:1px;opacity:0.7;font-family:'Space Mono',monospace;margin-bottom:6px;}
   .hero-card .hval{font-family:'Fraunces',serif;font-size:clamp(34px,4.2vw,46px);font-weight:700;line-height:1.1;}
   .hero-card .hsub{font-family:'Space Mono',monospace;font-size:clamp(12.5px,1.4vw,14px);opacity:0.75;margin-top:8px;}
   .chart-card{margin-bottom:16px;}
-  .bars{display:flex;align-items:flex-end;gap:14px;height:clamp(150px,18vw,190px);padding-top:10px;}
+  .bars{display:flex;align-items:flex-end;gap:clamp(4px,1.3vw,14px);height:clamp(150px,18vw,190px);padding-top:10px;}
+  .ov-week-bars-h{height:clamp(90px,11vw,120px) !important;}
   .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%;}
   .bar-pair{display:flex;gap:3px;align-items:flex-end;flex:1;width:100%;justify-content:center;}
-  .bar{width:14px;border-radius:2px 2px 0 0;min-height:2px;}
+  .bar{width:clamp(3px,1.5vw,14px);border-radius:2px 2px 0 0;min-height:2px;}
   .bar.inc{background:var(--green-ok);}
   .bar.exp{background:var(--brick);}
   .bar-col .bl{font-size:clamp(10.5px,1.1vw,11.5px);color:var(--muted);font-family:'Space Mono',monospace;}
@@ -1055,6 +1173,65 @@
 
   .rep-hr{border:none;border-top:1px solid var(--rule);margin:22px 0;}
 
+  /* Scope & period controls grouped into their own soft panel — matches
+     the Statistics page's toolbar treatment so period-selection controls
+     look consistent across the app, and gives the fields room to stack
+     cleanly instead of floating loose against the card edge. */
+  .rep-scope-panel{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:clamp(12px,1.8vw,16px) clamp(14px,2vw,18px) clamp(6px,1.2vw,10px);
+    margin-bottom:22px;
+  }
+  html.theme-dark .rep-scope-panel{background:rgba(255,255,255,0.035);}
+  .rep-scope-panel .rep-label{margin-top:0;}
+  .rep-scope-panel .field-row{margin-bottom:6px;}
+  @media (max-width:480px){
+    #rep-orientation-wrap{max-width:none;}
+    .rep-scope-panel .field-row{flex-direction:column;align-items:stretch;}
+    .rep-scope-panel .field{min-width:0;}
+  }
+
+  /* ===== Admin page — modernized layout & responsiveness ===== */
+  /* Same soft grouped-panel treatment as the report/stats toolbars, so
+     the search/sort/filter controls read as one distinct step. */
+  .admin-toolbar{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:clamp(12px,1.8vw,16px) clamp(14px,2vw,18px) clamp(4px,1vw,6px);
+    margin-bottom:14px;
+  }
+  html.theme-dark .admin-toolbar{background:rgba(255,255,255,0.035);}
+  .admin-toolbar .field-row{margin-bottom:6px;}
+  @media (max-width:480px){
+    .admin-toolbar .field-row{flex-direction:column;align-items:stretch;}
+    .admin-toolbar .field{min-width:0;}
+  }
+  /* User/notification lists get a defined card boundary instead of
+     floating loose rows directly on the page background. */
+  .admin-list-box{
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:4px 10px;
+    background:var(--white);
+  }
+  .admin-list-box:empty{display:none;}
+  html.theme-dark .admin-list-box{background:rgba(255,255,255,0.02);}
+  #panel-admin .stat-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  @media (max-width:480px){
+    #panel-admin .stat-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    #panel-admin .stat-box{padding:11px 12px;}
+    #panel-admin .stat-box .lbl{font-size:10.5px;}
+    #panel-admin .stat-box .val{font-size:14.5px;}
+  }
+  @media (max-width:340px){
+    #panel-admin .stat-grid{grid-template-columns:1fr;}
+  }
+  /* Section labels above the account-modal button groups */
+  #modal-admin-user .rep-label{display:block;}
+
   /* Report page action buttons — Generate / Preview / Print, and the
      Download/Print row inside the PDF preview card. One consistent
      row that wraps gracefully, and stacks full-width on phones. */
@@ -1283,9 +1460,9 @@
     font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:3px;text-transform:uppercase;
     color:var(--brass);
   }
-  .report-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px double var(--forest);padding-bottom:14px;margin-bottom:20px;}
+  .report-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 16px;border-bottom:3px double var(--forest);padding-bottom:14px;margin-bottom:20px;}
   .report-head .brandmark{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--brass);margin-bottom:6px;}
-  .report-head h1{font-family:'Fraunces',serif;font-size:23px;margin:0 0 4px;color:var(--forest);}
+  .report-head h1{font-family:'Fraunces',serif;font-size:23px;margin:0 0 4px;color:var(--forest);overflow-wrap:anywhere;}
   .report-head .sub{font-family:'Space Mono',monospace;font-size:12.5px;color:var(--muted);}
   .report-head .meta-right{text-align:right;line-height:1.6;}
   .report-user-block{display:flex;align-items:center;gap:10px;margin:-8px 0 20px;}
@@ -1307,7 +1484,7 @@
   .report-section h3 .idx{font-family:'Space Mono',monospace;font-size:11px;color:var(--brass);border:1px solid var(--brass);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
   .month-block{border:1px solid var(--rule);border-radius:4px;padding:16px 18px;margin-bottom:16px;break-inside:avoid;}
   .month-block h4{font-family:'Fraunces',serif;font-size:15px;color:var(--forest-2);margin:0 0 10px;}
-  .report-footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--rule);font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);display:flex;justify-content:space-between;}
+  .report-footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--rule);font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;}
   table.report-table th:first-child, table.report-table td:first-child{padding-left:2px;}
   table.report-table th:last-child, table.report-table td:last-child{padding-right:2px;}
   .highlight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:2px;}
@@ -1490,11 +1667,21 @@
   .nav-drawer-head{display:none;}
   .nav-backdrop{
     position:fixed; inset:0; z-index:190;
-    background:rgba(15,20,17,0.55);
+    background:rgba(12,16,13,0.62);
+    -webkit-backdrop-filter:blur(2px);
+    backdrop-filter:blur(2px);
     opacity:0; pointer-events:none;
     transition:opacity .25s ease;
   }
   .nav-backdrop.show{opacity:1; pointer-events:auto;}
+  /* Belt-and-suspenders: whatever else is floating on the page (quick-add
+     FAB, an open reminders popover) gets out of the way the moment the
+     nav drawer opens, instead of relying purely on z-index order to keep
+     it from visually poking out over the drawer/backdrop. */
+  body.menu-open .fab-quickadd{
+    opacity:0; transform:scale(.85); pointer-events:none;
+  }
+  body.menu-open .rem-popover.open{display:none;}
 
   @media (max-width:900px){
     .menu-btn{
@@ -1533,13 +1720,20 @@
       background:var(--forest-2);
       border-left:1px solid rgba(0,0,0,0.25);
       border-bottom:none;
-      box-shadow:-12px 0 30px -10px rgba(0,0,0,0.4);
+      box-shadow:-16px 0 40px -12px rgba(0,0,0,0.5);
       z-index:200;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       transform:translateX(100%);
       transition:transform .28s cubic-bezier(.4,0,.2,1);
       padding-bottom:max(14px, env(safe-area-inset-bottom));
+    }
+    /* On the wider end of "mobile" (large phones, small tablets in
+       portrait) a 320px-capped drawer leaves a lot of dimmed backdrop
+       exposed — let it grow a bit so the panel still feels proportionate
+       to the screen instead of like a thin strip. */
+    @media (min-width:560px){
+      nav.tabs{width:min(48vw, 380px); max-width:380px;}
     }
     nav.tabs.open{transform:translateX(0);}
     .nav-drawer-head{
@@ -1599,8 +1793,9 @@
     color:rgba(243,238,217,0.75);
     padding:0 0 clamp(14px,3vw,20px);
     border-top:1px solid rgba(201,169,106,0.35);
-    margin-top:24px;
+    margin-top:28px;
     overflow:hidden;
+    border-radius:22px 22px 0 0;
   }
   .site-footer::before{
     content:"";
@@ -1608,9 +1803,10 @@
     background:linear-gradient(90deg, transparent, var(--brass-dim), var(--brass), var(--brass-dim), transparent);
   }
   .site-footer .footer-shell{
-    max-width:1180px; margin:0 auto;
-    padding:0 clamp(14px,4vw,56px);
+    max-width:1400px; margin:0 auto;
+    padding:0 clamp(16px,5vw,56px);
   }
+  @media (min-width:1200px){ .site-footer .footer-shell{padding:0 clamp(20px,4vw,64px);} }
 
   /* -- brand / sync status row -- */
   .footer-top{
@@ -1623,6 +1819,7 @@
     width:38px;height:38px;border-radius:11px;flex-shrink:0;
     display:inline-flex;align-items:center;justify-content:center;
     background:rgba(201,169,106,0.14); border:1px solid rgba(201,169,106,0.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);
     font-size:18px;
   }
   .footer-brand-text{display:flex;flex-direction:column;gap:1px;}
@@ -1639,6 +1836,7 @@
     background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.16);
     font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:0.4px; text-transform:uppercase;
     color:rgba(243,238,217,0.85);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .footer-sync-badge .dot{
     width:7px;height:7px;border-radius:50%; flex-shrink:0;
@@ -1674,7 +1872,12 @@
     min-width:0;
   }
   .footer-stat:hover{background:rgba(255,255,255,0.075);}
-  .footer-stat .stat-ic{font-size:16px; flex-shrink:0; opacity:0.9;}
+  .footer-stat .stat-ic{
+    font-size:14px; flex-shrink:0; opacity:0.95;
+    width:30px;height:30px;border-radius:9px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);
+  }
   .footer-stat .stat-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
   .footer-stat .stat-val{
     font-family:'Space Mono',monospace; font-weight:700; font-size:clamp(12px,2vw,13.5px);
@@ -1691,6 +1894,7 @@
   @media (max-width:480px){
     .footer-stats-strip{grid-template-columns:repeat(2, 1fr);}
     .footer-stat:nth-child(3){border-top:1px solid rgba(255,255,255,0.09);}
+    .footer-stat .stat-ic{width:26px;height:26px;font-size:12px;border-radius:8px;}
   }
 
   .footer-divider{height:1px; background:rgba(255,255,255,0.09); margin-bottom:clamp(14px,3vw,18px);}
@@ -1732,6 +1936,7 @@
   @media (max-width:480px){
     .site-footer .footer-inner{flex-direction:column;align-items:flex-start;gap:12px;}
     .footer-top{flex-direction:column;align-items:flex-start;}
+    .site-footer{border-radius:16px 16px 0 0;}
   }
 
   /* Notification opt-in bell (footer) */
@@ -2005,6 +2210,10 @@
   }
   @media (min-width:1600px){
     .app{max-width:1520px;}
+    .stat-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+    .live-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+    .hero-card{padding:36px 40px;}
+    #panel-overview .card, #panel-overview details.ov-collapsible{padding-left:32px;padding-right:32px;}
   }
   /* ===== Mobile touch-target pass =====
      Phones need bigger hit areas than a mouse cursor does. This widens
@@ -2037,7 +2246,7 @@
     color:var(--white); border:none; cursor:pointer;
     font-family:'Work Sans',sans-serif; font-weight:700; font-size:14.5px; letter-spacing:0.2px;
     box-shadow:0 10px 26px -8px rgba(147,112,47,0.65), 0 2px 8px rgba(0,0,0,0.2);
-    transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease, filter .15s ease;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease, filter .15s ease, opacity .18s ease;
   }
   .fab-quickadd .fab-plus{font-size:22px;line-height:1;font-weight:700;}
   .fab-quickadd:hover{filter:brightness(1.06); box-shadow:0 14px 30px -8px rgba(147,112,47,0.7), 0 2px 8px rgba(0,0,0,0.25); transform:translateY(-2px);}
@@ -2084,6 +2293,980 @@
   .qa-acct-chip.on{background:var(--teal);color:var(--white);border-color:var(--teal);}
   .qa-note-toggle{background:transparent;border:none;color:var(--teal);font-size:12.5px;font-weight:600;cursor:pointer;padding:0 0 14px;text-decoration:underline;}
   .qa-save-btn{width:100%;font-size:16px;padding:15px 20px;min-height:52px;}
+
+  /* =========================================================
+     NEW ENTRY + ENTRIES — modern redesign (scoped to #panel-add
+     and #panel-list so no other panel/tab in the app is affected)
+     ========================================================= */
+  #panel-add .card, #panel-list .card{
+    padding:0;
+    overflow:visible;
+  }
+  #panel-add .card::before, #panel-list .card::before{ display:none; }
+  #panel-add .entry-head, #panel-list .entry-head{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper);
+    border-radius:14px 14px 0 0;
+    position:relative;
+    overflow:hidden;
+  }
+  #panel-add .entry-head::after, #panel-list .entry-head::after{
+    content:"";
+    position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-add .entry-head-icon, #panel-list .entry-head-icon{
+    flex-shrink:0;
+    width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px);
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-add .entry-head-text, #panel-list .entry-head-text{min-width:0;flex:1;}
+  #panel-add .card h2#add-form-title,
+  #panel-add .entry-head-text h2,
+  #panel-list .entry-head-text h2{
+    margin:0 0 4px;
+    color:var(--paper);
+    font-size:clamp(18px,2.6vw,22px);
+  }
+  #panel-add .entry-head-sub, #panel-list .entry-head-sub{
+    margin:0;
+    font-size:clamp(12px,1.6vw,13.5px);
+    color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif;
+    line-height:1.4;
+  }
+  #panel-add .entry-body, #panel-list .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+    display:flex;
+    flex-direction:column;
+    gap:clamp(18px,2.4vw,24px);
+  }
+  #panel-add .keep-hint{
+    margin:0;
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    font-size:12px;
+    line-height:1.5;
+    color:var(--forest-2);
+    background:rgba(47,100,120,0.08);
+    border:1px solid rgba(47,100,120,0.18);
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  #panel-add .keep-hint::before{
+    content:"💡";
+    flex-shrink:0;
+    font-size:14px;
+    line-height:1.4;
+  }
+  #panel-add .entry-section, #panel-list .entry-section{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  #panel-add .entry-eyebrow, #panel-list .entry-eyebrow{
+    font-family:'Work Sans',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.9px;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  #panel-add .entry-eyebrow::after, #panel-list .entry-eyebrow::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg, var(--rule), transparent);
+  }
+  /* ---- type selector: responsive card grid ---- */
+  #panel-add .type-toggle{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:10px;
+  }
+  @media (min-width:560px){
+    #panel-add .type-toggle{ grid-template-columns:repeat(4, 1fr); }
+  }
+  #panel-add .type-toggle button{
+    flex:none;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:14px 8px 13px;
+    min-height:76px;
+    border-radius:12px;
+    border:1.5px solid var(--rule);
+    background:var(--white);
+    font-size:12.5px;
+    letter-spacing:0.1px;
+  }
+  #panel-add .type-toggle button::before{
+    font-size:19px;
+    line-height:1;
+  }
+  #panel-add .type-toggle button.sel-expense::before{content:"💸";}
+  #panel-add .type-toggle button.sel-income::before{content:"💵";}
+  #panel-add .type-toggle button.sel-salary::before{content:"🏦";}
+  #panel-add .type-toggle button.sel-transfer::before{content:"🔁";}
+  #panel-add .type-toggle button::after{
+    content:"";
+    position:absolute; top:7px; right:7px;
+    width:8px; height:8px; border-radius:50%;
+    background:transparent;
+    transition:background-color .15s ease, box-shadow .15s ease;
+  }
+  #panel-add .type-toggle button.on::after{
+    background:currentColor;
+    box-shadow:0 0 0 3px rgba(255,255,255,0.35);
+  }
+  #panel-add .type-toggle button.sel-expense.on{background:rgba(156,68,56,0.1);color:var(--brick);border-color:var(--brick);}
+  #panel-add .type-toggle button.sel-income.on{background:rgba(62,107,79,0.1);color:var(--green-ok);border-color:var(--green-ok);}
+  #panel-add .type-toggle button.sel-salary.on{background:rgba(47,100,120,0.1);color:var(--teal);border-color:var(--teal);}
+  #panel-add .type-toggle button.sel-transfer.on{background:rgba(169,128,63,0.12);color:var(--brass);border-color:var(--brass);}
+  html.theme-dark #panel-add .type-toggle button{background:var(--paper-2);}
+
+  /* ---- form grids ---- */
+  #panel-add .field-row, #panel-list .field-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    margin-bottom:0;
+    align-items:start;
+  }
+  #panel-add .field-row.entry-grid-3, #panel-list .field-row.entry-grid-3{ grid-template-columns:1fr; }
+  #panel-add .field-row.entry-grid-2, #panel-list .field-row.entry-grid-2{ grid-template-columns:1fr; }
+  @media (min-width:640px){
+    #panel-add .field-row.entry-grid-3, #panel-list .field-row.entry-grid-3{ grid-template-columns:repeat(3, 1fr); }
+    #panel-add .field-row.entry-grid-2{ grid-template-columns:1fr 1.6fr; }
+    #panel-list .field-row.entry-grid-2{ grid-template-columns:2fr 1fr; }
+    #panel-add .field-row.entry-grid-rate{ grid-template-columns:1.2fr 1.6fr; }
+  }
+  #panel-add .field, #panel-list .field{ min-width:0; }
+  #panel-add .field label, #panel-list .field label{ font-size:11.5px; }
+  #panel-add input, #panel-add select,
+  #panel-list input, #panel-list select{
+    min-height:46px;
+    border-radius:10px;
+    font-size:15px;
+  }
+  #panel-add input:focus, #panel-add select:focus,
+  #panel-list input:focus, #panel-list select:focus{
+    box-shadow:0 0 0 4px rgba(47,100,120,0.14);
+  }
+  #panel-add #f-rate-row{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:14px;
+  }
+  #panel-add #f-exchange-hint-row .field,
+  #panel-add #f-rate-row .field:last-child{
+    background:transparent;
+  }
+
+  /* ---- receipt uploader ---- */
+  #panel-add .receipt-dropzone{
+    border:1.5px dashed var(--rule);
+    border-radius:12px;
+    padding:16px;
+    background:var(--paper-2);
+    transition:border-color .15s ease, background-color .15s ease;
+  }
+  #panel-add .receipt-dropzone:hover{ border-color:var(--brass-dim); }
+  #panel-add .receipt-row{ gap:10px; }
+
+  /* ---- action bar ---- */
+  #panel-add .entry-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    padding-top:6px;
+    border-top:1px solid var(--rule);
+  }
+  #panel-add .entry-actions .btn{
+    flex:0 1 auto;
+    justify-content:center;
+    text-align:center;
+    min-height:38px;
+    padding:8px 16px;
+    font-size:13px;
+  }
+  #panel-add #btn-add{
+    font-size:13px;
+  }
+  @media (max-width:479px){
+    #panel-add .entry-actions{ flex-direction:column; }
+    #panel-add .entry-actions .btn{ width:100%; }
+  }
+  @media (min-width:1000px){
+    #panel-add .entry-body{ max-width:760px; }
+  }
+
+  /* ---- Entries page ---- */
+  #panel-list .list-toolbar{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  #panel-list .list-toolbar-actions{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  #panel-list .list-count-chip{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    padding:5px 12px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  #panel-list #ledger-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  #panel-list .ledger-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 12px;
+    background:var(--white);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:13px 15px;
+    margin:0;
+    box-shadow:0 1px 2px rgba(31,42,36,0.03);
+    transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  }
+  #panel-list .ledger-row:hover{
+    box-shadow:0 10px 24px -14px rgba(31,42,36,0.28);
+    transform:translateY(-2px);
+    border-color:#ddd3ac;
+  }
+  #panel-list .lr-date{
+    order:1; width:auto;
+    background:var(--paper-2);
+    padding:4px 9px;
+    border-radius:6px;
+  }
+  #panel-list .lr-tag{ order:2; width:auto; padding:3px 10px; border-radius:20px; }
+  #panel-list .lr-amt{ order:3; width:auto; margin-left:auto; font-size:15px; }
+  #panel-list .lr-amt.transfer{ font-size:12.5px; }
+  #panel-list .lr-cat{ order:4; flex:1 1 100%; }
+  #panel-list .lr-cat .t{ font-size:14.5px; }
+  #panel-list .lr-actions{ order:5; margin-left:auto; }
+  @media (min-width:680px){
+    #panel-list .lr-date{ order:1; }
+    #panel-list .lr-tag{ order:2; }
+    #panel-list .lr-cat{ order:3; flex:1 1 auto; }
+    #panel-list .lr-amt{ order:4; margin-left:0; }
+    #panel-list .lr-actions{ order:5; }
+  }
+  #panel-list .empty{
+    background:var(--paper-2);
+    border:1px dashed var(--rule);
+    border-radius:12px;
+  }
+
+  /* =========================================================
+     RECURRING — modern redesign (scoped to #panel-recurring so
+     no other panel/tab in the app is affected)
+     ========================================================= */
+  #panel-recurring .card{ padding:0; overflow:visible; }
+  #panel-recurring .card::before{ display:none; }
+  #panel-recurring .entry-head{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper); border-radius:14px 14px 0 0; position:relative; overflow:hidden;
+  }
+  #panel-recurring .entry-head::after{
+    content:""; position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-recurring .entry-head-icon{
+    flex-shrink:0; width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px); background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-recurring .entry-head-text{ min-width:0; flex:1; }
+  #panel-recurring .entry-head-text h2{ margin:0 0 4px; color:var(--paper); font-size:clamp(18px,2.6vw,22px); }
+  #panel-recurring .entry-head-sub{
+    margin:0; font-size:clamp(12px,1.6vw,13.5px); color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif; line-height:1.4;
+  }
+  #panel-recurring .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+    display:flex; flex-direction:column; gap:clamp(18px,2.4vw,24px);
+  }
+  #panel-recurring .entry-section{ display:flex; flex-direction:column; gap:10px; }
+  #panel-recurring .entry-eyebrow{
+    font-family:'Work Sans',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.9px; color:var(--muted); display:flex; align-items:center; gap:8px;
+  }
+  #panel-recurring .entry-eyebrow::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, var(--rule), transparent); }
+
+  /* type selector — responsive card grid; kept on .rtype-toggle so the
+     Add-Entry form's global ".type-toggle button" handlers stay untouched */
+  #panel-recurring .rtype-toggle{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  #panel-recurring .rtype-toggle button{
+    flex:none; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:6px; padding:14px 8px 13px; min-height:76px; border-radius:12px; border:1.5px solid var(--rule);
+    background:var(--white); font-size:12.5px;
+  }
+  #panel-recurring .rtype-toggle button::before{ font-size:19px; line-height:1; }
+  #panel-recurring .rtype-toggle button.sel-expense::before{ content:"💸"; }
+  #panel-recurring .rtype-toggle button.sel-income::before{ content:"💵"; }
+  #panel-recurring .rtype-toggle button::after{
+    content:""; position:absolute; top:7px; right:7px; width:8px; height:8px; border-radius:50%;
+    background:transparent; transition:background-color .15s ease, box-shadow .15s ease;
+  }
+  #panel-recurring .rtype-toggle button.on::after{ background:currentColor; box-shadow:0 0 0 3px rgba(255,255,255,0.35); }
+  #panel-recurring .rtype-toggle button.sel-expense.on{ background:rgba(156,68,56,0.1); color:var(--brick); border-color:var(--brick); }
+  #panel-recurring .rtype-toggle button.sel-income.on{ background:rgba(62,107,79,0.1); color:var(--green-ok); border-color:var(--green-ok); }
+  html.theme-dark #panel-recurring .rtype-toggle button{ background:var(--paper-2); }
+
+  /* form grids */
+  #panel-recurring .field-row{ display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:0; align-items:start; }
+  @media (min-width:640px){
+    #panel-recurring .field-row.rec-grid-2{ grid-template-columns:1.6fr 1fr; }
+    #panel-recurring .field-row.rec-grid-3{ grid-template-columns:repeat(3, 1fr); }
+  }
+  #panel-recurring .field{ min-width:0; }
+  #panel-recurring .field label{ font-size:11.5px; }
+  #panel-recurring input, #panel-recurring select{ min-height:46px; border-radius:10px; font-size:15px; }
+  #panel-recurring input:focus, #panel-recurring select:focus{ box-shadow:0 0 0 4px rgba(47,100,120,0.14); }
+
+  /* action bar */
+  #panel-recurring .entry-actions{ display:flex; flex-wrap:wrap; gap:10px; padding-top:6px; border-top:1px solid var(--rule); }
+  #panel-recurring .entry-actions .btn{ flex:0 1 auto; justify-content:center; text-align:center; min-height:44px; padding:11px 20px; font-size:13.5px; }
+  @media (max-width:479px){
+    #panel-recurring .entry-actions{ flex-direction:column; }
+    #panel-recurring .entry-actions .btn{ width:100%; }
+  }
+  @media (min-width:1000px){ #panel-recurring .entry-body{ max-width:760px; } }
+
+  /* list toolbar + count chip */
+  #panel-recurring .list-toolbar{ display:flex; align-items:center; justify-content:flex-end; margin-bottom:2px; }
+  #panel-recurring .list-count-chip{
+    font-family:'Space Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper-2);
+    border:1px solid var(--rule); padding:5px 12px; border-radius:20px; white-space:nowrap;
+  }
+
+  /* recurring rule cards */
+  #panel-recurring #rec-list{ display:flex; flex-direction:column; gap:10px; }
+  #panel-recurring .rec-item{
+    display:flex; align-items:flex-start; gap:12px;
+    background:var(--white); border:1px solid var(--rule); border-radius:12px;
+    padding:14px 15px; box-shadow:0 1px 2px rgba(31,42,36,0.03);
+    transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  }
+  #panel-recurring .rec-item:hover{ box-shadow:0 10px 24px -14px rgba(31,42,36,0.28); transform:translateY(-2px); border-color:#ddd3ac; }
+  #panel-recurring .rec-item-icon{
+    flex-shrink:0; width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; background:var(--paper-2); border:1px solid var(--rule);
+  }
+  #panel-recurring .rec-item.is-paused .rec-item-icon{ opacity:0.5; }
+  #panel-recurring .rec-item.is-paused{ border-style:dashed; }
+  #panel-recurring .rec-item-main{ flex:1; min-width:0; }
+  #panel-recurring .rec-item-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  #panel-recurring .rec-item-name{ font-weight:600; font-size:14.5px; }
+  #panel-recurring .rec-item-meta{
+    font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;
+    display:flex; flex-wrap:wrap; gap:2px 8px; align-items:center;
+  }
+  #panel-recurring .rec-item-meta .amt{ font-family:'Space Mono',monospace; font-weight:700; }
+  #panel-recurring .rec-item-meta .amt.expense{ color:var(--brick); }
+  #panel-recurring .rec-item-meta .amt.income{ color:var(--green-ok); }
+  #panel-recurring .rec-item-meta .dot{ opacity:0.5; }
+  #panel-recurring .rec-item-meta .next{ font-family:'Space Mono',monospace; }
+  #panel-recurring .rec-item-actions{ display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; margin-left:auto; }
+  @media (max-width:479px){
+    #panel-recurring .rec-item{ flex-wrap:wrap; }
+    #panel-recurring .rec-item-actions{ width:100%; margin-left:0; padding-top:10px; border-top:1px dashed var(--rule); justify-content:flex-end; }
+  }
+  #panel-recurring .empty{
+    background:var(--paper-2);
+    border:1px dashed var(--rule);
+    border-radius:12px;
+  }
+
+  /* =========================================================
+     CATEGORIES — modern redesign (scoped to #panel-categories so
+     no other panel/tab in the app is affected)
+     ========================================================= */
+  #panel-categories .card{ padding:0; overflow:visible; }
+  #panel-categories .card::before{ display:none; }
+  #panel-categories .entry-head{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper); border-radius:14px 14px 0 0; position:relative; overflow:hidden;
+  }
+  #panel-categories .entry-head::after{
+    content:""; position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-categories .entry-head-icon{
+    flex-shrink:0; width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px); background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-categories .entry-head-text{ min-width:0; flex:1; }
+  #panel-categories .entry-head-text h2{ margin:0 0 4px; color:var(--paper); font-size:clamp(18px,2.6vw,22px); }
+  #panel-categories .entry-head-sub{
+    margin:0; font-size:clamp(12px,1.6vw,13.5px); color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif; line-height:1.4;
+  }
+  #panel-categories .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+  }
+
+  /* two responsive columns — one per side, stack under 720px */
+  #panel-categories .cat-groups{ display:grid; grid-template-columns:1fr; gap:20px; }
+  @media (min-width:720px){
+    #panel-categories .cat-groups{ grid-template-columns:1fr 1fr; gap:24px; }
+  }
+  #panel-categories .cat-group{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:14px;
+    padding:clamp(14px,2vw,18px); display:flex; flex-direction:column; gap:12px;
+  }
+  #panel-categories .cat-group-head{ display:flex; align-items:center; gap:9px; }
+  #panel-categories .cat-group-icon{
+    flex-shrink:0; width:32px; height:32px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+    background:var(--white); border:1px solid var(--rule);
+  }
+  #panel-categories .cat-group-head h3{
+    font-family:'Fraunces',serif; color:var(--forest); font-size:15.5px; font-weight:600; margin:0; flex:1; min-width:0;
+  }
+  #panel-categories .cat-group-count{
+    font-family:'Space Mono',monospace; font-size:10.5px; color:var(--muted);
+    background:var(--white); border:1px solid var(--rule); padding:3px 9px; border-radius:20px;
+    white-space:nowrap; flex-shrink:0;
+  }
+
+  /* category item pills */
+  #panel-categories .cat-item-list{ display:flex; flex-direction:column; gap:8px; }
+  #panel-categories .cat-item{
+    display:flex; align-items:center; gap:8px;
+    background:var(--white); border:1px solid var(--rule); border-left:4px solid var(--rule);
+    border-radius:10px; padding:10px 12px;
+    transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+  }
+  #panel-categories .cat-group-expense .cat-item{ border-left-color:var(--brick); }
+  #panel-categories .cat-group-income .cat-item{ border-left-color:var(--green-ok); }
+  #panel-categories .cat-item:hover{ box-shadow:0 8px 18px -12px rgba(31,42,36,0.32); transform:translateY(-1px); border-color:#ddd3ac; }
+  #panel-categories .cat-item-name{ flex:1; min-width:0; font-weight:500; font-size:14px; overflow-wrap:anywhere; }
+  #panel-categories .cat-item input.cat-edit-input{ flex:1; min-width:0; min-height:40px; border-radius:8px; font-size:14px; }
+  #panel-categories .cat-actions{ display:flex; gap:6px; flex-shrink:0; }
+  #panel-categories .empty{
+    background:var(--white); border:1px dashed var(--rule); border-radius:10px;
+    padding:18px 10px; font-size:13px;
+  }
+
+  /* add-new row */
+  #panel-categories .cat-add-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  #panel-categories .cat-add-row input{ flex:1 1 140px; min-width:0; min-height:44px; border-radius:10px; }
+  #panel-categories .cat-add-row .btn{ flex:0 0 auto; min-height:44px; }
+  @media (max-width:380px){
+    #panel-categories .cat-add-row .btn{ flex:1 1 100%; justify-content:center; }
+  }
+
+  /* ===== Accounts panel ===== */
+  #panel-accounts .card{ padding:0; overflow:visible; }
+  #panel-accounts .card::before{ display:none; }
+  #panel-accounts .entry-head{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper); border-radius:14px 14px 0 0; position:relative; overflow:hidden;
+  }
+  #panel-accounts .entry-head::after{
+    content:""; position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-accounts .entry-head-icon{
+    flex-shrink:0; width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px); background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-accounts .entry-head-text{ min-width:0; flex:1; }
+  #panel-accounts .entry-head-text h2{ margin:0 0 4px; color:var(--paper); font-size:clamp(18px,2.6vw,22px); }
+  #panel-accounts .entry-head-sub{
+    margin:0; font-size:clamp(12px,1.6vw,13.5px); color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif; line-height:1.4;
+  }
+  #panel-accounts .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+  }
+
+  /* account list */
+  #panel-accounts .acct-item-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+  #panel-accounts .acct-item{
+    display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px;
+    background:var(--white); border:1px solid var(--rule); border-radius:12px;
+    padding:12px 14px;
+    transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+  }
+  #panel-accounts .acct-item:hover{ box-shadow:0 8px 18px -12px rgba(31,42,36,0.32); transform:translateY(-1px); border-color:#ddd3ac; }
+  #panel-accounts .acct-icon{
+    flex-shrink:0; width:40px; height:40px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    background:var(--paper-2); border:1px solid var(--rule);
+  }
+  #panel-accounts .acct-info{ flex:1 1 140px; min-width:0; }
+  #panel-accounts .acct-name{ font-weight:600; font-size:14.5px; overflow-wrap:anywhere; }
+  #panel-accounts .acct-meta{ font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; flex-wrap:wrap; gap:5px 8px; align-items:center; }
+  #panel-accounts .acct-type-badge{
+    font-family:'Space Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.03em;
+    background:var(--paper-2); border:1px solid var(--rule); padding:2px 8px; border-radius:20px;
+  }
+  #panel-accounts .acct-balance{
+    flex:0 0 auto; font-family:'Space Mono',monospace; font-weight:700; font-size:14.5px; white-space:nowrap; color:var(--ink);
+  }
+  #panel-accounts .acct-balance.negative{ color:var(--brick); }
+  #panel-accounts .acct-balance.positive{ color:var(--green-ok); }
+  #panel-accounts .acct-actions{ display:flex; gap:6px; flex-shrink:0; margin-left:auto; }
+  #panel-accounts .empty{
+    background:var(--white); border:1px dashed var(--rule); border-radius:10px;
+    padding:18px 10px; font-size:13px; margin-bottom:22px;
+  }
+
+  /* inline edit form (replaces a row's contents while editing) */
+  #panel-accounts .acct-edit-form{ display:flex; flex-wrap:wrap; gap:8px; flex:1 1 220px; min-width:0; }
+  #panel-accounts .acct-edit-form input, #panel-accounts .acct-edit-form select{
+    flex:1 1 110px; min-width:100px; min-height:42px; border-radius:8px; font-size:13.5px;
+  }
+  #panel-accounts .acct-edit-currency{ align-self:center; font-size:11.5px; color:var(--muted); white-space:nowrap; }
+
+  /* add-account section */
+  #panel-accounts .acct-add-section{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:14px;
+    padding:clamp(14px,2vw,18px);
+  }
+  #panel-accounts .acct-add-title{
+    font-family:'Fraunces',serif; color:var(--forest); font-size:15.5px; font-weight:600; margin:0 0 14px;
+  }
+  #panel-accounts .field-row{ margin-bottom:12px; }
+  #panel-accounts .field-row:last-of-type{ margin-bottom:0; }
+  #panel-accounts .field input, #panel-accounts .field select{ min-height:44px; border-radius:10px; background:var(--white); }
+  #panel-accounts .btn-row{ margin-top:14px; }
+  #panel-accounts .btn-row .btn{ min-height:44px; }
+  @media (max-width:480px){
+    #panel-accounts .acct-actions{ margin-left:0; width:100%; justify-content:flex-end; }
+    #panel-accounts .btn-row .btn{ flex:1 1 100%; justify-content:center; }
+  }
+
+  /* ===== Budgets panel ===== */
+  #panel-budgets .card{ padding:0; overflow:visible; }
+  #panel-budgets .card::before{ display:none; }
+  #panel-budgets .entry-head{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper); border-radius:14px 14px 0 0; position:relative; overflow:hidden;
+  }
+  #panel-budgets .entry-head::after{
+    content:""; position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-budgets .entry-head-icon{
+    flex-shrink:0; width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px); background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-budgets .entry-head-text{ min-width:0; flex:1; }
+  #panel-budgets .entry-head-text h2{ margin:0 0 4px; color:var(--paper); font-size:clamp(18px,2.6vw,22px); }
+  #panel-budgets .entry-head-sub{
+    margin:0; font-size:clamp(12px,1.6vw,13.5px); color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif; line-height:1.4;
+  }
+  #panel-budgets .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+  }
+  #panel-budgets .card + .card{ margin-top:20px; }
+
+  /* shared field styling inside this panel */
+  #panel-budgets .field-row{ margin-bottom:0; }
+  #panel-budgets .field input, #panel-budgets .field select{ min-height:44px; border-radius:10px; background:var(--white); }
+  #panel-budgets .btn-row{ margin-top:14px; }
+  #panel-budgets .btn-row .btn{ min-height:44px; }
+
+  /* overall budget status */
+  #panel-budgets #budget-overall-status{ margin-top:18px; }
+  #panel-budgets #budget-overall-status .budget-line{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:12px;
+    padding:14px 16px; margin:0 0 10px;
+  }
+  #panel-budgets #budget-overall-status .budget-line:last-child{ margin-bottom:0; }
+  #panel-budgets #budget-overall-status .budget-empty{
+    background:var(--paper-2); border:1px dashed var(--rule); border-radius:10px;
+    padding:16px; text-align:center;
+  }
+
+  /* category budget section */
+  #panel-budgets .budget-section-label{
+    font-family:'Fraunces',serif; color:var(--forest); font-size:15.5px; font-weight:600; margin:0 0 12px;
+  }
+  #panel-budgets #budget-cat-list{ display:flex; flex-direction:column; gap:12px; margin-bottom:22px; }
+  #panel-budgets .budget-item{
+    border-radius:14px; padding:16px 18px; background:var(--white); border:1px solid var(--rule);
+    transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+  }
+  #panel-budgets .budget-item:hover{ box-shadow:0 8px 18px -12px rgba(31,42,36,0.32); transform:translateY(-1px); border-color:#ddd3ac; }
+  #panel-budgets .budget-item-name{ font-size:15.5px; }
+  #panel-budgets .budget-item-name::before{ content:"🏷️"; margin-right:7px; font-size:13px; }
+  #panel-budgets .budget-empty{
+    background:var(--white); border:1px dashed var(--rule); border-radius:10px;
+    padding:18px 10px; font-size:13px; text-align:center; margin-bottom:22px;
+  }
+
+  /* add-budget sub-section */
+  #panel-budgets .budget-add-section{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:14px;
+    padding:clamp(14px,2vw,18px);
+  }
+  #panel-budgets .budget-add-title{
+    font-family:'Fraunces',serif; color:var(--forest); font-size:15.5px; font-weight:600; margin:0 0 14px;
+  }
+  #panel-budgets .budget-add-section .field-row{ margin-bottom:0; }
+
+  @media (max-width:480px){
+    #panel-budgets .budget-item-actions{ width:100%; justify-content:flex-end; }
+    #panel-budgets .btn-row .btn{ flex:1 1 100%; justify-content:center; }
+  }
+
+  /* ===== Bills panel ===== */
+  #panel-bills .card{ padding:0; overflow:visible; }
+  #panel-bills .card::before{ display:none; }
+  #panel-bills .entry-head{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper); border-radius:14px 14px 0 0; position:relative; overflow:hidden;
+  }
+  #panel-bills .entry-head::after{
+    content:""; position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-bills .entry-head-icon{
+    flex-shrink:0; width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px); background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-bills .entry-head-text{ min-width:0; flex:1; }
+  #panel-bills .entry-head-text h2{ margin:0 0 4px; color:var(--paper); font-size:clamp(18px,2.6vw,22px); }
+  #panel-bills .entry-head-sub{
+    margin:0; font-size:clamp(12px,1.6vw,13.5px); color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif; line-height:1.4;
+  }
+  #panel-bills .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+    display:flex; flex-direction:column; gap:clamp(16px,2.2vw,20px);
+  }
+  #panel-bills .card + .card{ margin-top:20px; }
+
+  /* ---- form grid ---- */
+  #panel-bills .field-row{
+    display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:0; align-items:start;
+  }
+  @media (min-width:640px){
+    #panel-bills .field-row.entry-grid-2{ grid-template-columns:2fr 1fr; }
+    #panel-bills .field-row.entry-grid-3{ grid-template-columns:repeat(3, 1fr); }
+  }
+  #panel-bills .field{ min-width:0; }
+  #panel-bills .field label{ font-size:11.5px; }
+  #panel-bills input, #panel-bills select{ min-height:46px; border-radius:10px; font-size:15px; }
+  #panel-bills input:focus, #panel-bills select:focus{ box-shadow:0 0 0 4px rgba(47,100,120,0.14); }
+  #panel-bills .btn-row{ padding-top:6px; border-top:1px solid var(--rule); }
+  #panel-bills .btn-row .btn{ min-height:44px; }
+
+  /* ---- bills list toolbar ---- */
+  #panel-bills .bills-toolbar{ display:flex; justify-content:flex-end; }
+  #panel-bills .bill-asof-chip{
+    font-family:'Space Mono',monospace; font-size:11.5px; color:var(--muted);
+    background:var(--paper-2); border:1px solid var(--rule); padding:5px 12px; border-radius:20px;
+    white-space:nowrap;
+  }
+  #panel-bills #bill-list{ display:flex; flex-direction:column; gap:10px; }
+  #panel-bills .empty{
+    background:var(--paper-2); border:1px dashed var(--rule); border-radius:12px;
+  }
+
+  /* ---- bill row (same premium look as the Entries ledger) ---- */
+  #panel-bills .ledger-row{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px;
+    background:var(--white); border:1px solid var(--rule); border-radius:12px;
+    padding:13px 15px; margin:0;
+    box-shadow:0 1px 2px rgba(31,42,36,0.03);
+    transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  }
+  #panel-bills .ledger-row:hover{
+    box-shadow:0 10px 24px -14px rgba(31,42,36,0.28);
+    transform:translateY(-2px); border-color:#ddd3ac;
+  }
+  #panel-bills .lr-date{ order:1; width:auto; background:var(--paper-2); padding:4px 9px; border-radius:6px; }
+  #panel-bills .lr-tag{ order:2; width:auto; padding:3px 10px; border-radius:20px; }
+  #panel-bills .lr-amt{ order:3; width:auto; margin-left:auto; font-size:15px; }
+  #panel-bills .lr-cat{ order:4; flex:1 1 100%; }
+  #panel-bills .lr-cat .t{ font-size:14.5px; }
+  #panel-bills .lr-actions{ order:5; margin-left:auto; flex-wrap:wrap; }
+  @media (min-width:680px){
+    #panel-bills .lr-date{ order:1; }
+    #panel-bills .lr-tag{ order:2; }
+    #panel-bills .lr-cat{ order:3; flex:1 1 auto; }
+    #panel-bills .lr-amt{ order:4; margin-left:0; }
+    #panel-bills .lr-actions{ order:5; }
+  }
+  @media (max-width:479px){
+    #panel-bills .btn-row{ flex-direction:column; }
+    #panel-bills .btn-row .btn{ width:100%; justify-content:center; }
+  }
+
+  /* ===== Calendar & Activity Tracker panel ===== */
+  #panel-tracker .card{ padding:0; overflow:visible; }
+  #panel-tracker .card::before{ display:none; }
+  #panel-tracker .card + .card{ margin-top:20px; }
+  #panel-tracker .entry-head{
+    display:flex; align-items:flex-start; gap:14px;
+    padding:clamp(20px,3vw,30px) clamp(20px,3vw,30px) clamp(14px,2vw,18px);
+    background:linear-gradient(155deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper); border-radius:14px 14px 0 0; position:relative; overflow:hidden;
+  }
+  #panel-tracker .entry-head::after{
+    content:""; position:absolute; right:-50px; top:-60px;
+    width:190px; height:190px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 72%);
+    pointer-events:none;
+  }
+  #panel-tracker .entry-head-icon{
+    flex-shrink:0; width:clamp(40px,6vw,48px); height:clamp(40px,6vw,48px);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(19px,3vw,23px); background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+  }
+  #panel-tracker .entry-head-text{ min-width:0; flex:1; }
+  #panel-tracker .entry-head-text h2{ margin:0 0 4px; color:var(--paper); font-size:clamp(18px,2.6vw,22px); }
+  #panel-tracker .entry-head-sub{
+    margin:0; font-size:clamp(12px,1.6vw,13.5px); color:rgba(243,238,217,0.78);
+    font-family:'Work Sans',sans-serif; line-height:1.4;
+  }
+  #panel-tracker .entry-body{
+    padding:clamp(18px,2.6vw,28px) clamp(20px,3vw,30px) clamp(22px,2.8vw,30px);
+    display:flex; flex-direction:column; gap:clamp(14px,2vw,18px);
+  }
+
+  /* ---- form grid (holiday fields, add-activity-type fields) ---- */
+  #panel-tracker .field-row{
+    display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:0; align-items:start;
+  }
+  @media (min-width:640px){
+    #panel-tracker .field-row{ grid-template-columns:repeat(3, 1fr); }
+  }
+  #panel-tracker .field{ min-width:0; }
+  #panel-tracker .field label{ font-size:11.5px; }
+
+  /* ===== Statistics page — modernized layout & responsiveness ===== */
+  #panel-stats .card h2{display:flex;align-items:center;gap:8px;}
+  #panel-stats .card::before{transform:scaleX(1);opacity:.85;}
+
+  /* Controls live in their own soft panel instead of floating loose at
+     the top of the card, so the "pick a period" step reads as one
+     distinct unit before the numbers below it. */
+  #panel-stats .stats-toolbar{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:clamp(12px,1.8vw,16px) clamp(14px,2vw,18px) clamp(4px,1vw,6px);
+    margin-bottom:20px;
+  }
+  html.theme-dark #panel-stats .stats-toolbar{background:rgba(255,255,255,0.035);}
+  #panel-stats .stats-toolbar .field-row{margin-bottom:10px;}
+  #panel-stats .stats-toolbar .scope-toggle{margin-bottom:12px;}
+  #panel-stats .stats-toolbar .scope-toggle button,
+  #panel-stats #stats-trend-toggle button{flex:1;min-width:74px;}
+  @media (max-width:560px){
+    #panel-stats .stats-toolbar .scope-toggle{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+    #panel-stats .stats-toolbar .scope-toggle button{width:100%;margin:0;}
+  }
+  @media (max-width:420px){
+    #panel-stats .stats-toolbar .field-row{flex-direction:column;align-items:stretch;}
+    #panel-stats .stats-toolbar .field{min-width:0;}
+  }
+
+  /* Keep a real dashboard grid on phones instead of the tiles collapsing
+     into one long stacked column. */
+  #panel-stats .stat-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  @media (max-width:480px){
+    #panel-stats .stat-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    #panel-stats .stat-box{padding:11px 12px;border-radius:12px;}
+    #panel-stats .stat-box .lbl{font-size:10.5px;}
+    #panel-stats .stat-box .val{font-size:14.5px;}
+  }
+  @media (max-width:340px){
+    #panel-stats .stat-grid{grid-template-columns:1fr;}
+  }
+
+  /* Section rhythm inside the long stats-output block: a hairline divider
+     ahead of each "chapter" heading so the page reads as distinct
+     sections instead of one unbroken wall of numbers. */
+  #stats-output h3{padding-bottom:10px;border-bottom:1px solid var(--rule);}
+  #stats-output h4:not(:first-of-type){border-top:1px solid var(--rule);padding-top:18px;}
+
+  /* Donut charts: stay centered and legible once they stack on narrow
+     screens instead of the legend crowding the circle. */
+  #panel-stats .donut-row{gap:22px;}
+  @media (max-width:640px){
+    #panel-stats .donut-wrap{justify-content:center;}
+    #panel-stats .donut-col{min-width:100%;}
+  }
+
+  /* Category tables: tighten up before they'd otherwise wrap awkwardly. */
+  @media (max-width:480px){
+    #panel-stats table.report-table{font-size:11.5px;}
+    #panel-stats table.report-table th,
+    #panel-stats table.report-table td{padding:6px 5px;overflow-wrap:anywhere;}
+  }
+
+  /* Bar charts: a clear baseline to anchor the columns, and let the
+     legend/trend toggle wrap cleanly instead of overflowing the card. */
+  #panel-stats .bars{border-bottom:1px solid var(--rule);}
+  #panel-stats .legend{justify-content:center;flex-wrap:wrap;}
+  @media (max-width:480px){
+    #panel-stats .card{padding:18px 14px 20px;}
+    #panel-stats .bars{height:clamp(120px,32vw,150px);}
+  }
+  #panel-tracker input, #panel-tracker select{ min-height:46px; border-radius:10px; font-size:15px; }
+  #panel-tracker input:focus, #panel-tracker select:focus{ box-shadow:0 0 0 4px rgba(47,100,120,0.14); }
+  #panel-tracker input[type=color]{ padding:3px; height:46px; }
+  #panel-tracker .acttype-field-icon, #panel-tracker .acttype-field-color{ grid-column:span 1; max-width:none; }
+  @media (min-width:640px){
+    #panel-tracker .field-row.acttype-fields{ grid-template-columns:80px 1fr 80px; }
+  }
+  #panel-tracker .btn-row{ padding-top:4px; }
+  #panel-tracker .btn-row .btn{ min-height:44px; }
+
+  /* ---- add-activity-type sub-section ---- */
+  #panel-tracker .tracker-add-section{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:14px;
+    padding:clamp(14px,2vw,18px); display:flex; flex-direction:column; gap:14px;
+  }
+  #panel-tracker .tracker-add-title{
+    font-family:'Fraunces',serif; color:var(--forest); font-size:15.5px; font-weight:600; margin:0;
+  }
+
+  /* ---- holiday section helpers ---- */
+  #panel-tracker .tracker-hint{ font-size:12.5px; color:var(--muted); margin:0; line-height:1.5; }
+  #panel-tracker .tracker-status{ font-size:12px; color:var(--muted); min-height:16px; }
+  #panel-tracker .tracker-divider{
+    display:flex; align-items:center; gap:10px; color:var(--muted);
+    font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em;
+  }
+  #panel-tracker .tracker-divider::before, #panel-tracker .tracker-divider::after{
+    content:""; flex:1; height:1px; background:var(--rule);
+  }
+
+  @media (max-width:480px){
+    #panel-tracker .btn-row .btn{ flex:1 1 100%; justify-content:center; }
+  }
+
+  /* ================= Profile page (modernized) ================= */
+  #panel-profile{ display:flex; flex-direction:column; gap:18px; }
+
+  .profile-hero{
+    position:relative; overflow:hidden; isolation:isolate;
+    background:linear-gradient(150deg, var(--forest) 0%, var(--forest-2) 100%);
+    color:var(--paper);
+    border-radius:20px;
+    padding:clamp(22px,3.4vw,34px) clamp(20px,3.4vw,36px);
+    box-shadow:0 14px 30px -16px rgba(30,61,50,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+    display:flex; align-items:center; gap:clamp(16px,2.6vw,28px); flex-wrap:wrap;
+  }
+  .profile-hero::after{
+    content:""; position:absolute; right:-50px; top:-60px; width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,169,106,0.22) 0%, transparent 70%); pointer-events:none; z-index:-1;
+  }
+  .profile-hero .avatar-row{ margin:0; }
+  .profile-hero .avatar-circle{
+    width:clamp(72px,9vw,92px); height:clamp(72px,9vw,92px);
+    background:rgba(255,255,255,0.14); border:3px solid rgba(255,255,255,0.3);
+    color:var(--paper); font-size:clamp(26px,3vw,32px);
+    box-shadow:0 8px 20px -8px rgba(0,0,0,0.4);
+  }
+  .profile-hero .avatar-actions .btn{
+    background:rgba(255,255,255,0.12); color:var(--paper); border:1px solid rgba(255,255,255,0.3); box-shadow:none;
+  }
+  .profile-hero .avatar-actions .btn:hover{ background:rgba(255,255,255,0.22); transform:translateY(-1px); }
+  .profile-hero .avatar-actions .btn.ghost{ background:transparent; }
+  .profile-hero .avatar-actions .btn.ghost:hover{ background:rgba(224,137,124,0.3); border-color:transparent; }
+
+  .profile-hero-meta{ min-width:0; flex:1 1 200px; position:relative; z-index:1; }
+  .profile-hero-label{
+    display:block; font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.6px;
+    text-transform:uppercase; opacity:0.72; margin-bottom:4px;
+  }
+  .profile-hero-name{
+    display:block; font-family:'Fraunces',serif; font-weight:700; font-size:clamp(20px,2.8vw,27px);
+    line-height:1.25; word-break:break-word; overflow-wrap:anywhere;
+  }
+  .profile-hero-history-btn{
+    margin-top:12px; display:inline-flex; align-items:center; gap:6px;
+    font-family:'Work Sans', sans-serif; font-size:12.5px; font-weight:600; color:var(--paper);
+    background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.28);
+    padding:7px 14px; border-radius:999px; cursor:pointer; transition:background .18s ease, transform .18s ease;
+  }
+  .profile-hero-history-btn:hover{ background:rgba(255,255,255,0.22); transform:translateY(-1px); }
+  .profile-hero-history-btn:focus-visible{ outline:2px solid var(--paper); outline-offset:2px; }
+
+  .profile-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; align-items:start;
+  }
+  #panel-profile .card, #panel-profile .hero-card{ margin:0; }
+  #panel-profile .card h2{ display:flex; align-items:center; gap:8px; }
+
+  .profile-section-hint{ font-size:12px; color:var(--muted); margin:6px 0 14px; line-height:1.55; }
+
+  .backup-group-label{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px;
+    color:var(--forest-2); margin:16px 0 8px;
+  }
+  .backup-group-label:first-of-type{ margin-top:0; }
+
+  @media (max-width:640px){
+    .profile-hero{ flex-direction:column; align-items:flex-start; text-align:left; }
+  }
 </style>
 <style id="print-orientation-style"></style>
 </head>
@@ -2226,12 +3409,20 @@
     <!-- ADD ENTRY -->
     <div class="panel active" id="panel-add">
       <div class="card">
-        <h2 id="add-form-title">📝 New Entry</h2>
-        <p class="keep-hint">☑️ Tick "keep" beside a field to leave it filled in after you add an entry — handy for entering a batch of similar transactions fast.</p>
-        <div class="field-row">
-          <div class="field" style="flex:0 0 100%;">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">📝</div>
+          <div class="entry-head-text">
+            <h2 id="add-form-title">📝 New Entry</h2>
+            <p class="entry-head-sub">Log an expense, income, salary, or transfer in a few taps.</p>
+          </div>
+        </div>
+
+        <div class="entry-body">
+          <p class="keep-hint">Tick "keep" beside a field to leave it filled in after you add an entry — handy for entering a batch of similar transactions fast.</p>
+
+          <div class="entry-section">
             <div class="field-label-row">
-              <label>Type</label>
+              <span class="entry-eyebrow">Type</span>
               <label class="keep-chk"><input type="checkbox" id="keep-type"> keep</label>
             </div>
             <div class="type-toggle">
@@ -2241,120 +3432,137 @@
               <button type="button" class="sel-transfer" data-type="transfer" data-i18n="type_transfer">Transfer / Exchange</button>
             </div>
           </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <div class="field-label-row">
-              <label>Date</label>
-              <label class="keep-chk"><input type="checkbox" id="keep-date"> keep</label>
+
+          <div class="entry-section">
+            <span class="entry-eyebrow">When &amp; how much</span>
+            <div class="field-row entry-grid-3">
+              <div class="field">
+                <div class="field-label-row">
+                  <label>Date</label>
+                  <label class="keep-chk"><input type="checkbox" id="keep-date"> keep</label>
+                </div>
+                <input type="date" id="f-date">
+              </div>
+              <div class="field">
+                <div class="field-label-row">
+                  <label><span id="f-currency-label-text">Currency</span></label>
+                  <label class="keep-chk"><input type="checkbox" id="keep-currency"> keep</label>
+                </div>
+                <select id="f-currency">
+                  <option value="USD">USD</option>
+                  <option value="LBP">LBP</option>
+                </select>
+              </div>
+              <div class="field">
+                <div class="field-label-row">
+                  <label>Amount</label>
+                  <label class="keep-chk"><input type="checkbox" id="keep-amount"> keep</label>
+                </div>
+                <input type="text" inputmode="decimal" autocomplete="off" id="f-amount" placeholder="0.00">
+              </div>
             </div>
-            <input type="date" id="f-date">
           </div>
-          <div class="field">
-            <div class="field-label-row">
-              <label><span id="f-currency-label-text">Currency</span></label>
-              <label class="keep-chk"><input type="checkbox" id="keep-currency"> keep</label>
+
+          <div class="field-row entry-grid-rate" id="f-rate-row">
+            <div class="field">
+              <div class="field-label-row">
+                <label>Exchange rate (LBP per $1)</label>
+                <label class="keep-chk"><input type="checkbox" id="keep-rate"> keep</label>
+              </div>
+              <input type="text" inputmode="decimal" autocomplete="off" id="f-rate" placeholder="e.g. 89,500">
             </div>
-            <select id="f-currency">
-              <option value="USD">USD</option>
-              <option value="LBP">LBP</option>
-            </select>
-          </div>
-          <div class="field">
-            <div class="field-label-row">
-              <label>Amount</label>
-              <label class="keep-chk"><input type="checkbox" id="keep-amount"> keep</label>
+            <div class="field">
+              <div class="field-label-row"><label>&nbsp;</label></div>
+              <div id="f-rate-hint" style="font-size:11.5px;color:var(--muted);padding:10px 0;line-height:1.4;">Locked in for this entry — changing today's rate later won't touch it.</div>
             </div>
-            <input type="text" inputmode="decimal" autocomplete="off" id="f-amount" placeholder="0.00">
           </div>
-        </div>
-        <div class="field-row" id="f-rate-row">
-          <div class="field">
-            <div class="field-label-row">
-              <label>Exchange rate (LBP per $1)</label>
-              <label class="keep-chk"><input type="checkbox" id="keep-rate"> keep</label>
+
+          <div class="entry-section">
+            <div class="field-row">
+              <div class="field" id="f-account-wrap">
+                <div class="field-label-row">
+                  <label><span id="f-account-label-text">Account (optional)</span></label>
+                  <label class="keep-chk"><input type="checkbox" id="keep-account"> keep</label>
+                </div>
+                <select id="f-account"><option value="">No account</option></select>
+              </div>
             </div>
-            <input type="text" inputmode="decimal" autocomplete="off" id="f-rate" placeholder="e.g. 89,500">
           </div>
-          <div class="field" style="flex:1.4;">
-            <div class="field-label-row"><label>&nbsp;</label></div>
-            <div id="f-rate-hint" style="font-size:11.5px;color:var(--muted);padding:10px 0;line-height:1.4;">Locked in for this entry — changing today's rate later won't touch it.</div>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field" id="f-account-wrap">
-            <div class="field-label-row">
-              <label><span id="f-account-label-text">Account (optional)</span></label>
-              <label class="keep-chk"><input type="checkbox" id="keep-account"> keep</label>
+
+          <div class="field-row" id="f-to-currency-row" style="display:none;">
+            <div class="field">
+              <div class="field-label-row">
+                <label>To currency</label>
+              </div>
+              <select id="f-to-currency">
+                <option value="USD">USD</option>
+                <option value="LBP">LBP</option>
+              </select>
             </div>
-            <select id="f-account"><option value="">No account</option></select>
-          </div>
-        </div>
-        <div class="field-row" id="f-to-currency-row" style="display:none;">
-          <div class="field">
-            <div class="field-label-row">
-              <label>To currency</label>
+            <div class="field" id="f-to-amount-wrap" style="display:none;">
+              <div class="field-label-row">
+                <label>Received amount</label>
+              </div>
+              <input type="text" inputmode="decimal" autocomplete="off" id="f-to-amount" placeholder="0.00">
             </div>
-            <select id="f-to-currency">
-              <option value="USD">USD</option>
-              <option value="LBP">LBP</option>
-            </select>
           </div>
-          <div class="field" id="f-to-amount-wrap" style="display:none;">
-            <div class="field-label-row">
-              <label>Received amount</label>
+          <div class="field-row" id="f-exchange-hint-row" style="display:none;">
+            <div class="field" style="flex:1;">
+              <div id="f-exchange-hint" style="font-size:11.5px;color:var(--muted);line-height:1.4;">Pick the currencies you're exchanging above — that's all this needs. Linking accounts below is optional, only there if you also want an account balance updated.</div>
             </div>
-            <input type="text" inputmode="decimal" autocomplete="off" id="f-to-amount" placeholder="0.00">
           </div>
-        </div>
-        <div class="field-row" id="f-exchange-hint-row" style="display:none;">
-          <div class="field" style="flex:1;">
-            <div id="f-exchange-hint" style="font-size:11.5px;color:var(--muted);line-height:1.4;">Pick the currencies you're exchanging above — that's all this needs. Linking accounts below is optional, only there if you also want an account balance updated.</div>
-          </div>
-        </div>
-        <div class="field-row" id="f-to-account-row" style="display:none;">
-          <div class="field" id="f-to-account-wrap">
-            <div class="field-label-row">
-              <label>To account (optional)</label>
+          <div class="field-row" id="f-to-account-row" style="display:none;">
+            <div class="field" id="f-to-account-wrap">
+              <div class="field-label-row">
+                <label>To account (optional)</label>
+              </div>
+              <select id="f-to-account"><option value="">No account</option></select>
             </div>
-            <select id="f-to-account"><option value="">No account</option></select>
           </div>
-        </div>
-        <div class="field-row">
-          <div class="field" id="f-category-wrap">
-            <div class="field-label-row">
-              <label>Category</label>
-              <label class="keep-chk"><input type="checkbox" id="keep-category"> keep</label>
+
+          <div class="entry-section">
+            <span class="entry-eyebrow">Details</span>
+            <div class="field-row entry-grid-2">
+              <div class="field" id="f-category-wrap">
+                <div class="field-label-row">
+                  <label>Category</label>
+                  <label class="keep-chk"><input type="checkbox" id="keep-category"> keep</label>
+                </div>
+                <select id="f-category"></select>
+              </div>
+              <div class="field">
+                <div class="field-label-row">
+                  <label>Note (optional)</label>
+                  <label class="keep-chk"><input type="checkbox" id="keep-note"> keep</label>
+                </div>
+                <input type="text" id="f-note" placeholder="e.g. groceries at Spinneys">
+              </div>
             </div>
-            <select id="f-category"></select>
           </div>
-          <div class="field" style="flex:2;">
-            <div class="field-label-row">
-              <label>Note (optional)</label>
-              <label class="keep-chk"><input type="checkbox" id="keep-note"> keep</label>
+
+          <div class="entry-section">
+            <span class="entry-eyebrow">Receipt</span>
+            <div class="field-row">
+              <div class="field" style="flex:0 0 100%;">
+                <div class="receipt-dropzone">
+                  <div class="receipt-row" id="f-receipt-row">
+                    <label class="btn small subtle" for="f-receipt-input" id="f-receipt-attach-label" style="cursor:pointer;">📎 Attach receipt</label>
+                    <input type="file" id="f-receipt-input" accept="image/*,application/pdf,.pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif">
+                    <span class="receipt-name" id="f-receipt-name" style="display:none;"></span>
+                    <button type="button" class="btn small ghost-teal" id="btn-receipt-view" style="display:none;">👁️ View</button>
+                    <button type="button" class="btn small ghost" id="btn-receipt-remove" style="display:none;">🗑️ Remove</button>
+                  </div>
+                  <div class="receipt-hint" style="font-size:11.5px;color:var(--muted);margin-top:6px;">Photo, image, or PDF — private to your account. Images up to 8MB, PDFs up to 3MB.</div>
+                </div>
+              </div>
             </div>
-            <input type="text" id="f-note" placeholder="e.g. groceries at Spinneys">
           </div>
-        </div>
-        <div class="field-row">
-          <div class="field" style="flex:0 0 100%;">
-            <div class="field-label-row">
-              <label>Receipt (optional)</label>
-            </div>
-            <div class="receipt-row" id="f-receipt-row">
-              <label class="btn small subtle" for="f-receipt-input" id="f-receipt-attach-label" style="cursor:pointer;">📎 Attach receipt</label>
-              <input type="file" id="f-receipt-input" accept="image/*,application/pdf,.pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif">
-              <span class="receipt-name" id="f-receipt-name" style="display:none;"></span>
-              <button type="button" class="btn small ghost-teal" id="btn-receipt-view" style="display:none;">👁️ View</button>
-              <button type="button" class="btn small ghost" id="btn-receipt-remove" style="display:none;">🗑️ Remove</button>
-            </div>
-            <div class="receipt-hint" style="font-size:11.5px;color:var(--muted);margin-top:6px;">Photo, image, or PDF — private to your account. Images up to 8MB, PDFs up to 3MB.</div>
+
+          <div class="entry-actions btn-row">
+            <button class="btn brass" id="btn-add">➕ Add Entry</button>
+            <button class="btn subtle" id="btn-clear-form" type="button">🧹 Clear</button>
+            <button class="btn subtle" id="btn-cancel-edit" style="display:none;">✖ Cancel edit</button>
           </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn brass" id="btn-add">➕ Add Entry</button>
-          <button class="btn subtle" id="btn-clear-form" type="button">🧹 Clear</button>
-          <button class="btn subtle" id="btn-cancel-edit" style="display:none;">✖ Cancel edit</button>
         </div>
       </div>
     </div>
@@ -2362,177 +3570,224 @@
     <!-- LIST -->
     <div class="panel" id="panel-list">
       <div class="card">
-        <div class="field-label-row" style="margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-          <h2 style="margin:0;">📋 Entries</h2>
-          <button class="btn small subtle" id="list-filters-toggle" type="button">🔧 Filters<span id="list-filters-badge" class="filter-badge" style="display:none;">0</span></button>
-        </div>
-        <div class="field-row">
-          <div class="field" style="flex:2;min-width:180px;">
-            <label>🔍 Search category, amount, currency, description, or date</label>
-            <input type="text" id="list-search" placeholder="e.g. groceries, 25.50, USD, or 2026-08-25">
-          </div>
-          <div class="field" style="min-width:150px;">
-            <label>Sort by</label>
-            <select id="list-sort">
-              <option value="newest">🕓 Newest first</option>
-              <option value="oldest">📜 Oldest first</option>
-              <option value="amount-high">⬆️ Highest amount</option>
-              <option value="amount-low">⬇️ Lowest amount</option>
-            </select>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">📋</div>
+          <div class="entry-head-text">
+            <h2>Entries</h2>
+            <p class="entry-head-sub">Search, filter, and manage everything you've logged.</p>
           </div>
         </div>
 
-        <div id="list-filters-panel" style="display:none;">
-          <div class="field-row">
-            <div class="field">
-              <label>From date</label>
-              <input type="date" id="list-date-start">
+        <div class="entry-body">
+          <div class="list-toolbar">
+            <div class="field-row entry-grid-2">
+              <div class="field" style="flex:2;min-width:180px;">
+                <label>🔍 Search</label>
+                <input type="text" id="list-search" placeholder="Category, amount, currency, note, or date">
+              </div>
+              <div class="field" style="min-width:150px;">
+                <label>Sort by</label>
+                <select id="list-sort">
+                  <option value="newest">🕓 Newest first</option>
+                  <option value="oldest">📜 Oldest first</option>
+                  <option value="amount-high">⬆️ Highest amount</option>
+                  <option value="amount-low">⬇️ Lowest amount</option>
+                </select>
+              </div>
             </div>
-            <div class="field">
-              <label>To date</label>
-              <input type="date" id="list-date-end">
-            </div>
-            <div class="field">
-              <label>Type</label>
-              <select id="list-type-filter">
-                <option value="">All types</option>
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-                <option value="salary">Salary</option>
-                <option value="transfer">Transfer</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Category</label>
-              <select id="list-category-filter"><option value="">All categories</option></select>
-            </div>
-            <div class="field">
-              <label>Account</label>
-              <select id="list-account-filter"><option value="">All accounts</option></select>
-            </div>
-            <div class="field">
-              <label>Currency</label>
-              <select id="list-currency-filter">
-                <option value="">All currencies</option>
-                <option value="USD">USD</option>
-                <option value="LBP">LBP</option>
-              </select>
+            <div class="list-toolbar-actions">
+              <button class="btn small subtle" id="list-filters-toggle" type="button">🔧 Filters<span id="list-filters-badge" class="filter-badge" style="display:none;">0</span></button>
+              <span class="list-count-chip" id="list-summary"></span>
             </div>
           </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Min amount (≈ USD)</label>
-              <input type="text" inputmode="decimal" autocomplete="off" id="list-amount-min" placeholder="0.00">
-            </div>
-            <div class="field">
-              <label>Max amount (≈ USD)</label>
-              <input type="text" inputmode="decimal" autocomplete="off" id="list-amount-max" placeholder="0.00">
-            </div>
-          </div>
-          <div class="btn-row">
-            <button class="btn small subtle" id="list-clear-filter" type="button">🔄 Clear all filters</button>
-          </div>
-        </div>
 
-        <div id="list-summary"></div>
-        <div id="ledger-list"></div>
+          <div id="list-filters-panel" style="display:none;">
+            <div class="field-row entry-grid-3">
+              <div class="field">
+                <label>From date</label>
+                <input type="date" id="list-date-start">
+              </div>
+              <div class="field">
+                <label>To date</label>
+                <input type="date" id="list-date-end">
+              </div>
+              <div class="field">
+                <label>Type</label>
+                <select id="list-type-filter">
+                  <option value="">All types</option>
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                  <option value="salary">Salary</option>
+                  <option value="transfer">Transfer</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row entry-grid-3">
+              <div class="field">
+                <label>Category</label>
+                <select id="list-category-filter"><option value="">All categories</option></select>
+              </div>
+              <div class="field">
+                <label>Account</label>
+                <select id="list-account-filter"><option value="">All accounts</option></select>
+              </div>
+              <div class="field">
+                <label>Currency</label>
+                <select id="list-currency-filter">
+                  <option value="">All currencies</option>
+                  <option value="USD">USD</option>
+                  <option value="LBP">LBP</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row entry-grid-2">
+              <div class="field">
+                <label>Min amount (≈ USD)</label>
+                <input type="text" inputmode="decimal" autocomplete="off" id="list-amount-min" placeholder="0.00">
+              </div>
+              <div class="field">
+                <label>Max amount (≈ USD)</label>
+                <input type="text" inputmode="decimal" autocomplete="off" id="list-amount-max" placeholder="0.00">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn small subtle" id="list-clear-filter" type="button">🔄 Clear all filters</button>
+            </div>
+          </div>
+
+          <div id="ledger-list"></div>
+        </div>
       </div>
     </div>
 
     <!-- RECURRING -->
     <div class="panel" id="panel-recurring">
       <div class="card">
-        <h2 id="rec-form-title">🔁 New recurring transaction</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Set up something that repeats — salary, rent, internet, phone bill, subscriptions, any monthly payment — and a matching entry is generated automatically each time it's due. Adding or editing a recurring rule never changes any entry already in your ledger.</p>
-        <div class="field-row">
-          <div class="field" style="flex:0 0 100%;">
-            <label>Type</label>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🔁</div>
+          <div class="entry-head-text">
+            <h2 id="rec-form-title">🔁 New recurring transaction</h2>
+            <p class="entry-head-sub">Salary, rent, internet, phone bill, subscriptions — set up anything that repeats and a matching entry is generated automatically each time it's due. Adding or editing a rule never changes any entry already in your ledger.</p>
+          </div>
+        </div>
+        <div class="entry-body">
+          <div class="entry-section">
+            <div class="entry-eyebrow">Type</div>
             <div class="rtype-toggle" id="rec-type-toggle">
               <button type="button" class="sel-expense on" data-rtype="expense" data-i18n="type_expense">Expense</button>
               <button type="button" class="sel-income" data-rtype="income" data-i18n="type_income">Income</button>
             </div>
           </div>
-        </div>
-        <div class="field-row">
-          <div class="field" style="flex:2;min-width:180px;">
-            <label>Name / description</label>
-            <input type="text" id="rec-name" placeholder="e.g. Salary, Rent, Internet, Netflix">
+          <div class="entry-section">
+            <div class="entry-eyebrow">Details</div>
+            <div class="field-row rec-grid-2">
+              <div class="field">
+                <label>Name / description</label>
+                <input type="text" id="rec-name" placeholder="e.g. Salary, Rent, Internet, Netflix">
+              </div>
+              <div class="field">
+                <label>Repeats</label>
+                <select id="rec-frequency">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly" selected>Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label>Repeats</label>
-            <select id="rec-frequency">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly" selected>Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
+          <div class="entry-section">
+            <div class="entry-eyebrow">Amount &amp; category</div>
+            <div class="field-row rec-grid-3">
+              <div class="field">
+                <label>Currency</label>
+                <select id="rec-currency">
+                  <option value="USD">USD</option>
+                  <option value="LBP">LBP</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Amount</label>
+                <input type="text" inputmode="decimal" autocomplete="off" id="rec-amount" placeholder="0.00">
+              </div>
+              <div class="field">
+                <label>Category</label>
+                <select id="rec-category"></select>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Currency</label>
-            <select id="rec-currency">
-              <option value="USD">USD</option>
-              <option value="LBP">LBP</option>
-            </select>
+          <div class="entry-section">
+            <div class="entry-eyebrow">Schedule</div>
+            <div class="field-row rec-grid-3">
+              <div class="field">
+                <label>Account (optional)</label>
+                <select id="rec-account"><option value="">No account</option></select>
+              </div>
+              <div class="field">
+                <label>Start date</label>
+                <input type="date" id="rec-start">
+              </div>
+              <div class="field">
+                <label>End date (optional)</label>
+                <input type="date" id="rec-end">
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label>Amount</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="rec-amount" placeholder="0.00">
+          <div class="entry-actions">
+            <button class="btn brass" id="btn-rec-add">➕ Add recurring transaction</button>
+            <button class="btn subtle" id="btn-rec-cancel-edit" style="display:none;">✖ Cancel edit</button>
           </div>
-          <div class="field">
-            <label>Category</label>
-            <select id="rec-category"></select>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Account (optional)</label>
-            <select id="rec-account"><option value="">No account</option></select>
-          </div>
-          <div class="field">
-            <label>Start date</label>
-            <input type="date" id="rec-start">
-          </div>
-          <div class="field">
-            <label>End date (optional)</label>
-            <input type="date" id="rec-end">
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn brass" id="btn-rec-add">➕ Add recurring transaction</button>
-          <button class="btn subtle" id="btn-rec-cancel-edit" style="display:none;">✖ Cancel edit</button>
         </div>
       </div>
       <div class="card">
-        <h2 data-i18n="h_recurring">🔁 Your recurring transactions</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Pause one to stop it from generating new entries without losing its settings, or delete it entirely. Nothing here ever edits or removes entries it already generated.</p>
-        <div id="rec-list"></div>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">📋</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_recurring">🔁 Your recurring transactions</h2>
+            <p class="entry-head-sub">Pause one to stop it from generating new entries without losing its settings, or delete it entirely. Nothing here ever edits or removes entries it already generated.</p>
+          </div>
+        </div>
+        <div class="entry-body">
+          <div id="rec-list"></div>
+        </div>
       </div>
     </div>
 
     <!-- CATEGORIES -->
     <div class="panel" id="panel-categories">
       <div class="card">
-        <h2 data-i18n="h_categories">🏷️ Manage categories</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Add, rename, or remove the categories used for expenses and income. Renaming updates every past entry that used it; removing a category only takes it out of the picker — past entries keep their original label.</p>
-        <div class="two-col">
-          <div>
-            <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:6px 0 4px;">Expense categories</h3>
-            <div id="cat-list-expense"></div>
-            <div class="field-row" style="margin-top:10px;">
-              <div class="field"><input type="text" id="cat-new-expense" placeholder="New expense category"></div>
-              <button class="btn small brass" id="cat-add-expense">➕ Add</button>
-            </div>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🏷️</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_categories">🏷️ Manage categories</h2>
+            <p class="entry-head-sub">Add, rename, or remove the categories used for expenses and income. Renaming updates every past entry that used it; removing a category only takes it out of the picker — past entries keep their original label.</p>
           </div>
-          <div>
-            <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:6px 0 4px;">Income categories</h3>
-            <div id="cat-list-income"></div>
-            <div class="field-row" style="margin-top:10px;">
-              <div class="field"><input type="text" id="cat-new-income" placeholder="New income category"></div>
-              <button class="btn small brass" id="cat-add-income">➕ Add</button>
+        </div>
+        <div class="entry-body">
+          <div class="cat-groups">
+            <div class="cat-group cat-group-expense">
+              <div class="cat-group-head">
+                <span class="cat-group-icon" aria-hidden="true">💸</span>
+                <h3>Expense categories</h3>
+                <span class="cat-group-count" id="cat-count-expense"></span>
+              </div>
+              <div id="cat-list-expense" class="cat-item-list"></div>
+              <div class="cat-add-row">
+                <input type="text" id="cat-new-expense" placeholder="New expense category">
+                <button class="btn small brass" id="cat-add-expense">➕ Add</button>
+              </div>
+            </div>
+            <div class="cat-group cat-group-income">
+              <div class="cat-group-head">
+                <span class="cat-group-icon" aria-hidden="true">💵</span>
+                <h3>Income categories</h3>
+                <span class="cat-group-count" id="cat-count-income"></span>
+              </div>
+              <div id="cat-list-income" class="cat-item-list"></div>
+              <div class="cat-add-row">
+                <input type="text" id="cat-new-income" placeholder="New income category">
+                <button class="btn small brass" id="cat-add-income">➕ Add</button>
+              </div>
             </div>
           </div>
         </div>
@@ -2542,39 +3797,48 @@
     <!-- ACCOUNTS -->
     <div class="panel" id="panel-accounts">
       <div class="card">
-        <h2 data-i18n="h_accounts">🏦 Manage accounts</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Track balances across cash, bank, credit card, or digital wallet accounts. Pick an account when logging an entry and its balance updates automatically — it's always calculated fresh from starting balance + every entry tied to it, so it can't drift out of sync.</p>
-        <div id="acct-list"></div>
-        <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:16px 0 6px;">Add an account</h3>
-        <div class="field-row">
-          <div class="field">
-            <label>Name</label>
-            <input type="text" id="acct-new-name" placeholder="e.g. Main Bank">
-          </div>
-          <div class="field">
-            <label>Type</label>
-            <select id="acct-new-type">
-              <option value="cash">Cash</option>
-              <option value="bank">Bank</option>
-              <option value="credit_card">Credit Card</option>
-              <option value="digital_wallet">Digital Wallet</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Currency</label>
-            <select id="acct-new-currency">
-              <option value="USD">USD</option>
-              <option value="LBP">LBP</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Starting balance</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="acct-new-balance" placeholder="0.00">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🏦</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_accounts">🏦 Manage accounts</h2>
+            <p class="entry-head-sub">Track balances across cash, bank, credit card, or digital wallet accounts. Pick an account when logging an entry and its balance updates automatically — it's always calculated fresh from starting balance + every entry tied to it, so it can't drift out of sync.</p>
           </div>
         </div>
-        <div class="btn-row">
-          <button class="btn small brass" id="acct-add-btn">➕ Add account</button>
+        <div class="entry-body">
+          <div id="acct-list" class="acct-item-list"></div>
+          <div class="acct-add-section">
+            <h3 class="acct-add-title">➕ Add an account</h3>
+            <div class="field-row">
+              <div class="field">
+                <label>Name</label>
+                <input type="text" id="acct-new-name" placeholder="e.g. Main Bank">
+              </div>
+              <div class="field">
+                <label>Type</label>
+                <select id="acct-new-type">
+                  <option value="cash">Cash</option>
+                  <option value="bank">Bank</option>
+                  <option value="credit_card">Credit Card</option>
+                  <option value="digital_wallet">Digital Wallet</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Currency</label>
+                <select id="acct-new-currency">
+                  <option value="USD">USD</option>
+                  <option value="LBP">LBP</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Starting balance</label>
+                <input type="text" inputmode="decimal" autocomplete="off" id="acct-new-balance" placeholder="0.00">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn brass" id="acct-add-btn">➕ Add account</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2582,44 +3846,60 @@
     <!-- BUDGETS -->
     <div class="panel" id="panel-budgets">
       <div class="card">
-        <h2 data-i18n="h_overall_budget">🎯 Overall monthly budget</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">A total spending cap for the month across every category. Compared against your real expense entries only — transfers between your own accounts are never counted as spending.</p>
-        <div class="field-row">
-          <div class="field">
-            <label>Monthly budget (USD)</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="budget-overall-usd" placeholder="0.00">
-          </div>
-          <div class="field">
-            <label>Monthly budget (LBP)</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="budget-overall-lbp" placeholder="0">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🎯</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_overall_budget">🎯 Overall monthly budget</h2>
+            <p class="entry-head-sub">A total spending cap for the month across every category. Compared against your real expense entries only — transfers between your own accounts are never counted as spending.</p>
           </div>
         </div>
-        <div class="btn-row">
-          <button class="btn small brass" id="budget-overall-save">💾 Save overall budget</button>
+        <div class="entry-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Monthly budget (USD)</label>
+              <input type="text" inputmode="decimal" autocomplete="off" id="budget-overall-usd" placeholder="0.00">
+            </div>
+            <div class="field">
+              <label>Monthly budget (LBP)</label>
+              <input type="text" inputmode="decimal" autocomplete="off" id="budget-overall-lbp" placeholder="0">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn brass" id="budget-overall-save">💾 Save overall budget</button>
+          </div>
+          <div id="budget-overall-status"></div>
         </div>
-        <div id="budget-overall-status" style="margin-top:14px;"></div>
       </div>
       <div class="card">
-        <h2 data-i18n="h_category_budgets">🏷️ Category budgets</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">e.g. Food → $300/month, Transport → $100/month. Leave a currency blank if you don't budget in it.</p>
-        <div id="budget-cat-list"></div>
-        <h3 style="font-family:'Fraunces',serif;color:var(--forest);font-size:15px;margin:16px 0 6px;">Add a category budget</h3>
-        <div class="field-row">
-          <div class="field">
-            <label>Category</label>
-            <select id="budget-new-cat"></select>
-          </div>
-          <div class="field">
-            <label>Monthly budget (USD)</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="budget-new-usd" placeholder="0.00">
-          </div>
-          <div class="field">
-            <label>Monthly budget (LBP)</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="budget-new-lbp" placeholder="0">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🏷️</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_category_budgets">🏷️ Category budgets</h2>
+            <p class="entry-head-sub">e.g. Food → $300/month, Transport → $100/month. Leave a currency blank if you don't budget in it.</p>
           </div>
         </div>
-        <div class="btn-row">
-          <button class="btn small brass" id="budget-cat-add">➕ Add budget</button>
+        <div class="entry-body">
+          <div id="budget-cat-list"></div>
+          <div class="budget-add-section">
+            <h3 class="budget-add-title">➕ Add a category budget</h3>
+            <div class="field-row">
+              <div class="field">
+                <label>Category</label>
+                <select id="budget-new-cat"></select>
+              </div>
+              <div class="field">
+                <label>Monthly budget (USD)</label>
+                <input type="text" inputmode="decimal" autocomplete="off" id="budget-new-usd" placeholder="0.00">
+              </div>
+              <div class="field">
+                <label>Monthly budget (LBP)</label>
+                <input type="text" inputmode="decimal" autocomplete="off" id="budget-new-lbp" placeholder="0">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn brass" id="budget-cat-add">➕ Add budget</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2627,226 +3907,275 @@
     <!-- BILLS -->
     <div class="panel" id="panel-bills">
       <div class="card">
-        <h2 id="bill-form-title">🧾 New bill</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Track bills — rent, utilities, subscriptions, loans, anything you owe — as paid or unpaid, whether they're due every day, every month, or once a year. Status is tracked per period, so a bill automatically shows as unpaid again the moment its next period starts.</p>
-        <div class="field-row">
-          <div class="field" style="flex:2;min-width:180px;">
-            <label>Bill name</label>
-            <input type="text" id="bill-name" placeholder="e.g. Rent, Electricity, Netflix">
-          </div>
-          <div class="field">
-            <label>Frequency</label>
-            <select id="bill-frequency">
-              <option value="daily">Daily</option>
-              <option value="monthly" selected>Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🧾</div>
+          <div class="entry-head-text">
+            <h2 id="bill-form-title">🧾 New bill</h2>
+            <p class="entry-head-sub">Track bills — rent, utilities, subscriptions, loans, anything you owe — as paid or unpaid, whether they're due every day, every month, or once a year. Status is tracked per period, so a bill automatically shows as unpaid again the moment its next period starts.</p>
           </div>
         </div>
-        <div class="field-row">
-          <div class="field" id="bill-due-month-field" style="display:none;">
-            <label>Month</label>
-            <select id="bill-due-month">
-              <option value="">Month</option>
-              <option value="1">January</option>
-              <option value="2">February</option>
-              <option value="3">March</option>
-              <option value="4">April</option>
-              <option value="5">May</option>
-              <option value="6">June</option>
-              <option value="7">July</option>
-              <option value="8">August</option>
-              <option value="9">September</option>
-              <option value="10">October</option>
-              <option value="11">November</option>
-              <option value="12">December</option>
-            </select>
+        <div class="entry-body">
+          <div class="field-row entry-grid-2">
+            <div class="field">
+              <label>Bill name</label>
+              <input type="text" id="bill-name" placeholder="e.g. Rent, Electricity, Netflix">
+            </div>
+            <div class="field">
+              <label>Frequency</label>
+              <select id="bill-frequency">
+                <option value="daily">Daily</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
           </div>
-          <div class="field" id="bill-due-day-field">
-            <label id="bill-due-day-label">Due day of month</label>
-            <input type="number" inputmode="numeric" id="bill-due-day" min="1" max="31" placeholder="e.g. 5">
+          <div class="field-row entry-grid-2">
+            <div class="field" id="bill-due-month-field" style="display:none;">
+              <label>Month</label>
+              <select id="bill-due-month">
+                <option value="">Month</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div class="field" id="bill-due-day-field">
+              <label id="bill-due-day-label">Due day of month</label>
+              <input type="number" inputmode="numeric" id="bill-due-day" min="1" max="31" placeholder="e.g. 5">
+            </div>
           </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Currency</label>
-            <select id="bill-currency">
-              <option value="USD">USD</option>
-              <option value="LBP">LBP</option>
-            </select>
+          <div class="field-row entry-grid-3">
+            <div class="field">
+              <label>Currency</label>
+              <select id="bill-currency">
+                <option value="USD">USD</option>
+                <option value="LBP">LBP</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Amount</label>
+              <input type="text" inputmode="decimal" autocomplete="off" id="bill-amount" placeholder="0.00">
+            </div>
+            <div class="field">
+              <label>Category (optional)</label>
+              <select id="bill-category"></select>
+            </div>
           </div>
-          <div class="field">
-            <label>Amount</label>
-            <input type="text" inputmode="decimal" autocomplete="off" id="bill-amount" placeholder="0.00">
+          <div class="btn-row">
+            <button class="btn brass" id="btn-bill-add">➕ Add bill</button>
+            <button class="btn subtle" id="btn-bill-cancel-edit" style="display:none;">✖ Cancel edit</button>
           </div>
-          <div class="field">
-            <label>Category (optional)</label>
-            <select id="bill-category"></select>
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn brass" id="btn-bill-add">➕ Add bill</button>
-          <button class="btn subtle" id="btn-bill-cancel-edit" style="display:none;">✖ Cancel edit</button>
         </div>
       </div>
       <div class="card">
-        <div class="field-label-row" style="margin-bottom:6px;flex-wrap:wrap;gap:10px;">
-          <h2 style="margin:0;" data-i18n="h_bills">🧾 Bills</h2>
-          <span id="bill-month-label" style="font-size:12.5px;color:var(--muted);"></span>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🧾</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_bills">🧾 Bills</h2>
+            <p class="entry-head-sub">Mark each one paid as you settle it. Every bill shows the status of its current period — today for daily bills, this month for monthly bills, this year for yearly bills — and resets to unpaid automatically once that period ends.</p>
+          </div>
         </div>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-2px;">Mark each one paid as you settle it. Every bill shows the status of its current period — today for daily bills, this month for monthly bills, this year for yearly bills — and resets to unpaid automatically once that period ends.</p>
-        <div id="bill-month-summary" style="margin:10px 0 14px;"></div>
-        <div id="bill-list"></div>
+        <div class="entry-body">
+          <div class="bills-toolbar">
+            <span id="bill-month-label" class="bill-asof-chip"></span>
+          </div>
+          <div id="bill-month-summary"></div>
+          <div id="bill-list"></div>
+        </div>
       </div>
     </div>
 
     <!-- CALENDAR & ACTIVITY TRACKER -->
     <div class="panel" id="panel-tracker">
       <div class="card">
-        <h2 data-i18n="h_calendar_tracker">📅 Calendar &amp; Activity Tracker</h2>
-        <div class="actcal-controls">
-          <div class="actcal-nav">
-            <button class="cal-nav-btn" id="actcal-prev" type="button" aria-label="Previous month">&larr;</button>
-            <span class="cal-title" id="actcal-title"></span>
-            <button class="cal-nav-btn" id="actcal-next" type="button" aria-label="Next month">&rarr;</button>
-          </div>
-          <div class="btn-row" style="gap:8px;">
-            <button class="actcal-today-btn" id="actcal-bulk-toggle" type="button">☑️ Select multiple days</button>
-            <button class="actcal-today-btn" id="actcal-today" type="button">Today</button>
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">📅</div>
+          <div class="entry-head-text">
+            <h2 data-i18n="h_calendar_tracker">📅 Calendar &amp; Activity Tracker</h2>
+            <p class="entry-head-sub">Tap any day to mark work, gym, days off &amp; more. Use <b>Select multiple days</b> to apply one activity — like a holiday — to several days at once.</p>
           </div>
         </div>
-        <div class="actcal-bulk-bar" id="actcal-bulk-bar" style="display:none;">
-          <span id="actcal-bulk-count">0 days selected</span>
-          <div class="btn-row" style="gap:8px;">
-            <button class="btn small ghost-teal" id="actcal-bulk-selectall" type="button">Select all this month</button>
-            <button class="btn small subtle" id="actcal-bulk-clear" type="button">Clear</button>
-            <button class="btn small brass" id="actcal-bulk-apply" type="button">✅ Apply activity to selected</button>
-            <button class="btn small ghost" id="actcal-bulk-cancel" type="button">✖️ Done</button>
+        <div class="entry-body">
+          <div class="actcal-controls">
+            <div class="actcal-nav">
+              <button class="cal-nav-btn" id="actcal-prev" type="button" aria-label="Previous month">&larr;</button>
+              <span class="cal-title" id="actcal-title"></span>
+              <button class="cal-nav-btn" id="actcal-next" type="button" aria-label="Next month">&rarr;</button>
+            </div>
+            <div class="btn-row" style="gap:8px;">
+              <button class="actcal-today-btn" id="actcal-bulk-toggle" type="button">☑️ Select multiple days</button>
+              <button class="actcal-today-btn" id="actcal-today" type="button">Today</button>
+            </div>
           </div>
-        </div>
-        <div class="actcal-grid" id="actcal-grid-wrap"></div>
-        <p style="font-size:12px;color:var(--muted);margin:14px 0 0;">👆 Tap any day to mark work, gym, days off &amp; more. Use <b>Select multiple days</b> to apply one activity — like a holiday — to several days at once.</p>
-      </div>
-
-      <div class="card">
-        <h2>📊 This Month &amp; Year</h2>
-        <div class="actstat-grid" id="actstat-grid"></div>
-      </div>
-
-      <div class="card">
-        <h2>🏋️ Gym Tracking</h2>
-        <div class="actstat-grid" id="gymstat-grid"></div>
-      </div>
-
-      <div class="card">
-        <h2>🏷️ Activity Types</h2>
-        <div class="acttype-manager" id="acttype-list"></div>
-        <div class="field-row" style="margin-top:14px;">
-          <div class="field" style="max-width:70px;">
-            <label>Icon</label>
-            <input type="text" id="acttype-icon" placeholder="⭐" maxlength="4">
+          <div class="actcal-bulk-bar" id="actcal-bulk-bar" style="display:none;">
+            <span id="actcal-bulk-count">0 days selected</span>
+            <div class="btn-row" style="gap:8px;">
+              <button class="btn small ghost-teal" id="actcal-bulk-selectall" type="button">Select all this month</button>
+              <button class="btn small subtle" id="actcal-bulk-clear" type="button">Clear</button>
+              <button class="btn small brass" id="actcal-bulk-apply" type="button">✅ Apply activity to selected</button>
+              <button class="btn small ghost" id="actcal-bulk-cancel" type="button">✖️ Done</button>
+            </div>
           </div>
-          <div class="field">
-            <label>Name</label>
-            <input type="text" id="acttype-name" placeholder="e.g. Errands">
-          </div>
-          <div class="field" style="max-width:70px;">
-            <label>Color</label>
-            <input type="color" id="acttype-color" value="#2F6478" style="padding:3px;height:41px;">
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn small brass" id="acttype-add" type="button">➕ Add activity type</button>
+          <div class="actcal-grid" id="actcal-grid-wrap"></div>
         </div>
       </div>
 
       <div class="card">
-        <h2>🎉 Public Holidays</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Fetch a country's public holidays and mark them on your calendar as 🎉 Holiday automatically — existing activities on those days are kept. Lebanon works out of the box, no signup or key needed.</p>
-        <div class="field-row">
-          <div class="field" style="max-width:190px;">
-            <label>Source</label>
-            <select id="holiday-api-source">
-              <option value="auto">Automatic (built-in for Lebanon)</option>
-              <option value="nager">Nager.Date (free, no key)</option>
-              <option value="calendarific">Calendarific (free key required)</option>
-            </select>
-          </div>
-          <div class="field" style="max-width:130px;">
-            <label>Country</label>
-            <select id="holiday-country">
-              <option value="LB">Lebanon</option>
-              <option value="US">United States</option>
-              <option value="GB">United Kingdom</option>
-              <option value="FR">France</option>
-              <option value="CA">Canada</option>
-              <option value="AU">Australia</option>
-              <option value="AE">UAE</option>
-              <option value="SA">Saudi Arabia</option>
-              <option value="EG">Egypt</option>
-              <option value="JO">Jordan</option>
-              <option value="DE">Germany</option>
-              <option value="IN">India</option>
-            </select>
-          </div>
-          <div class="field" style="max-width:100px;">
-            <label>Year</label>
-            <input type="number" id="holiday-year" placeholder="2026">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">📊</div>
+          <div class="entry-head-text">
+            <h2>📊 This Month &amp; Year</h2>
+            <p class="entry-head-sub">A quick tally of days worked, days off, and everything else you've logged — for the current month and the year so far.</p>
           </div>
         </div>
-        <div id="holiday-calendarific-key-row" class="field-row" style="display:none;">
-          <div class="field" style="flex:1;">
-            <label>Calendarific API key</label>
-            <div class="pw-field">
-              <input type="password" id="holiday-calendarific-key" autocomplete="off" placeholder="Paste your free API key">
-              <button type="button" class="pw-eye-btn" id="holiday-calendarific-key-toggle" aria-label="Show API key" tabindex="-1">👁️</button>
+        <div class="entry-body">
+          <div class="actstat-grid" id="actstat-grid"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🏋️</div>
+          <div class="entry-head-text">
+            <h2>🏋️ Gym Tracking</h2>
+            <p class="entry-head-sub">Streaks and totals pulled straight from the days you've marked 🏋️ Gym on the calendar above.</p>
+          </div>
+        </div>
+        <div class="entry-body">
+          <div class="actstat-grid" id="gymstat-grid"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🏷️</div>
+          <div class="entry-head-text">
+            <h2>🏷️ Activity Types</h2>
+            <p class="entry-head-sub">The tags available when marking a day. Add, recolor, or remove any of them — icon and color show up on every calendar cell.</p>
+          </div>
+        </div>
+        <div class="entry-body">
+          <div class="acttype-manager" id="acttype-list"></div>
+          <div class="tracker-add-section">
+            <h3 class="tracker-add-title">➕ Add an activity type</h3>
+            <div class="field-row acttype-fields">
+              <div class="field acttype-field-icon">
+                <label>Icon</label>
+                <input type="text" id="acttype-icon" placeholder="⭐" maxlength="4">
+              </div>
+              <div class="field">
+                <label>Name</label>
+                <input type="text" id="acttype-name" placeholder="e.g. Errands">
+              </div>
+              <div class="field acttype-field-color">
+                <label>Color</label>
+                <input type="color" id="acttype-color" value="#2F6478">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn brass" id="acttype-add" type="button">➕ Add activity type</button>
             </div>
           </div>
         </div>
-        <p id="holiday-calendarific-hint" style="display:none;font-size:11.5px;color:var(--muted);margin:0 0 8px;">Free — sign up at <a href="https://calendarific.com/signup" target="_blank" rel="noopener">calendarific.com/signup</a> to get a key (no credit card, ~1,000 requests/month), then paste it above. It's saved on this device only and covers Lebanon and 230+ other countries.</p>
-        <div class="btn-row">
-          <button type="button" class="btn small brass" id="holiday-load-btn">🌐 Load holidays</button>
-        </div>
-        <div id="holiday-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin:10px 0 8px;">
-          <div style="flex:1;height:1px;background:var(--rule);"></div>
-          <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">OR</span>
-          <div style="flex:1;height:1px;background:var(--rule);"></div>
-        </div>
-        <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">Country or year not covered above? Import a calendar file instead — works for any country, entirely offline, no API needed. Get one free from <a href="https://www.google.com/calendar" target="_blank" rel="noopener">Google Calendar</a> ("Other calendars" → browse holiday calendars → ⋮ → export), <a href="https://www.officeholidays.com/" target="_blank" rel="noopener">officeholidays.com</a>, or <a href="https://www.calendarlabs.com/ical-calendar/holidays" target="_blank" rel="noopener">calendarlabs.com</a> — search "[country] holidays ics" and download/subscribe, then import the .ics file here.</p>
-        <div class="btn-row">
-          <input type="file" id="holiday-ics-file" accept=".ics,text/calendar" style="display:none;">
-          <button type="button" class="btn small ghost-teal" id="holiday-ics-btn">📅 Import from calendar file (.ics)</button>
-        </div>
-        <div id="holiday-ics-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 8px;">
-          <div style="flex:1;height:1px;background:var(--rule);"></div>
-          <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">CLEAR</span>
-          <div style="flex:1;height:1px;background:var(--rule);"></div>
-        </div>
-        <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">Remove 🎉 Holiday and its name from your calendar — undo a fetch or import gone wrong. Any other activity you've logged that day is kept.</p>
-        <div class="field-row">
-          <div class="field" style="max-width:170px;">
-            <label>Scope</label>
-            <select id="holiday-clear-scope">
-              <option value="all">All holidays</option>
-              <option value="year">A specific year</option>
-              <option value="month">A specific month</option>
-            </select>
-          </div>
-          <div class="field" id="holiday-clear-year-row" style="max-width:100px;display:none;">
-            <label>Year</label>
-            <input type="number" id="holiday-clear-year" placeholder="2026">
-          </div>
-          <div class="field" id="holiday-clear-month-row" style="max-width:150px;display:none;">
-            <label>Month</label>
-            <select id="holiday-clear-month"></select>
+      </div>
+
+      <div class="card">
+        <div class="entry-head">
+          <div class="entry-head-icon" aria-hidden="true">🎉</div>
+          <div class="entry-head-text">
+            <h2>🎉 Public Holidays</h2>
+            <p class="entry-head-sub">Fetch a country's public holidays and mark them on your calendar as 🎉 Holiday automatically — existing activities on those days are kept. Lebanon works out of the box, no signup or key needed.</p>
           </div>
         </div>
-        <div class="btn-row">
-          <button type="button" class="btn small ghost-teal" id="holiday-clear-btn">🗑️ Clear holidays</button>
+        <div class="entry-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Source</label>
+              <select id="holiday-api-source">
+                <option value="auto">Automatic (built-in for Lebanon)</option>
+                <option value="nager">Nager.Date (free, no key)</option>
+                <option value="calendarific">Calendarific (free key required)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Country</label>
+              <select id="holiday-country">
+                <option value="LB">Lebanon</option>
+                <option value="US">United States</option>
+                <option value="GB">United Kingdom</option>
+                <option value="FR">France</option>
+                <option value="CA">Canada</option>
+                <option value="AU">Australia</option>
+                <option value="AE">UAE</option>
+                <option value="SA">Saudi Arabia</option>
+                <option value="EG">Egypt</option>
+                <option value="JO">Jordan</option>
+                <option value="DE">Germany</option>
+                <option value="IN">India</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Year</label>
+              <input type="number" id="holiday-year" placeholder="2026">
+            </div>
+          </div>
+          <div id="holiday-calendarific-key-row" class="field-row" style="display:none;">
+            <div class="field" style="flex:1;">
+              <label>Calendarific API key</label>
+              <div class="pw-field">
+                <input type="password" id="holiday-calendarific-key" autocomplete="off" placeholder="Paste your free API key">
+                <button type="button" class="pw-eye-btn" id="holiday-calendarific-key-toggle" aria-label="Show API key" tabindex="-1">👁️</button>
+              </div>
+            </div>
+          </div>
+          <p id="holiday-calendarific-hint" class="tracker-hint" style="display:none;">Free — sign up at <a href="https://calendarific.com/signup" target="_blank" rel="noopener">calendarific.com/signup</a> to get a key (no credit card, ~1,000 requests/month), then paste it above. It's saved on this device only and covers Lebanon and 230+ other countries.</p>
+          <div class="btn-row">
+            <button type="button" class="btn brass" id="holiday-load-btn">🌐 Load holidays</button>
+          </div>
+          <div id="holiday-status" class="tracker-status"></div>
+
+          <div class="tracker-divider"><span>OR</span></div>
+          <p class="tracker-hint">Country or year not covered above? Import a calendar file instead — works for any country, entirely offline, no API needed. Get one free from <a href="https://www.google.com/calendar" target="_blank" rel="noopener">Google Calendar</a> ("Other calendars" → browse holiday calendars → ⋮ → export), <a href="https://www.officeholidays.com/" target="_blank" rel="noopener">officeholidays.com</a>, or <a href="https://www.calendarlabs.com/ical-calendar/holidays" target="_blank" rel="noopener">calendarlabs.com</a> — search "[country] holidays ics" and download/subscribe, then import the .ics file here.</p>
+          <div class="btn-row">
+            <input type="file" id="holiday-ics-file" accept=".ics,text/calendar" style="display:none;">
+            <button type="button" class="btn ghost-teal" id="holiday-ics-btn">📅 Import from calendar file (.ics)</button>
+          </div>
+          <div id="holiday-ics-status" class="tracker-status"></div>
+
+          <div class="tracker-divider"><span>CLEAR</span></div>
+          <p class="tracker-hint">Remove 🎉 Holiday and its name from your calendar — undo a fetch or import gone wrong. Any other activity you've logged that day is kept.</p>
+          <div class="field-row">
+            <div class="field">
+              <label>Scope</label>
+              <select id="holiday-clear-scope">
+                <option value="all">All holidays</option>
+                <option value="year">A specific year</option>
+                <option value="month">A specific month</option>
+              </select>
+            </div>
+            <div class="field" id="holiday-clear-year-row" style="display:none;">
+              <label>Year</label>
+              <input type="number" id="holiday-clear-year" placeholder="2026">
+            </div>
+            <div class="field" id="holiday-clear-month-row" style="display:none;">
+              <label>Month</label>
+              <select id="holiday-clear-month"></select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn ghost-teal" id="holiday-clear-btn">🗑️ Clear holidays</button>
+          </div>
+          <div id="holiday-clear-status" class="tracker-status"></div>
         </div>
-        <div id="holiday-clear-status" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
       </div>
     </div>
 
@@ -2895,14 +4224,33 @@
 
     <!-- OVERVIEW -->
     <div class="panel" id="panel-overview">
+      <div class="ov-page-header">
+        <div>
+          <h1>📊 Overview</h1>
+          <p class="ov-page-sub">Your finances at a glance</p>
+        </div>
+        <span class="ov-page-date" id="ov-page-date"></span>
+      </div>
       <div class="quick-actions">
         <button type="button" class="btn brick" id="btn-quick-expense">➖ Quick Add Expense</button>
         <button type="button" class="btn green" id="btn-quick-income">➕ Quick Add Income</button>
       </div>
       <div class="stat-grid" id="ov-kpi-grid">
-        <div class="stat-box"><div class="lbl">💰 Current total balance</div><div class="val" id="ov-kpi-balance">$0.00</div></div>
+        <div class="hero-card" id="ov-kpi-balance-box">
+          <span class="hero-icon">💰</span>
+          <div class="hlbl">💰 Current total balance</div>
+          <div class="hval" id="ov-kpi-balance-usd">$0.00</div>
+          <div class="hsub" id="ov-kpi-balance-lbp">0 LBP</div>
+        </div>
         <div class="stat-box income"><div class="lbl">📈 This month's income</div><div class="val" id="ov-kpi-income">$0.00</div></div>
         <div class="stat-box expense"><div class="lbl">📉 This month's expenses</div><div class="val" id="ov-kpi-expense">$0.00</div></div>
+      </div>
+
+      <div class="ov-section-head">
+        <span class="ov-section-label">🌐 Live Market Rates</span>
+        <span class="ov-section-sub">Auto-refreshes every 10 minutes</span>
+      </div>
+      <div class="stat-grid live-grid" id="ov-live-grid">
         <div class="stat-box live" id="ov-kpi-liverate-box">
           <div class="lbl">🌐 Live rate · USD→LBP<button type="button" class="live-refresh-btn" id="ov-liverate-refresh" title="Refresh live rate">⟳</button></div>
           <div class="val" id="ov-kpi-liverate">—</div>
@@ -2933,6 +4281,10 @@
           <div class="val" id="ov-kpi-gas">—</div>
           <div class="sub" id="ov-kpi-gas-sub">Set your price ↓</div>
         </div>
+      </div>
+
+      <div class="ov-section-head">
+        <span class="ov-section-label">🛠️ Rate Tools</span>
       </div>
       <div class="card" id="ov-default-rate-card">
         <h2 data-i18n="h_default_rate">💵 Default Exchange Rate</h2>
@@ -2994,8 +4346,9 @@
         </div>
         <div id="conv-live-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
       </div>
-      <div class="card" id="ov-gold-card">
-        <h2>🪙 Gold Prices (Lebanon)<button type="button" class="live-refresh-btn" id="ov-gold-card-refresh" title="Refresh gold price">⟳</button></h2>
+      <details class="card ov-collapsible" id="ov-gold-card">
+        <summary>🪙 Gold Prices (Lebanon)<button type="button" class="live-refresh-btn" id="ov-gold-card-refresh" title="Refresh gold price" onclick="event.stopPropagation()">⟳</button></summary>
+        <div class="ov-collapsible-body">
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Live spot price (XAU/USD), converted to the karats and per-gram pricing used in Lebanon, at the current exchange rate.</p>
         <div class="stat-grid" id="ov-gold-grid">
           <div class="stat-box"><div class="lbl">Ounce (oz)</div><div class="val" id="gold-oz-usd">—</div><div class="sub" id="gold-oz-lbp">—</div></div>
@@ -3004,9 +4357,11 @@
           <div class="stat-box"><div class="lbl">18K · per gram</div><div class="val" id="gold-18k-usd">—</div><div class="sub" id="gold-18k-lbp">—</div></div>
         </div>
         <div id="gold-card-status" style="font-size:11.5px;color:var(--muted);min-height:14px;">Fetching live price…</div>
-      </div>
-      <div class="card" id="ov-fuel-card">
-        <h2 data-i18n="h_fuel_prices">⛽ Fuel Prices (Lebanon)</h2>
+        </div>
+      </details>
+      <details class="card ov-collapsible" id="ov-fuel-card">
+        <summary data-i18n="h_fuel_prices">⛽ Fuel Prices (Lebanon)</summary>
+        <div class="ov-collapsible-body">
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Lebanon's Ministry of Energy &amp; Water sets these weekly and there's no official live feed for them, so this tries a best-effort automatic check against <a href="https://www.thefuelprice.com/Flb/en" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">thefuelprice.com</a>, then <a href="https://www.iptgroup.com.lb/ipt/en/our-stations/fuel-prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">IPT</a>, then <a href="https://www.globalpetrolprices.com/Lebanon/" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">globalpetrolprices.com</a> as backups, and falls back to manual entry if all three are unavailable — you can also check <a href="https://en.dgo.gov.lb/prices" target="_blank" rel="noopener" style="color:var(--forest);font-weight:600;">the Ministry's price list</a> yourself and type this week's figures in below.</p>
         <div class="btn-row" style="margin-top:2px;align-items:center;gap:8px;flex-wrap:wrap;">
           <button type="button" class="btn small subtle" id="fuel-live-fetch-btn">🔄 Check live prices</button>
@@ -3062,9 +4417,11 @@
           <button type="button" class="btn small brass" id="fuel-save-btn">✅ Save prices</button>
         </div>
         <div id="fuel-save-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
-      </div>
-      <div class="card" id="ov-goldfuel-calc-card">
-        <h2 data-i18n="h_gold_fuel_calc">🧮 Gold &amp; Fuel Calculator</h2>
+        </div>
+      </details>
+      <details class="card ov-collapsible" id="ov-goldfuel-calc-card">
+        <summary data-i18n="h_gold_fuel_calc">🧮 Gold &amp; Fuel Calculator</summary>
+        <div class="ov-collapsible-body">
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Type in a quantity and get the price, using the live gold rate and the fuel prices saved above.</p>
         <div class="scope-toggle" id="calc-type-toggle">
           <button class="on" data-type="gold">🪙 Gold</button>
@@ -3104,6 +4461,10 @@
         </div>
         <div class="conv-result" id="calc-result">≈ $0.00</div>
         <div id="calc-status" style="font-size:11.5px;color:var(--muted);min-height:14px;"></div>
+        </div>
+      </details>
+      <div class="ov-section-head">
+        <span class="ov-section-label">🔔 Alerts &amp; Planning</span>
       </div>
       <div class="card" id="ov-reminders-card">
         <h2 data-i18n="h_reminders">🔔 Reminders</h2>
@@ -3129,14 +4490,21 @@
         <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">From the Calendar tab — work days, holidays, gym and anything else you've logged this month.</p>
         <div class="stat-grid" id="ov-activities-grid"></div>
       </div>
+
+      <div class="ov-section-head">
+        <span class="ov-section-label">📊 Analytics &amp; Trends</span>
+        <span class="ov-section-sub">Charts, breakdowns and trends for this month</span>
+      </div>
+      <div class="ov-net-banner">
+        <span class="ov-net-icon">💹</span>
+        <div class="ov-net-text">
+          <div class="ov-net-lbl" id="ov-month-label">📅 This month</div>
+          <div class="ov-net-sub" id="ov-net-lbp">0 LBP net</div>
+        </div>
+        <div class="ov-net-val" id="ov-net-usd">$0.00</div>
+      </div>
       <div class="dash-grid">
         <div>
-          <div class="hero-card">
-            <div class="hero-icon">💹</div>
-            <div class="hlbl" id="ov-month-label">📅 This month</div>
-            <div class="hval" id="ov-net-usd">$0.00</div>
-            <div class="hsub" id="ov-net-lbp">0 LBP net</div>
-          </div>
           <div class="card">
             <h2 data-i18n="h_income_vs_expenses">⚖️ Income vs Expenses (this month)</h2>
             <div id="ov-vs-bars"></div>
@@ -3171,12 +4539,12 @@
                 </select>
               </div>
             </div>
-            <div class="bars" id="ov-bars"></div>
+            <div class="bars-panel"><div class="bars" id="ov-bars"></div></div>
             <div class="legend"><span><i style="background:var(--green-ok);"></i>Income + Salary</span><span><i style="background:var(--brick);"></i>Expenses</span></div>
           </div>
           <div class="card chart-card">
             <h2 data-i18n="h_this_week">🗓️ This week</h2>
-            <div class="bars" id="ov-week-bars" style="height:110px;"></div>
+            <div class="bars-panel"><div class="bars ov-week-bars-h" id="ov-week-bars"></div></div>
             <div class="legend"><span><i style="background:var(--green-ok);"></i>Income + Salary</span><span><i style="background:var(--brick);"></i>Expenses</span></div>
           </div>
           <div class="card">
@@ -3212,39 +4580,41 @@
     <!-- STATS -->
     <div class="panel" id="panel-stats">
       <div class="card">
-        <div class="field-label-row" style="margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div class="field-label-row" style="margin-bottom:16px;flex-wrap:wrap;gap:10px;">
           <h2 style="margin:0;">📈 Statistics</h2>
           <div class="curr-toggle" id="stats-curr-toggle">
             <button class="on" data-c="USD">USD</button>
             <button data-c="LBP">LBP</button>
           </div>
         </div>
-        <div class="scope-toggle" id="stats-scope-toggle">
-          <button class="on" data-scope="day">Day</button>
-          <button data-scope="month">Month</button>
-          <button data-scope="year">Year</button>
-          <button data-scope="range">Date Range</button>
-        </div>
-        <div class="field-row">
-          <div class="field" id="stats-day-wrap">
-            <label>Date</label>
-            <input type="date" id="stats-day">
+        <div class="stats-toolbar">
+          <div class="scope-toggle" id="stats-scope-toggle">
+            <button class="on" data-scope="day">Day</button>
+            <button data-scope="month">Month</button>
+            <button data-scope="year">Year</button>
+            <button data-scope="range">Date Range</button>
           </div>
-          <div class="field" id="stats-month-wrap" style="display:none;">
-            <label>Month</label>
-            <input type="month" id="stats-month">
-          </div>
-          <div class="field" id="stats-year-wrap" style="display:none;">
-            <label>Year</label>
-            <input type="number" id="stats-year" placeholder="2026">
-          </div>
-          <div class="field" id="stats-range-start-wrap" style="display:none;">
-            <label>From</label>
-            <input type="date" id="stats-range-start">
-          </div>
-          <div class="field" id="stats-range-end-wrap" style="display:none;">
-            <label>To</label>
-            <input type="date" id="stats-range-end">
+          <div class="field-row">
+            <div class="field" id="stats-day-wrap">
+              <label>Date</label>
+              <input type="date" id="stats-day">
+            </div>
+            <div class="field" id="stats-month-wrap" style="display:none;">
+              <label>Month</label>
+              <input type="month" id="stats-month">
+            </div>
+            <div class="field" id="stats-year-wrap" style="display:none;">
+              <label>Year</label>
+              <input type="number" id="stats-year" placeholder="2026">
+            </div>
+            <div class="field" id="stats-range-start-wrap" style="display:none;">
+              <label>From</label>
+              <input type="date" id="stats-range-start">
+            </div>
+            <div class="field" id="stats-range-end-wrap" style="display:none;">
+              <label>To</label>
+              <input type="date" id="stats-range-end">
+            </div>
           </div>
         </div>
         <div id="stats-output"></div>
@@ -3319,40 +4689,42 @@
           <button type="button" data-reptype="combined">📑 Combined</button>
         </div>
 
-        <label class="rep-label">Scope &amp; period</label>
-        <div class="field-row">
-          <div class="field">
-            <label>Scope</label>
-            <select id="rep-scope" class="scope-input">
-              <option value="month">Single month</option>
-              <option value="multi">Multiple months</option>
-              <option value="year">Full year (every month)</option>
-              <option value="all">All time</option>
-            </select>
+        <div class="rep-scope-panel">
+          <label class="rep-label">Scope &amp; period</label>
+          <div class="field-row">
+            <div class="field">
+              <label>Scope</label>
+              <select id="rep-scope" class="scope-input">
+                <option value="month">Single month</option>
+                <option value="multi">Multiple months</option>
+                <option value="year">Full year (every month)</option>
+                <option value="all">All time</option>
+              </select>
+            </div>
+            <div class="field" id="rep-orientation-wrap" style="max-width:150px;">
+              <label>Page orientation</label>
+              <select id="rep-orientation" class="scope-input">
+                <option value="portrait">A4 Portrait</option>
+                <option value="landscape">A4 Landscape</option>
+              </select>
+            </div>
+            <div class="field" id="rep-month-wrap">
+              <label>Month</label>
+              <input type="month" id="rep-month" class="scope-input">
+            </div>
+            <div class="field" id="rep-year-wrap" style="display:none;">
+              <label>Year</label>
+              <input type="number" id="rep-year" class="scope-input" placeholder="2026">
+            </div>
           </div>
-          <div class="field" id="rep-orientation-wrap" style="max-width:150px;">
-            <label>Page orientation</label>
-            <select id="rep-orientation" class="scope-input">
-              <option value="portrait">A4 Portrait</option>
-              <option value="landscape">A4 Landscape</option>
-            </select>
+          <div id="rep-multi-wrap" style="display:none;">
+            <div class="field" style="max-width:160px;margin-bottom:10px;">
+              <label>Year</label>
+              <input type="number" id="rep-multi-year" class="scope-input" placeholder="2026">
+            </div>
+            <label class="rep-label">Select months</label>
+            <div class="month-grid" id="rep-month-grid"></div>
           </div>
-          <div class="field" id="rep-month-wrap">
-            <label>Month</label>
-            <input type="month" id="rep-month" class="scope-input">
-          </div>
-          <div class="field" id="rep-year-wrap" style="display:none;">
-            <label>Year</label>
-            <input type="number" id="rep-year" class="scope-input" placeholder="2026">
-          </div>
-        </div>
-        <div id="rep-multi-wrap" style="display:none;">
-          <div class="field" style="max-width:160px;margin-bottom:10px;">
-            <label>Year</label>
-            <input type="number" id="rep-multi-year" class="scope-input" placeholder="2026">
-          </div>
-          <label class="rep-label">Select months</label>
-          <div class="month-grid" id="rep-month-grid"></div>
         </div>
 
         <hr class="rep-hr">
@@ -3403,12 +4775,13 @@
         </p>
       </div>
       <div class="card">
-        <h2>🛠️ Admin — users</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">
-          View accounts, ban or unban, and open an account to fix its ledger. Every action here runs through
-          your server-side <code>admin-actions</code> function, which checks that you're an approved admin
-          before doing anything — this page has no special power on its own.
-        </p>
+        <div class="rep-head" style="margin-bottom:18px;">
+          <div class="rep-head-icon">🛠️</div>
+          <div>
+            <h2 style="margin:0 0 4px;">Admin — users</h2>
+            <p class="rep-head-sub">View accounts, ban or unban, and open an account to fix its ledger. Every action runs through your server-side <code>admin-actions</code> function, which checks that you're an approved admin before doing anything — this page has no special power on its own.</p>
+          </div>
+        </div>
         <p style="font-size:12px;color:var(--muted);background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;margin:0 0 14px;">
           🔒 <b>About passwords:</b> Supabase never stores or exposes a password anyone can read back — not you,
           not an admin, not even Supabase itself — accounts are secured with one-way hashing, so there's no
@@ -3422,51 +4795,55 @@
           <h2 style="font-size:15px;">📈 Signups — last 6 months</h2>
           <div id="admin-growth-chart"></div>
         </div>
-        <div class="field-row">
-          <div class="field" style="flex:2;min-width:180px;">
-            <label>🔍 Search by email</label>
-            <input type="text" id="admin-user-search" placeholder="e.g. name@example.com">
-          </div>
-          <div class="field" style="flex:1;min-width:140px;">
-            <label>Sort by</label>
-            <select id="admin-user-sort">
-              <option value="joined-desc">Newest first</option>
-              <option value="joined-asc">Oldest first</option>
-              <option value="entries-desc">Most entries</option>
-              <option value="email-asc">Email A–Z</option>
-              <option value="lastseen-desc">Last active</option>
-            </select>
-          </div>
-          <div class="field" style="flex:1;min-width:120px;">
-            <label>Show</label>
-            <select id="admin-user-filter">
-              <option value="all">All accounts</option>
-              <option value="active">Active only</option>
-              <option value="banned">Banned only</option>
-              <option value="unconfirmed">Unconfirmed email</option>
-            </select>
-          </div>
-          <div class="field" style="flex:0;">
-            <label>&nbsp;</label>
-            <button class="btn small subtle" id="admin-refresh-users">🔄 Refresh</button>
+        <div class="admin-toolbar">
+          <div class="field-row">
+            <div class="field" style="flex:2;min-width:180px;">
+              <label>🔍 Search by email</label>
+              <input type="text" id="admin-user-search" placeholder="e.g. name@example.com">
+            </div>
+            <div class="field" style="flex:1;min-width:140px;">
+              <label>Sort by</label>
+              <select id="admin-user-sort">
+                <option value="joined-desc">Newest first</option>
+                <option value="joined-asc">Oldest first</option>
+                <option value="entries-desc">Most entries</option>
+                <option value="email-asc">Email A–Z</option>
+                <option value="lastseen-desc">Last active</option>
+              </select>
+            </div>
+            <div class="field" style="flex:1;min-width:120px;">
+              <label>Show</label>
+              <select id="admin-user-filter">
+                <option value="all">All accounts</option>
+                <option value="active">Active only</option>
+                <option value="banned">Banned only</option>
+                <option value="unconfirmed">Unconfirmed email</option>
+              </select>
+            </div>
+            <div class="field" style="flex:0;">
+              <label>&nbsp;</label>
+              <button class="btn small subtle" id="admin-refresh-users">🔄 Refresh</button>
+            </div>
           </div>
         </div>
-        <div class="btn-row" style="margin-bottom:6px;">
+        <div class="btn-row" style="margin-bottom:10px;">
           <button class="btn small ghost-teal" id="admin-export-users">⬇️ Export user list (CSV)</button>
           <button class="btn small brass" id="btn-open-notify">🔔 Send notification</button>
         </div>
-        <div id="admin-users-list"></div>
+        <div id="admin-users-list" class="admin-list-box"></div>
       </div>
       <div class="card">
-        <h2>🔔 Admin — sent notifications</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">
-          Everything sent from "Send notification" above, in one place — edit a notification to fix a typo or
-          change who sees it (it updates in everyone's 📨 inbox), or delete it to pull it back entirely.
-        </p>
+        <div class="rep-head" style="margin-bottom:18px;">
+          <div class="rep-head-icon">🔔</div>
+          <div>
+            <h2 style="margin:0 0 4px;">Admin — sent notifications</h2>
+            <p class="rep-head-sub">Everything sent from "Send notification" above, in one place — edit a notification to fix a typo or change who sees it (it updates in everyone's 📨 inbox), or delete it to pull it back entirely.</p>
+          </div>
+        </div>
         <div class="btn-row" style="margin-bottom:10px;">
           <button class="btn small subtle" id="admin-notif-refresh">🔄 Refresh</button>
         </div>
-        <div id="admin-notif-list"></div>
+        <div id="admin-notif-list" class="admin-list-box"></div>
       </div>
     </div>
 
@@ -3478,7 +4855,8 @@
         <p class="modal-sub" id="admin-user-modal-sub"></p>
         <div id="admin-user-meta" class="stat-grid" style="margin-bottom:14px;"></div>
         <div id="admin-user-ban-box" style="display:none;"></div>
-        <div class="btn-row" style="margin-bottom:8px;">
+        <label class="rep-label" style="margin-bottom:8px;">Account access</label>
+        <div class="btn-row" style="margin-bottom:14px;">
           <button class="btn small brass" id="admin-btn-login-as">🔓 Log in as user</button>
           <button class="btn small ghost-teal" id="admin-btn-reset-link">🔑 Send reset link</button>
           <button class="btn small ghost-teal" id="admin-btn-set-password">🛠️ Set new password</button>
@@ -3486,6 +4864,7 @@
           <button class="btn small subtle" id="admin-btn-export-entries">⬇️ Export entries (CSV)</button>
           <button class="btn small ghost" id="admin-btn-copy-id">📋 Copy user ID</button>
         </div>
+        <label class="rep-label" style="margin-bottom:8px;">Moderation &amp; danger zone</label>
         <div class="btn-row" style="margin-bottom:14px;">
           <button class="btn small ghost" id="admin-btn-ban">⛔ Ban user</button>
           <button class="btn small subtle" id="admin-btn-unban" style="display:none;">✅ Unban user</button>
@@ -3632,8 +5011,8 @@
 
     <!-- PROFILE -->
     <div class="panel" id="panel-profile">
-      <div class="card">
-        <h2 data-i18n="h_your_profile">👤 Your profile</h2>
+
+      <div class="profile-hero">
         <div class="avatar-row">
           <div class="avatar-circle" id="avatar-circle">?</div>
           <div class="avatar-actions">
@@ -3642,89 +5021,98 @@
             <button class="btn small ghost" id="btn-avatar-remove" type="button">🗑️ Remove photo</button>
           </div>
         </div>
-        <div class="field-row">
-          <div class="field" style="max-width:260px;">
-            <label>Username</label>
-            <input type="text" id="profile-username" placeholder="Pick a username" maxlength="30">
-          </div>
-          <div class="field" style="flex:0;">
-            <label>&nbsp;</label>
-            <button class="btn small brass" id="btn-username-save" type="button">💾 Save username</button>
-          </div>
+        <div class="profile-hero-meta">
+          <span class="profile-hero-label">Current job title</span>
+          <span class="profile-hero-name" id="profile-jobtitle-current-display">—</span>
+          <button class="profile-hero-history-btn" id="btn-jobtitle-history" type="button">🕒 Job title history</button>
         </div>
-        <div class="field-row">
-          <div class="field" style="max-width:220px;">
-            <label>Job title</label>
-            <input type="text" id="profile-jobtitle" placeholder="e.g. Freelance Designer" maxlength="60">
-          </div>
-          <div class="field" style="max-width:170px;">
-            <label>Effective from</label>
-            <input type="date" id="profile-jobtitle-date">
-          </div>
-          <div class="field" style="flex:0;">
-            <label>&nbsp;</label>
-            <button class="btn small brass" id="btn-jobtitle-save" type="button">💾 Save job title</button>
-          </div>
-        </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">Reports use whichever job title was in effect on the dates they cover, so a report for an old period keeps your old title even after you update it here. Back-date "Effective from" if you're logging a title change that already happened.</p>
-        <div class="jth-current-row">
-          <div>
-            <span class="jth-current-lbl">Current job title</span>
-            <div class="jth-current-val" id="profile-jobtitle-current-display">—</div>
-          </div>
-          <button class="btn small subtle" id="btn-jobtitle-history" type="button">🕒 History</button>
-        </div>
-        <div id="profile-info" style="margin-top:10px;"></div>
       </div>
-      <div class="card">
-        <h2 data-i18n="settings_title">⚙️ App settings</h2>
-        <div class="settings-row">
-          <div>
-            <div class="settings-row-title" data-i18n="settings_language_title">Language</div>
-            <div class="settings-row-sub" data-i18n="settings_language_sub">Choose the language the app is displayed in.</div>
+
+      <div class="profile-grid">
+        <div class="card">
+          <h2 data-i18n="h_your_profile">👤 Your profile</h2>
+          <div class="field-row">
+            <div class="field" style="max-width:260px;">
+              <label>Username</label>
+              <input type="text" id="profile-username" placeholder="Pick a username" maxlength="30">
+            </div>
+            <div class="field" style="flex:0;">
+              <label>&nbsp;</label>
+              <button class="btn small brass" id="btn-username-save" type="button">💾 Save username</button>
+            </div>
           </div>
-          <select id="setting-language" style="min-width:130px;">
-            <option value="en">English</option>
-            <option value="ar">العربية (Arabic)</option>
-            <option value="fr">Français (French)</option>
-          </select>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-row-title" data-i18n="settings_quickadd_title">Quick Add button</div>
-            <div class="settings-row-sub" data-i18n="settings_quickadd_sub">Show the floating ⚡ Quick Add button on every screen.</div>
+          <div class="field-row">
+            <div class="field" style="max-width:220px;">
+              <label>Job title</label>
+              <input type="text" id="profile-jobtitle" placeholder="e.g. Freelance Designer" maxlength="60">
+            </div>
+            <div class="field" style="max-width:170px;">
+              <label>Effective from</label>
+              <input type="date" id="profile-jobtitle-date">
+            </div>
+            <div class="field" style="flex:0;">
+              <label>&nbsp;</label>
+              <button class="btn small brass" id="btn-jobtitle-save" type="button">💾 Save job title</button>
+            </div>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="setting-quickadd-toggle">
-            <span class="toggle-slider"></span>
-          </label>
+          <p class="profile-section-hint">Reports use whichever job title was in effect on the dates they cover, so a report for an old period keeps your old title even after you update it here. Back-date "Effective from" if you're logging a title change that already happened.</p>
+          <div id="profile-info"></div>
         </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-row-title" data-i18n="settings_darkmode_title">Dark mode</div>
-            <div class="settings-row-sub" data-i18n="settings_darkmode_sub">Switch the app to a dark color theme.</div>
+
+        <div class="card">
+          <h2 data-i18n="settings_title">⚙️ App settings</h2>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-title" data-i18n="settings_language_title">Language</div>
+              <div class="settings-row-sub" data-i18n="settings_language_sub">Choose the language the app is displayed in.</div>
+            </div>
+            <select id="setting-language" style="min-width:130px;">
+              <option value="en">English</option>
+              <option value="ar">العربية (Arabic)</option>
+              <option value="fr">Français (French)</option>
+            </select>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="setting-darkmode-toggle">
-            <span class="toggle-slider"></span>
-          </label>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-title" data-i18n="settings_quickadd_title">Quick Add button</div>
+              <div class="settings-row-sub" data-i18n="settings_quickadd_sub">Show the floating ⚡ Quick Add button on every screen.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-quickadd-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-title" data-i18n="settings_darkmode_title">Dark mode</div>
+              <div class="settings-row-sub" data-i18n="settings_darkmode_sub">Switch the app to a dark color theme.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-darkmode-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <p class="profile-section-hint" style="margin-bottom:0;" data-i18n="settings_saved_device">These are saved on this device/browser.</p>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:10px 0 0;" data-i18n="settings_saved_device">These are saved on this device/browser.</p>
       </div>
-      <div class="hero-card" id="profile-balance-card">
-        <div class="hlbl">💰 Balance still available</div>
-        <div class="hval" id="profile-balance-usd">$0.00</div>
-        <div class="hsub" id="profile-balance-lbp">0 LBP</div>
+
+      <div class="profile-grid">
+        <div class="hero-card" id="profile-balance-card">
+          <div class="hlbl">💰 Balance still available</div>
+          <div class="hval" id="profile-balance-usd">$0.00</div>
+          <div class="hsub" id="profile-balance-lbp">0 LBP</div>
+        </div>
+        <div class="card" id="profile-account-card">
+          <h2 data-i18n="h_account">🔐 Account</h2>
+          <div id="profile-account-actions"></div>
+        </div>
       </div>
-      <div class="card" id="profile-account-card">
-        <h2 data-i18n="h_account">🔐 Account</h2>
-        <div id="profile-account-actions"></div>
-      </div>
+
       <div class="card">
         <h2 data-i18n="h_backup_restore">📤 Backup &amp; restore</h2>
-        <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;">Download your data any time, or restore it from a previous backup. A restore never deletes or changes anything already in your account — it only adds items you don't already have.</p>
+        <p class="profile-section-hint" style="margin-top:-8px;">Download your data any time, or restore it from a previous backup. A restore never deletes or changes anything already in your account — it only adds items you don't already have.</p>
 
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);margin:14px 0 8px;">Export</div>
+        <div class="backup-group-label">Export</div>
         <div class="btn-row">
           <button class="btn small ghost-teal" id="btn-export-my-csv">⬇️ Transactions (CSV)</button>
           <button class="btn small ghost-teal" id="btn-export-categories-csv">⬇️ Categories (CSV)</button>
@@ -3734,17 +5122,16 @@
           <button class="btn small ghost-teal" id="btn-export-excel">⬇️ Everything (Excel .xlsx)</button>
           <button class="btn small brass" id="btn-export-full-backup">⬇️ Full backup (JSON)</button>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;">Transfers are included in the Transactions export — a transfer is just a ledger entry moving money between two of your accounts. The full JSON backup is the one to keep for restoring your account later — it's the only export that covers absolutely everything: transactions, categories, accounts, budgets, recurring rules, bills, the calendar/activity tracker, your profile, and your app settings, receipts included.</p>
+        <p class="profile-section-hint">Transfers are included in the Transactions export — a transfer is just a ledger entry moving money between two of your accounts. The full JSON backup is the one to keep for restoring your account later — it's the only export that covers absolutely everything: transactions, categories, accounts, budgets, recurring rules, bills, the calendar/activity tracker, your profile, and your app settings, receipts included.</p>
 
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--forest-2);margin:18px 0 8px;">Restore</div>
+        <div class="backup-group-label">Restore</div>
         <div class="btn-row">
           <label class="btn small subtle" for="backup-import-input" style="cursor:pointer;">📥 Choose backup file (JSON)</label>
           <input type="file" id="backup-import-input" accept="application/json,.json" style="display:none;">
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;">Only full JSON backups exported from this app can be restored. You'll see a preview of everything that will be added — including any blank profile fields or app settings the backup can fill in — before anything is imported, and it's always safe to import the same backup more than once; matching items are simply skipped.</p>
+        <p class="profile-section-hint" style="margin-bottom:0;">Only full JSON backups exported from this app can be restored. You'll see a preview of everything that will be added — including any blank profile fields or app settings the backup can fill in — before anything is imported, and it's always safe to import the same backup more than once; matching items are simply skipped.</p>
       </div>
     </div>
-
   </main>
 
   <footer class="site-footer no-print">
@@ -4121,6 +5508,8 @@
     {value:'other', label:'Other'}
   ];
   const accountTypeLabel = (v) => (ACCOUNT_TYPES.find(t=>t.value===v) || ACCOUNT_TYPES[4]).label;
+  const ACCOUNT_ICONS = { cash:'💵', bank:'🏦', credit_card:'💳', digital_wallet:'📱', other:'🗂️' };
+  const accountTypeIcon = (v) => ACCOUNT_ICONS[v] || ACCOUNT_ICONS.other;
   // Budgets: one optional overall monthly cap (USD/LBP) plus any number of
   // per-category monthly caps. Both are pure numbers per currency — actual
   // spend against them is always computed fresh from real entries at
@@ -9699,6 +11088,8 @@
   function renderCategoryList(kind){
     const list = kind === 'expense' ? EXPENSE_CATS : INCOME_CATS;
     const wrap = $('cat-list-' + kind);
+    const countEl = $('cat-count-' + kind);
+    if(countEl) countEl.textContent = list.length + (list.length === 1 ? ' category' : ' categories');
     if(list.length === 0){
       wrap.innerHTML = '<div class="empty">No categories yet — add one below.</div>';
       return;
@@ -9706,8 +11097,8 @@
     wrap.innerHTML = list.map(name => {
       const isOpen = expandedCat && expandedCat.kind === kind && expandedCat.name === name;
       return `
-      <div class="cat-row" data-name="${escapeHtml(name)}">
-        <span class="cat-name">${escapeHtml(name)}</span>
+      <div class="cat-item" data-name="${escapeHtml(name)}">
+        <span class="cat-item-name">${escapeHtml(name)}</span>
         <div class="cat-actions">
           ${isOpen ? `
             <button class="btn ghost-teal small cat-edit">✏️ Edit</button>
@@ -9720,7 +11111,7 @@
       </div>
     `;}).join('');
 
-    wrap.querySelectorAll('.cat-row').forEach(row=>{
+    wrap.querySelectorAll('.cat-item').forEach(row=>{
       const name = row.dataset.name;
       const toggleBtn = row.querySelector('.cat-toggle');
       if(toggleBtn) toggleBtn.addEventListener('click', ()=>{ expandedCat = {kind, name}; renderCategoryList(kind); });
@@ -9746,7 +11137,7 @@
 
   function startCatEdit(row, kind, oldName){
     row.innerHTML = `
-      <input type="text" value="${escapeHtml(oldName)}" class="cat-edit-input" style="flex:1;">
+      <input type="text" value="${escapeHtml(oldName)}" class="cat-edit-input">
       <div class="cat-actions">
         <button class="btn small brass cat-save">💾 Save</button>
         <button class="btn small subtle cat-cancel">✖ Cancel</button>
@@ -9840,12 +11231,19 @@
     wrap.innerHTML = accounts.map(a => {
       const isOpen = expandedAcct === a.id;
       const bal = computeAccountBalance(a);
+      const balCls = bal < 0 ? 'negative' : (bal > 0 ? 'positive' : '');
       return `
-      <div class="cat-row" data-id="${a.id}">
-        <span class="cat-name">${escapeHtml(a.name)}
-          <div style="font-size:11.5px;color:var(--muted);font-weight:500;">${accountTypeLabel(a.type)} · ${a.currency} · balance ${fmtByCurrency(bal, a.currency)}</div>
-        </span>
-        <div class="cat-actions">
+      <div class="acct-item" data-id="${a.id}">
+        <div class="acct-icon" aria-hidden="true">${accountTypeIcon(a.type)}</div>
+        <div class="acct-info">
+          <div class="acct-name">${escapeHtml(a.name)}</div>
+          <div class="acct-meta">
+            <span class="acct-type-badge">${accountTypeLabel(a.type)}</span>
+            <span>${a.currency}</span>
+          </div>
+        </div>
+        <div class="acct-balance ${balCls}">${fmtByCurrency(bal, a.currency)}</div>
+        <div class="acct-actions">
           ${isOpen ? `
             <button class="btn ghost-teal small acct-edit">✏️ Edit</button>
             <button class="btn ghost small acct-del">🗑️ Delete</button>
@@ -9857,7 +11255,7 @@
       </div>
     `;}).join('');
 
-    wrap.querySelectorAll('.cat-row').forEach(row=>{
+    wrap.querySelectorAll('.acct-item').forEach(row=>{
       const id = row.dataset.id;
       const acct = accounts.find(a=>a.id===id);
       const toggleBtn = row.querySelector('.acct-toggle');
@@ -9885,13 +11283,14 @@
   function startAcctEdit(row, acct){
     const typeOptions = ACCOUNT_TYPES.map(t => `<option value="${t.value}" ${t.value===acct.type?'selected':''}>${t.label}</option>`).join('');
     row.innerHTML = `
-      <div style="display:flex;flex-wrap:wrap;gap:8px;flex:1;">
-        <input type="text" value="${escapeHtml(acct.name)}" class="acct-edit-name" style="flex:1;min-width:110px;">
-        <select class="acct-edit-type" style="flex:1;min-width:110px;">${typeOptions}</select>
-        <input type="text" inputmode="decimal" autocomplete="off" value="${formatAmountValue(String(acct.startingBalance))}" class="acct-edit-balance" style="flex:1;min-width:100px;" placeholder="Starting balance">
-        <span style="align-self:center;font-size:11.5px;color:var(--muted);">${acct.currency} (fixed)</span>
+      <div class="acct-icon" aria-hidden="true">${accountTypeIcon(acct.type)}</div>
+      <div class="acct-edit-form">
+        <input type="text" value="${escapeHtml(acct.name)}" class="acct-edit-name" placeholder="Account name">
+        <select class="acct-edit-type">${typeOptions}</select>
+        <input type="text" inputmode="decimal" autocomplete="off" value="${formatAmountValue(String(acct.startingBalance))}" class="acct-edit-balance" placeholder="Starting balance">
+        <span class="acct-edit-currency">${acct.currency} (fixed)</span>
       </div>
-      <div class="cat-actions">
+      <div class="acct-actions">
         <button class="btn small brass acct-save">💾 Save</button>
         <button class="btn small subtle acct-cancel">✖ Cancel</button>
       </div>
@@ -10084,7 +11483,8 @@
     }
     const acctName = (id) => { const a = accounts.find(x=>x.id===id); return a ? a.name : null; };
     const list = recurring.slice().sort((a,b)=> (a.nextDate||'').localeCompare(b.nextDate||'') || (a.name||'').localeCompare(b.name||''));
-    wrap.innerHTML = list.map(r=>{
+    const countLabel = list.length + (list.length === 1 ? ' rule' : ' rules');
+    wrap.innerHTML = `<div class="list-toolbar"><span class="list-count-chip">${countLabel}</span></div>` + list.map(r=>{
       const isOpen = expandedRecurringId === r.id;
       const acct = acctName(r.accountId);
       const amtHtml = r.currency === 'USD' ? fmtUSD(r.amount) : fmtLBP(r.amount);
@@ -10092,14 +11492,25 @@
         ? `<span class="lr-tag income">active</span>`
         : `<span class="lr-tag paused">paused</span>`;
       return `
-      <div class="cat-row" data-id="${r.id}" style="align-items:flex-start;">
-        <span class="cat-name">${escapeHtml(r.name || r.category)} ${statusHtml}
-          <div style="font-size:11.5px;color:var(--muted);font-weight:500;margin-top:2px;">
-            ${r.type === 'expense' ? '📉' : '📈'} ${amtHtml} · ${escapeHtml(r.category)} · ${FREQ_LABEL[r.frequency] || r.frequency}${acct ? ' · ' + escapeHtml(acct) : ''}<br>
-            ${r.active ? 'Next: ' + r.nextDate : 'Paused'}${r.endDate ? ' · Ends ' + r.endDate : ''}
+      <div class="rec-item${r.active ? '' : ' is-paused'}" data-id="${r.id}">
+        <div class="rec-item-icon" aria-hidden="true">${r.type === 'expense' ? '📉' : '📈'}</div>
+        <div class="rec-item-main">
+          <div class="rec-item-title-row">
+            <span class="rec-item-name">${escapeHtml(r.name || r.category)}</span>
+            ${statusHtml}
           </div>
-        </span>
-        <div class="cat-actions">
+          <div class="rec-item-meta">
+            <span class="amt ${r.type}">${amtHtml}</span>
+            <span class="dot">·</span>
+            <span>${escapeHtml(r.category)}</span>
+            <span class="dot">·</span>
+            <span>${FREQ_LABEL[r.frequency] || r.frequency}</span>
+            ${acct ? `<span class="dot">·</span><span>${escapeHtml(acct)}</span>` : ''}
+            <span class="dot">·</span>
+            <span class="next">${r.active ? 'Next ' + r.nextDate : 'Paused'}${r.endDate ? ' · Ends ' + r.endDate : ''}</span>
+          </div>
+        </div>
+        <div class="rec-item-actions">
           ${isOpen ? `
             <button class="btn ghost-teal small rec-toggle-active">${r.active ? '⏸️ Pause' : '▶️ Resume'}</button>
             <button class="btn ghost-teal small rec-edit">✏️ Edit</button>
@@ -10112,7 +11523,7 @@
       </div>
     `;}).join('');
 
-    wrap.querySelectorAll('.cat-row').forEach(row=>{
+    wrap.querySelectorAll('.rec-item').forEach(row=>{
       const id = row.dataset.id;
       const rule = recurring.find(r=>r.id===id);
       const openBtn = row.querySelector('.rec-open');
@@ -11223,6 +12634,8 @@
     const thisMonthList = filterEntries({year:y, month:m});
     const s = computeStats(thisMonthList);
     $('ov-month-label').textContent = '📅 ' + MONTH_NAMES[m] + ' ' + y;
+    const ovDateEl = $('ov-page-date');
+    if(ovDateEl) ovDateEl.textContent = now.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
     $('ov-net-usd').textContent = fmtUSD(s.netUSD);
     $('ov-net-lbp').textContent = fmtLBP(s.netLBP) + ' net this month';
     renderDashboardBudgets();
@@ -11233,7 +12646,8 @@
 
     // ---- top KPI row: balance, this month's income, this month's expenses ----
     const allTime = computeStats(entries);
-    $('ov-kpi-balance').innerHTML = `${fmtUSD(allTime.netUSD)}<br>${fmtLBP(allTime.netLBP)}`;
+    $('ov-kpi-balance-usd').textContent = fmtUSD(allTime.netUSD);
+    $('ov-kpi-balance-lbp').textContent = fmtLBP(allTime.netLBP);
     $('ov-kpi-income').innerHTML = `${fmtUSD(s.incomeUSD + s.salaryUSD)}<br>${fmtLBP(s.incomeLBP + s.salaryLBP)}`;
     $('ov-kpi-expense').innerHTML = `${fmtUSD(s.expenseUSD)}<br>${fmtLBP(s.expenseLBP)}`;
 
