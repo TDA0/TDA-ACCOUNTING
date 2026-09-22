@@ -3210,9 +3210,9 @@
     background:linear-gradient(150deg, var(--forest) 0%, var(--forest-2) 100%);
     color:var(--paper);
     border-radius:20px;
-    padding:clamp(22px,3.4vw,34px) clamp(20px,3.4vw,36px);
+    padding:clamp(28px,4.5vw,40px) clamp(24px,4vw,40px);
     box-shadow:0 14px 30px -16px rgba(30,61,50,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
-    display:flex; align-items:center; gap:clamp(16px,2.6vw,28px); flex-wrap:wrap;
+    display:flex; align-items:center; align-content:flex-start; gap:clamp(16px,2.6vw,28px); flex-wrap:wrap;
   }
   .profile-hero::after{
     content:""; position:absolute; right:-50px; top:-60px; width:220px; height:220px; border-radius:50%;
@@ -3220,9 +3220,9 @@
   }
   .profile-hero .avatar-row{ margin:0; }
   .profile-hero .avatar-circle{
-    width:clamp(72px,9vw,92px); height:clamp(72px,9vw,92px);
+    width:clamp(88px,11vw,112px); height:clamp(88px,11vw,112px);
     background:rgba(255,255,255,0.14); border:3px solid rgba(255,255,255,0.3);
-    color:var(--paper); font-size:clamp(26px,3vw,32px);
+    color:var(--paper); font-size:clamp(32px,3.6vw,40px);
     box-shadow:0 8px 20px -8px rgba(0,0,0,0.4);
   }
   .profile-hero .avatar-actions .btn{
@@ -3238,7 +3238,7 @@
     text-transform:uppercase; opacity:0.72; margin-bottom:4px;
   }
   .profile-hero-name{
-    display:block; font-family:'Fraunces',serif; font-weight:700; font-size:clamp(20px,2.8vw,27px);
+    display:block; font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,3.4vw,32px);
     line-height:1.25; word-break:break-word; overflow-wrap:anywhere;
   }
   .profile-hero-history-btn{
@@ -3254,6 +3254,8 @@
     display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; align-items:start;
   }
   #panel-profile .card, #panel-profile .hero-card{ margin:0; }
+  #profile-balance-card{ grid-column:1/-1; padding:clamp(28px,4vw,40px) clamp(28px,4vw,44px); }
+  #profile-balance-card .hval{ font-size:clamp(40px,6vw,56px); }
   #panel-profile .card h2{ display:flex; align-items:center; gap:8px; }
 
   .profile-section-hint{ font-size:12px; color:var(--muted); margin:6px 0 14px; line-height:1.55; }
@@ -3266,6 +3268,7 @@
 
   @media (max-width:640px){
     .profile-hero{ flex-direction:column; align-items:flex-start; text-align:left; }
+    .profile-hero-meta{ flex-basis:auto; }
   }
 </style>
 <style id="print-orientation-style"></style>
@@ -12646,8 +12649,8 @@
 
     // ---- top KPI row: balance, this month's income, this month's expenses ----
     const allTime = computeStats(entries);
-    $('ov-kpi-balance-usd').textContent = fmtUSD(allTime.netUSD);
-    $('ov-kpi-balance-lbp').textContent = fmtLBP(allTime.netLBP);
+    $('ov-kpi-balance-usd').textContent = fmtUSD(allTime.balanceUSD);
+    $('ov-kpi-balance-lbp').textContent = fmtLBP(allTime.balanceLBP);
     $('ov-kpi-income').innerHTML = `${fmtUSD(s.incomeUSD + s.salaryUSD)}<br>${fmtLBP(s.incomeLBP + s.salaryLBP)}`;
     $('ov-kpi-expense').innerHTML = `${fmtUSD(s.expenseUSD)}<br>${fmtLBP(s.expenseLBP)}`;
 
